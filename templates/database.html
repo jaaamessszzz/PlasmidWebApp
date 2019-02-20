@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block javascript %}
+{# Javascript #}
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
+{#Script#}
+
+<script type="text/javascript">
+var csrftoken = getCookie('csrftoken');
+$(document).ready(function() {
+    $('#plasmid_datatable').DataTable( {
+        "searching": true,
+        "dom": "lfiprt",
+        "processing": true,
+        "serverSide": true,
+        "columnDefs": [
+            { "orderable": false, "targets": 2 } {# Disable description ordering #}
+        ],
+        "ajax": {
+            url: "{% url 'plasmid_database:update_table' %}",
+            type: "POST",
+            data: {csrfmiddlewaretoken: csrftoken},
+        },
+        "fixedColumns": {heightMatch: 'none'},
+    } );
+} );
+</script>
+{% endblock %}
+
+{% block header %}
+<div class="header">
+    <h1>Plasmid Database</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="datatable">
+        <table id="plasmid_datatable" class="table display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Creator</th>
+                <th>ID</th>
+                <th>Description</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+<div id="assembly">
+    <div class="container">
+
+        {# Reaction Definition #}
+        <div class="flex-container" style="height: 250px">
+            <div class="assemblyDefinition MasterMix">
+                <button class="tableHeader" type="button" id="addMasterMix">Add to Master Mix</button>
+                <div class="assemblyDefinitions button-flex">
+
+                </div>
+            </div>
+
+            <div class="assemblyDefinition DropIn">
+                <button class="tableHeader" type="button" id="addDropIn">Add an Insert</button>
+                <div class="assemblyDefinitions button-flex">
+
+                </div>
+            </div>
+
+            <div class="assemblyDefinition UserDefinedParts">
+                <button class="tableHeader" type="button" id="addDefinedPart">Define a Drop-In Part</button>
+                <div class="assemblyDefinitions button-flex">
+
+                </div>
+            </div>
+        </div>
+
+        {# Perform Reaction #}
+        <button type="button" id="performReaction">Assemble!</button>
+
+        {# Filter Plasmids #}
+        <form id="plasmidFilterInputs" method="post" class="userSearchInput flex-container">
+            <label for="id_creator">Creator:</label>
+                <select name="creator" id="id_creator" form="plasmidFilterInputs" required>
+                    <option value="0"></option>
+                    {% for plasmidCreator in users %}
+                        <option value="{{ plasmidCreator.id }}">{{ plasmidCreator }}</option>
+                    {% endfor %}
+                </select>
+            <label for="id_creator_index">Creator index:</label>
+            <input type="number" name="id" value=0 min="1" step="any" id="id_creator_index" oninput="validity.valid||(value='');">
+            <label for="id_description">Description:</label>
+            <input type="text" name="description" id="id_description">
+        </form>
+
+        {# Plasmid DataTable #}
+        <table id="filteredPlasmidsTable">
+            <thead>
+                <tr>
+                    <th>Creator</th>
+                    <th>ID</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+        </table>
+
+    </div>
+</div>

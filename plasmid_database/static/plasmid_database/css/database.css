@@ -1,0 +1,15 @@
+.datatable{
+    margin: 2%;
+}
+
+tr, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate {
+    font-family: "Open Sans", Calibri, sans-serif;
+    font-style: normal;
+    font-variant: normal;
+    font-size: 10pt;
+}
+
+/* Doesn't do anything... don't know why */
+table tbody tr {
+    max-height: 150px;
+}

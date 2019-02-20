@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block javascript %}
+{% load static %}
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+</script>
+{# Javascript #}
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/add_plasmids.js' %}"></script>
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
+{% endblock %}
+
+{% block header %}
+    <div class="header">
+        <h1>Add Plasmids</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+{# Tab Navigation #}
+<nav class="addPlasmidMethods">
+    <ul class="pageTabs">
+        <li><a href="#assembly">Plasmid Assembly</a>
+        <li><a href="#drag-n-drop">Drag-n-Drop</a>
+        <li><a href="#csv_upload">Upload CSV</a>
+    </ul>
+</nav>
+
+{# Page Content #}
+<div class="pageContent">
+    {# Drag-n-Drop #}
+    {% include 'clone-dragndrop.html' %}
+    {# Single #}
+    {% include 'clone-assembly.html' %}
+</div>
+{% endblock %}
+
+{% block run_scripts %}
+{# Set default values for plasmid filters #}
+<script type="text/javascript">
+    $('#id_creator option:contains("{{ user.username }}")').prop('selected',true);
+    $('#id_creator_index').val('');
+</script>
+{% endblock %}

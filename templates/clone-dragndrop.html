@@ -1,0 +1,18 @@
+<div id="drag-n-drop">
+    <div class="container">
+        <div class="flex-container" style="height: 400px;">
+            <div class="dropZoneZone">
+                <div id="drop-zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+                    <p>Drop stuff here!</p>
+                    <form id="drag-n-drop-upload" action="{% url 'plasmid_database:add-plasmid-by-file' %}" class="dropzone">
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+            <div class="reportUploadStatus">
+                <ul class="reportUploadStatusList">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

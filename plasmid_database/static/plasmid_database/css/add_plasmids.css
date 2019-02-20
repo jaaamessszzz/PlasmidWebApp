@@ -1,0 +1,199 @@
+/* Navigation Bar */
+.pageTabs{
+    padding: 0;
+}
+
+ul.pageTabs {
+    list-style: none;
+    text-align: center;
+    background-color: #052049;
+    margin: 2px 0 2px 0;
+}
+
+.pageTabs li {
+    display: inline-block;
+    text-align: center;
+    width: 20%;
+    padding: 0;
+}
+
+.pageTabs a{
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 0.4em 0.4em;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+a.active{
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.addPlasmidMethods ul li:hover a {
+    background-color: #D1D3D3;
+    color: #000000;
+}
+
+.addPlasmidMethods ul li.current a {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+/* General Formatting */
+
+.container-header{
+    display: block;
+    width:100%;
+}
+
+.flex-container {
+    display: flex;
+}
+
+/* Drag-n-Drop */
+
+.dropZoneZone{
+    margin: 0 10px 0 10px;
+    flex-basis: 500px;
+
+}
+
+#drop-zone {
+    border: 5px solid #052049;
+    width: 95%;
+    height: 200px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+
+.reportUploadStatus {
+    margin: 0 10px 0 10px;
+    flex-basis: 500px;
+    height: 400px;
+}
+
+.reportUploadStatusList {
+    overflow: scroll;
+    height: 400px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.reportUploadStatusList li {
+    display:inline-block;
+    color: #FFFFFF;
+    font-size: 10pt;
+    width:95%;
+    margin:1px;
+    padding:2px 0 2px 1em;
+    border: 2px solid #052049;
+    border-radius: 5px;
+}
+
+/* Plasmid Assembly */
+
+button{
+    text-decoration: none;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    color: white;
+}
+
+label{
+    font-size: 10pt;
+}
+
+.button-flex{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.tableHeader{
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border: black;
+    border-width: 2px;
+    font-size: 12pt;
+}
+
+.assemblyPlasmid{
+    display:inline-block;
+    color: black;
+    background-color: whitesmoke;
+    width: 50%;
+    flex-basis: 50%;
+    flex-wrap: wrap;
+    border-radius: 3px;
+}
+
+.MasterMix, .DropIn {
+    margin: 0;
+    order: 1;
+    flex: 1 1 25%;
+    height: 250px;
+}
+
+.assemblyDefinitions {
+    padding: 2px 1px 2px 1px;
+    overflow: scroll;
+    height: 210px; /* Janky fix for button overflow...*/
+}
+
+.MasterMix table tbody tr{
+    background-color: #B4B9BF;
+    width: 95%;
+    height: 2em;
+    table-layout:fixed;
+    padding: 0.25em;
+}
+
+.MasterMix table tbody tr:nth-child(even){
+    background-color: #D1D3D3;
+}
+
+.UserDefinedParts {
+    margin: 0;
+    order: 3;
+    flex: 2 2 50%;
+    height: 250px;
+}
+
+#performReaction{
+    text-align: center;
+    font-size: 16px;
+    color: white;
+    background: #052049;
+    text-decoration: none;
+    width: 100%;
+    padding: 0.4em 0.4em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+    border: none;
+}
+
+#addDropIn{
+    width: 100%;
+    background-color: #058488;
+}
+
+#addMasterMix{
+    width: 100%;
+    background-color: #007CBE;
+}
+
+#addDefinedPart{
+    width: 100%;
+    background-color: #716FB2;
+}
+
+#performReaction:hover, #addDropIn:hover, #addMasterMix:hover, #addDefinedPart:hover {
+    background-color: #D1D3D3;
+    color: black;
+}
