@@ -26,33 +26,75 @@
         </div>
 
         {# Perform Reaction #}
-        <button type="button" id="performReaction">Assemble!</button>
-
-        {# Filter Plasmids #}
-        <form id="plasmidFilterInputs" method="post" class="userSearchInput flex-container">
-            <label for="id_creator">Creator:</label>
-                <select name="creator" id="id_creator" form="plasmidFilterInputs" required>
-                    <option value="0"></option>
-                    {% for plasmidCreator in users %}
-                        <option value="{{ plasmidCreator.id }}">{{ plasmidCreator }}</option>
-                    {% endfor %}
+        <div class="ReactionDefinition-flex">
+            <div class="ReactionDefinition ReactionTypeContainer">
+                <label for="reactionType">Select Reaction:</label>
+                <select name="reactionType" id="reactionTypeSelector" required>
+                    <option value="goldengate">Golden Gate</option>
+                    <option value="gibson">Gibson</option>
                 </select>
-            <label for="id_creator_index">Creator index:</label>
-            <input type="number" name="id" value=0 min="1" step="any" id="id_creator_index" oninput="validity.valid||(value='');">
-            <label for="id_description">Description:</label>
-            <input type="text" name="description" id="id_description">
-        </form>
+            </div>
+
+            {# Only show enzymes if reaction requires them #}
+            <div class="ReactionDefinition ReactionEnzymeContainer" hidden>
+                <label for="enzymeType">Select Enzyme:</label>
+                <select name="enzymeType" id="enzymeTypeSelector" required>
+                    <option value="BsaI">BsaI</option>
+                    <option value="BsmbI">BsmbI</option>
+                </select>
+            </div>
+
+            <div class="ReactionDefinition performReactionContainer">
+                <button type="button" id="performReaction">Assemble!</button>
+            </div>
+        </div>
 
         {# Plasmid DataTable #}
         <table id="filteredPlasmidsTable">
             <thead>
                 <tr>
-                    <th>Creator</th>
+                    <th>Project</th>
+                    <th>ProjectIndex</th>
                     <th>ID</th>
+                    <th>Features</th>
+                    <th>Attributes</th>
                     <th>Description</th>
+                </tr>
+                <tr class="filterInputsRow">
+                    <th>
+                        <select name="project" id="id_project" form="plasmidFilterInputs" class="filterInputs" required>
+                        <option value="" selected></option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.project }}</option>
+                        {% endfor %}
+                        </select>
+                    </th>
+                    <th></th>
+                    <th><input type="number" name="id" value=0 min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
+                    <th><input type="text" name="features" id="id_features" class="filterInputs" placeholder="Filter"></th>
+                    <th><input type="text" name="attributes" id="id_attributes" class="filterInputs" placeholder="Filter"></th>
+                    <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
                 </tr>
             </thead>
         </table>
 
+    </div>
+
+    <div id="AssemblyReport" class="container" style="display:none">
+        <ul class="reportUploadStatusList">
+        </ul>
+    </div>
+
+    <div id="NewPartDefinition" class="container" style="display:none">
+        <div class="labeldiv">
+            <label for="NewPartID" class="DialogLabel">Part ID:</label>
+            <input type="text" id="NewPartID" class="DialogInput" placeholder="Part ID">
+        </div>
+        <div class="labeldiv">
+            <label for="NewPartSequence" class="DialogLabel">Part Sequence:</label>
+        </div>
+        <div align="center">
+            <textarea id="NewPartSequence" class="DialogInput" placeholder="Part Sequence" rows="5" cols="50"></textarea>
+        </div>
     </div>
 </div>

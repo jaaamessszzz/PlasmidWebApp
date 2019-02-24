@@ -1,36 +1,5 @@
 {% extends "base.html" %}
 
-{% block javascript %}
-{# Javascript #}
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
-{# CSS #}
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
-{#Script#}
-
-<script type="text/javascript">
-var csrftoken = getCookie('csrftoken');
-$(document).ready(function() {
-    $('#plasmid_datatable').DataTable( {
-        "searching": true,
-        "dom": "lfiprt",
-        "processing": true,
-        "serverSide": true,
-        "columnDefs": [
-            { "orderable": false, "targets": 2 } {# Disable description ordering #}
-        ],
-        "ajax": {
-            url: "{% url 'plasmid_database:update_table' %}",
-            type: "POST",
-            data: {csrfmiddlewaretoken: csrftoken},
-        },
-        "fixedColumns": {heightMatch: 'none'},
-    } );
-} );
-</script>
-{% endblock %}
-
 {% block header %}
 <div class="header">
     <h1>Plasmid Database</h1>
@@ -43,13 +12,61 @@ $(document).ready(function() {
         <table id="plasmid_datatable" class="table display" style="width:100%">
         <thead>
             <tr>
-                <th>Creator</th>
+                <th>Project</th>
                 <th>ID</th>
+                <th>Features</th>
+                <th>Attributes</th>
                 <th>Description</th>
+                <th>Location</th>
+                <th>Creator</th>
                 <th>Created</th>
             </tr>
+            <tr class="filterInputsRow">
+                <th>
+                    <select name="project" id="id_project" form="plasmidFilterInputs" class="filterInputs" required>
+                    <option value=""></option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project }}</option>
+                    {% endfor %}
+                    </select>
+                </th>
+                <th><input type="number" name="id" min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
+                <th><input type="text" name="features" id="id_features" class="filterInputs" placeholder="Filter"></th>
+                <th><input type="text" name="attributes" id="id_attributes" class="filterInputs" placeholder="Filter"></th>
+                <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
+                <th><input type="text" name="locations" id="id_location" class="filterInputs" placeholder="Filter"></th>
+                <th>
+                    <select name="creator" id="id_creator" form="plasmidFilterInputs" class="filterInputs" required>
+                    <option value=""></option>
+                    {% for plasmidCreator in users %}
+                        <option value="{{ plasmidCreator.id }}">{{ plasmidCreator }}</option>
+                    {% endfor %}
+                    </select>
+                </th>
+                <th><input type="text" name="date" id="id_date" class="filterInputs" placeholder="Filter"></th>
+            </tr>
         </thead>
-    </table>
+        </table>
+    </div>
+    <div class="DatatableOptions">
+        <button class="BlockButton" id="DownloadSelectedDatatablePlasmids">Download Selected Plasmids</button>
     </div>
 </div>
+{% endblock %}
+
+{% block javascript %}
+{# Javascript #}
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+{% load static %}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/database.js' %}"></script>
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
+{% endblock %}
+
+{% block run_scripts %}
+{#Script#}
+<script type="text/javascript">
+var csrftoken = getCookie('csrftoken');
+</script>
 {% endblock %}

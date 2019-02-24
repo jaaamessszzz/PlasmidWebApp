@@ -1,44 +1,28 @@
 {% extends "base.html" %}
 
 {% block header %}
-    <div class="header">
-        <h1>Add Plasmids</h1>
-    </div>
-{% endblock %}
-
-{% block content %}
-
-{# Tab Navigation #}
-<nav class="SubNavigationBar">
-    <ul class="pageTabs">
-        <li><a href="#assembly">Plasmid Assembly</a>
-        <li><a href="#drag-n-drop">Drag-n-Drop</a>
-        <li><a href="#csv_upload">Upload CSV</a>
-    </ul>
-</nav>
-
-{# Page Content #}
-<div class="pageContent">
-    {# Drag-n-Drop #}
-    {% include 'clone-dragndrop.html' %}
-    {# Assembly #}
-    {% include 'clone-assembly.html' %}
-    {# CSV Upload #}
-    {% include 'clone-csvupload.html' %}
-
+<div class="header">
+    <h1>Database Management</h1>
 </div>
 {% endblock %}
 
+{% block content %}
+{# Tab Navigation #}
+<nav class="SubNavigationBar">
+    <ul class="pageTabs">
+        <li><a href="#locations">Locations</a>
+        <li><a href="#attributes">Attributes</a>
+        <li><a href="#features">Features</a>
+    </ul>
+</nav>
+{% endblock %}
+
 {% block javascript %}
+{# javascript #}
 {% load static %}
-<script type="text/javascript">
-    var csrftoken = getCookie('csrftoken');
-</script>
-{# Javascript #}
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
-<script type="text/javascript" src="{% static 'plasmid_database/javascript/add_plasmids.js' %}"></script>
 
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
@@ -46,15 +30,9 @@
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css'%}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
-
 {% endblock %}
 
 {% block run_scripts %}
-{# Set default values for plasmid filters #}
-<script type="text/javascript">
-    $('#id_creator option:contains("{{ user.username }}")').prop('selected',true);
-    $('#id_creator_index').val('');
-</script>
 {% endblock %}

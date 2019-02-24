@@ -1,18 +1,79 @@
 <div id="drag-n-drop">
     <div class="container">
         <div class="flex-container" style="height: 400px;">
+
             <div class="dropZoneZone">
-                <div id="drop-zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
-                    <p>Drop stuff here!</p>
+                <div id="drop-zone" class="flex-container" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+                    <div style="display: inline-block">
+                        <p>Drop stuff here!</p>
+                    </div>
                     <form id="drag-n-drop-upload" action="{% url 'plasmid_database:add-plasmid-by-file' %}" class="dropzone">
                         {% csrf_token %}
                     </form>
                 </div>
             </div>
+
             <div class="reportUploadStatus">
                 <ul class="reportUploadStatusList">
                 </ul>
             </div>
+
+            <div class="UploadOptions">
+
+                <h3>Define Plasmid Properties</h3>
+                <p>Uploaded plasmids will have these properties automatically assigned to them.</p>
+
+                <div class="flex-container DragnDropUploadOptions">
+
+                    <div class="DragnDropUploadOption">
+                        <div class="labeldiv">
+                            <label for="dragndrop-attributes">Assign attributes:
+                                <div class="DropdownTreeMenu">
+                                    <ul id="dragndrop-attributes">
+                                        {% for attribute in attribute_roots %}
+                                            <li id="attr-{{ attribute.id }}" data-nodeinit="{{ attribute.id }}" data-sourcetable="attribute" class="rootNode">
+                                                {% if attribute.id in roots_with_children %}
+                                                    <span class="TreeMenuCaret">{{ attribute.name }}</span>
+                                                {% else %}
+                                                    <span>{{ attribute.name }}</span>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="DragnDropUploadOption">
+                        <div class="labeldiv">
+                            <label for="dragndrop-project" style="padding: 0.5em;" required>Select project:
+                                <select id="dragndrop-project" class="dragndrop-properties" style="width: 50%">
+                                    <option value=""></option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.project }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <div class="labeldiv">
+                            <label for="dragndrop-features" style="padding: 0.5em;">
+                                <input id="dragndrop-features" type="checkbox" checked="checked">
+                                <span class="checkmark"></span>
+                                Add Features to the database
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
+
+    <div id="SelectProjectForPlasmid" class="container" style="display:none">
+        <div>
+           <p>Select a project!</p>
+        </div>
+    </div>
+
 </div>

@@ -1,7 +1,10 @@
 /*Imports*/
 @import url('https://fonts.googleapis.com/css?family=Open+Sans');
 
+/*********/
 /* Fonts */
+/*********/
+
 h1, h3, p, a, ul, li, span, button, label{
   font-family: "Open Sans", Calibri, sans-serif;
   font-style: normal;
@@ -9,7 +12,10 @@ h1, h3, p, a, ul, li, span, button, label{
   color: #000000;
 }
 
+/**********/
 /* Header */
+/**********/
+
 h1 {
   text-align: center;
   padding: 0.5em 0 0.5em 0;
@@ -24,12 +30,14 @@ h1 {
 
 .flex-container {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
+  flex-flow: row wrap;
+  justify-content: flex-start;
   align-items: stretch;
 }
 
-/* Top navigation bar */
+/**********************/
+/* Sub-navigation bar */
+/**********************/
 
 ul.nav {
   margin:0;
@@ -74,7 +82,53 @@ hr {
     padding: 0;
 }
 
+/* Navigation Bar */
+.pageTabs{
+    padding: 0;
+}
+
+ul.pageTabs {
+    list-style: none;
+    text-align: center;
+    background-color: #052049;
+    margin: 2px 0 2px 0;
+}
+
+.pageTabs li {
+    display: inline-block;
+    text-align: center;
+    width: 20%;
+    padding: 0;
+}
+
+.pageTabs a{
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 0.4em 0.4em;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+a.active{
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.SubNavigationBar ul li:hover a {
+    background-color: #D1D3D3;
+    color: #000000;
+}
+
+.SubNavigationBar ul li.current a {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+/********/
 /* Body */
+/********/
+
 body {
   background-color: #FFFFFF;
   margin: 0;
@@ -83,4 +137,68 @@ body {
 .container {
   max-width: 70vw;
   margin: 0 auto;
+}
+
+/*************/
+/* Datatable */
+/*************/
+
+.filterInputs {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+::-webkit-input-placeholder {
+   text-align: center;
+}
+
+/************************/
+/* Drop Down List Trees */
+/************************/
+
+.DropdownTreeMenu li{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.TreeMenuCaret {
+    cursor: pointer;
+    user-select: none;
+}
+
+.TreeMenuCaret::before {
+  content: "\25B6";
+  color: #052049;
+  display: inline-block;
+  margin-right: 0.4em;
+}
+
+.caret-down::before {
+  transform: rotate(90deg);
+}
+
+.nested {
+  display: none;
+}
+
+.active {
+  display: block;
+}
+
+/**********************/
+/* General Formatting */
+/**********************/
+
+.labeldiv{
+    margin: 0.5em;
+}
+
+.BlockButton{
+    color: white;
+    background-color: #052049;
+    text-align: center;
+    font-size: 12px;
+    padding: 1em;
+    border: none;
 }
