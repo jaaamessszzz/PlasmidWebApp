@@ -12,6 +12,7 @@
         <table id="plasmid_datatable" class="table display" style="width:100%">
         <thead>
             <tr>
+                <th>ProjectID</th>
                 <th>Project</th>
                 <th>ID</th>
                 <th>Features</th>
@@ -22,6 +23,7 @@
                 <th>Created</th>
             </tr>
             <tr class="filterInputsRow">
+                <th></th>
                 <th>
                     <select name="project" id="id_project" form="plasmidFilterInputs" class="filterInputs" required>
                     <option value=""></option>
@@ -49,9 +51,15 @@
         </table>
     </div>
     <div class="DatatableOptions">
-        <button class="BlockButton" id="DownloadSelectedDatatablePlasmids">Download Selected Plasmids</button>
+        <form method="post" action="download_database_plasmids/">
+            {% csrf_token %}
+            <input type="hidden" name="DownloadSelectedDatabasePlasmids" id="DownloadSelectedDatabasePlasmids">
+            <input type="submit" class="BlockButton" value="Download Selected Plasmids">
+        </form>
     </div>
 </div>
+
+
 {% endblock %}
 
 {% block javascript %}

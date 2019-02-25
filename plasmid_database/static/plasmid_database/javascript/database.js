@@ -9,31 +9,32 @@ const datatable = $('#plasmid_datatable').DataTable({
     "order": [[ 1, "asc" ]],
     "fixedColumns": true,
     "columnDefs": [
-        { width: 100, targets: 0 },
+        { width: 0, targets: 0, visible: false },
         { width: 100, targets: 1 },
-        { width: 200, targets: 2,
+        { width: 100, targets: 2 },
+        { width: 200, targets: 3,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[2] + "</div>";
+                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[3] + "</div>";
                     },
         },
         {
-            width: 200, targets: 3,
+            width: 200, targets: 4,
             orderable: false,
             render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[3] + "</div>";
+                return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[4] + "</div>";
             },
         },
-        { width: 200, targets: 4,
+        { width: 200, targets: 5,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[4] + "</div>";
+                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[5] + "</div>";
                     },
         },
-        { width: 100, targets: 5,
+        { width: 100, targets: 6,
             orderable: false},
-        { width: 100, targets: 6 },
         { width: 100, targets: 7 },
+        { width: 100, targets: 8 },
     ],
     "drawCallback": function( settings ) {
         this.api().columns.adjust();
@@ -84,14 +85,14 @@ datatable.on( 'click', 'tr', function () {
     $(this).toggleClass('selected');
 });
 
-// Download selected plasmids as zip
-$('#DownloadSelectedDatatablePlasmids').on('click', function(){
-    console.log('HI.');
-
+// Attach plasmids to form when selected
+$('#plasmid_datatable').on('click', function(){
     const SelectedPlasmids = datatable.rows('.selected').data();
     let PlasmidIDs = [];
     for(let i=0;i<SelectedPlasmids.length;i++){
-        console.log(SelectedPlasmids[i]);
-        // PlasmidIDs.push();
+        const SelectedPlasmid = SelectedPlasmids[i][0];
+        PlasmidIDs.push(SelectedPlasmid);
     }
+    $('#DownloadSelectedDatabasePlasmids').val(JSON.stringify(PlasmidIDs));
+    console.log($('#DownloadSelectedDatabasePlasmids').val());
 });

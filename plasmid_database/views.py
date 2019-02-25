@@ -1,16 +1,21 @@
+import io
+import os
+import json
+from datetime import datetime
+from pprint import pprint
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.utils.html import escape
 from django_datatables_view.base_datatable_view import BaseDatatableView
 
+import dnassembly
+import zipfile
 
 from .models import Plasmid, User, Project, Feature, Attribute
 from .forms import SignUpForm
-
-import json
-from pprint import pprint
 
 # --- New User Enrollment --- #
 
@@ -34,7 +39,7 @@ def new_user(request):
             return redirect('home')
     else:
         form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'registration/signup.html', {'form': form})
 
 # --- Plasmid Datatables --- #
 
@@ -42,7 +47,7 @@ class plasmidDatatable(BaseDatatableView):
 
     model = Plasmid
     columns = ['id', 'project', 'projectindex', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
-    order_columns = ['projectindex', 'project']
+    order_columns = ['id', 'project', 'projectindex', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
     max_display_length = 100
 
     # Other things
@@ -108,6 +113,7 @@ class plasmidDatatable(BaseDatatableView):
         json_data = []
         for item in qs:
             json_data.append([
+                escape(int(item.id)),
                 escape(str(item.project.project).capitalize()),
                 escape(item.projectindex),
                 item.get_features_as_string(),
@@ -119,6 +125,31 @@ class plasmidDatatable(BaseDatatableView):
             ])
         return json_data
 
+@login_required
+def download_selected_plasmids(request):
+    plasmid_indicies_str = json.loads(request.POST['DownloadSelectedDatabasePlasmids'])
+    plasmid_indicies = [int(index) for index in plasmid_indicies_str]
+    plasmid_records = Plasmid.objects.filter(id__in=plasmid_indicies)
+    zip_subdir = 'Plasmids'
+    zip_filename = 'Plasmids.zip'
+
+    response = HttpResponse(content_type='application/zip')
+    zip_file = zipfile.ZipFile(response, 'w')
+
+    for plasmid in plasmid_records:
+        # Write plasmid genbank to StringIO
+        plasmid_name = f'{plasmid.get_standard_id()}.gb'
+        plasmid_genbank = plasmid.as_dnassembly()
+        plasmid_io = io.StringIO()
+        dnassembly.write_genbank(plasmid_genbank, output=plasmid_io, to_stream=True)
+        plasmid_io.seek(0)
+        # Add to ZIP
+        zip_path = os.path.join(zip_subdir, plasmid_name)
+        zip_file.writestr(zip_path, plasmid_io.read())
+
+    zip_file.close()
+    response['Content-Disposition'] = f'attachment;filename={zip_filename}'
+    return response
 
 @login_required
 def database(request):
@@ -144,15 +175,14 @@ def add_plasmids(request):
     context['projects'] = Project.objects.all()
     context['attribute_roots'] = Attribute.objects.filter(subcategory__isnull=True)
     context['roots_with_children'] = [attr.id for attr in context['attribute_roots'] if Attribute.objects.filter(subcategory=attr)]
-    print(context)
     return render(request, 'clone.html', context)
 
 
 class PlasmidFilterDatatable(BaseDatatableView):
 
     model = Plasmid
-    columns = ['project', 'project', 'projectindex', 'feature', 'attribute', 'description']
-    order_columns = ['project', 'project', 'projectindex', 'feature', 'attribute',  '']
+    columns = ['project', 'id', 'projectindex', 'feature', 'attribute', 'description']
+    order_columns = ['project', 'id', 'projectindex', 'feature', 'attribute', 'description']
     max_display_length = 10
 
     def render_column(self, row, column):
@@ -216,7 +246,7 @@ class PlasmidFilterDatatable(BaseDatatableView):
         for item in qs:
             json_data.append([
                 escape(str(item.project.project).capitalize()),
-                escape(int(item.project.id)),
+                escape(int(item.id)),
                 escape(int(item.projectindex)),
                 item.get_features_as_string(),
                 item.get_attributes_as_string(),
@@ -308,16 +338,22 @@ def add_plasmid_by_file(request):
 @login_required
 def perform_assemblies(request):
     post_data = json.loads(request.POST['data'])
+    print(post_data)
+    reaction_project = Project.objects.get(id=int(post_data['ReactionProject']))
 
     # Get master mix plasmids
     master_mix_plasmids = list()
     for master_mix_plasmid in post_data['MasterMix']:
-        master_mix_plasmids.append(Plasmid.objects.get(project=master_mix_plasmid[0], projectindex=master_mix_plasmid[1]))
-    
+        master_mix_plasmids.append(Plasmid.objects.get(id=master_mix_plasmid))
+
+    assembly_mixins = list()
     # Get drop-in plasmids
-    drop_in_plasmids = list()
     for drop_in_plasmid in post_data['DropIn']:
-        drop_in_plasmids.append(Plasmid.objects.get(project=drop_in_plasmid[0], projectindex=drop_in_plasmid[1]))
+        assembly_mixins.append([Plasmid.objects.get(id=drop_in_plasmid)])
+
+    # Get defined parts
+    for defined_part in post_data['DefinedParts']:
+        assembly_mixins.append(defined_part)
 
     # Get Reaction Definitions
     enzyme_dict = {'BsaI': BsaI, 'BsmBI': BsmBI}
@@ -326,38 +362,54 @@ def perform_assemblies(request):
 
     response_data = dict()
 
-    # Enumerate and perform assembly for each drop-in
-    for index, drop_in in enumerate(drop_in_plasmids, start=1):
-        assembly_plasmid_objects = master_mix_plasmids + [drop_in]
-        assembly_plasmid_pool = [plasmid.as_dnassembly() for plasmid in assembly_plasmid_objects]
-        assembly_plasmid_id_list = [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid in assembly_plasmid_objects]
+    master_mix_dna = [plasmid.as_dnassembly() for plasmid in master_mix_plasmids]
+    master_mix_ids = [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid in master_mix_plasmids]
 
+    # Enumerate and perform assembly for each drop-in
+    for index, drop_in_set in enumerate(assembly_mixins, start=1):
         # Keep track of current reaction status
         response_data[index] = dict()
-        response_data[index]['reaction_plasmids'] = assembly_plasmid_id_list
-        print(assembly_plasmid_id_list)
+
+        if type(drop_in_set) is dict:
+            defined_part_dna = [dnassembly.Part(name=defined_part['PartID'],
+                                                entity_id=defined_part['PartID'],
+                                                sequence=defined_part['PartSequence']
+                                                )]
+            assembly_plasmid_pool = master_mix_dna + defined_part_dna
+            response_data[index]['DefinedPart'] = defined_part['PartID']
+            response_data[index]['reaction_plasmids'] = master_mix_ids
+
+        else:
+            assembly_plasmid_pool = master_mix_dna + [plasmid.as_dnassembly() for plasmid in drop_in_set]
+            assembly_plasmid_id_list = master_mix_ids + [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid in drop_in_set]
+            response_data[index]['reaction_plasmids'] = assembly_plasmid_id_list
 
         # todo: catch and handle errors...
         if reaction_type == 'goldengate':
-            gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
-            gg_rxn.digest()
             try:
+                gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
+                gg_rxn.digest()
                 assembly_product = gg_rxn.perform_assembly()
-                new_plasmid = Plasmid(sequence=assembly_product.sequence,
+                new_plasmid = Plasmid(project=reaction_project,
+                                      sequence=assembly_product.sequence,
                                       creator=request.user,
                                       description=assembly_product.description)
                 new_plasmid.save()
                 print(new_plasmid)
 
+                # todo: pull features from new_plasmid and associate with new entry
                 response_data[index]['success'] = True
                 response_data[index]['assembly_id'] = int(new_plasmid.projectindex)
 
             except AssemblyException as assembly_error:
                 print(assembly_error)
                 response_data[index]['success'] = False
+                response_data[index]['error'] = str(assembly_error)
+
             except ReactionDefinitionException as definition_error:
                 print(definition_error)
                 response_data[index]['success'] = False
+                response_data[index]['error'] = str(definition_error)
 
     return JsonResponse(response_data, status=200)
 

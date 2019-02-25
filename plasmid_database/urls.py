@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 app_name = 'plasmid_database'
 urlpatterns = [path('signup/', views.new_user, name='new-user'),
                path(r'', views.database, name='database'),
+               path(r'download_database_plasmids/', views.download_selected_plasmids, name='download-database-plasmids'),
                path(r'update_table/', login_required(views.plasmidDatatable.as_view()), name='update_table'),
                ]
 

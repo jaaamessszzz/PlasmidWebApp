@@ -199,35 +199,36 @@ label{
     display: flex;
     flex-direction: row;
     justify-content: center;
-    align-items: center;
+    align-content: center;
     flex-wrap: wrap;
 }
 
 .ReactionDefinition{
     display:inline-block;
-    vertical-align: center;
+    align-items: center;
     flex-wrap: wrap;
-    border-radius: 3px;
+    margin: 0;
+    padding: 0;
+}
+
+.ReactionProjectContainer{
+    order: 1;
+    flex: 1 1 auto;
 }
 
 .ReactionTypeContainer{
-    margin: 0;
-    padding: 1em 1em;
-    order: 1;
-    flex: 1 1 25%;
+    order: 2;
+    flex: 1 1 auto;
 }
 
 .EnzymeTypeContainer{
-    margin: 0;
-    padding: 1em 1em;
-    order: 2;
-    flex: 1 1 25%;
+    order: 3;
+    flex: 1 1 auto;
 }
 
 .performReactionContainer{
-    margin: 0;
-    order: 3;
-    flex: 1 1 50%;
+    order: 0;
+    flex: 1 1 100%;
 }
 
 #performReaction{

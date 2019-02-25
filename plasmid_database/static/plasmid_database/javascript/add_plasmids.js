@@ -215,11 +215,6 @@ let datatable = $('#filteredPlasmidsTable').DataTable({
                     // const inputValue = $.fn.dataTable.util.escapeRegex(searchJQO.val());
                     const inputValue = searchJQO.val();
                     const currentColumn = table.api().column(columnMapping[inputFieldID]);
-
-                    console.log('Input ID', inputFieldID);
-                    console.log('Input value', inputValue);
-                    console.log('Column index', currentColumn.index());
-
                     currentColumn.search( inputValue, false, false ).draw();
                     });
             },
@@ -242,20 +237,19 @@ function addPlasmidsToReactionPool (event) {
     const selectedRows = datatable.rows('.selected');
     const selectedRowsData = selectedRows.data();
 
-    console.log(reactionDefinition);
-
     // Add selected rows to reaction definition
     for(let i=0; i<selectedRowsData.length; i++){
-        console.log(selectedRowsData[i]);
         const selectedUser = selectedRowsData[i][0];
-        const selectedUserID = selectedRowsData[i][1];
+        const selectedPlasmidID = Number(selectedRowsData[i][1]);
         const selectedIndex = selectedRowsData[i][2];
 
         // Check if Plasmid has already been added... fucking Javascript
         let alreadyIncluded = false;
         for(let j=0;j<reactionDefinition.length;j++){
             let currentElement = reactionDefinition[j];
-            if(currentElement[0] === selectedUserID && currentElement[1] === selectedIndex){
+            console.log(currentElement);
+            console.log(selectedPlasmidID);
+            if(currentElement === selectedPlasmidID){
                 alreadyIncluded = true;
             }
         }
@@ -267,13 +261,11 @@ function addPlasmidsToReactionPool (event) {
             newRow.innerText = selectedUser + ' ' + selectedIndex;
             newRow.className = 'assemblyPlasmid';
             // Assign values
-            $.data(newRow, 'creator', selectedUserID);
-            $.data(newRow, 'projectindex', selectedIndex);
-            console.log(selectedRowsData[i][1], selectedRowsData[i][2]);
+            $.data(newRow, 'PlasmidID', selectedPlasmidID);
             // Append
             selectedTable.append(newRow);
             // Add plasmid to reaction definition
-            reactionDefinition.push([selectedUserID, selectedIndex])
+            reactionDefinition.push(Number(selectedPlasmidID));
         }
     }
     // Deselect everything
@@ -284,8 +276,19 @@ function addPlasmidsToReactionPool (event) {
 $('#addMasterMix').on('click', {'targetTable': $('.MasterMix .assemblyDefinitions')}, addPlasmidsToReactionPool);
 $('#addDropIn').on('click', {'targetTable': $('.DropIn .assemblyDefinitions')}, addPlasmidsToReactionPool);
 
+// Only show enzymes if Golden Gate is selected
+const EnzymeSelector = $('#enzymeTypeSelectorContainer');
+$('#reactionTypeSelector').on('input', function(){
+    if($('#reactionTypeSelector option:selected').val() === 'goldengate') {
+        console.log(EnzymeSelector);
+        EnzymeSelector.show();
+    }else{
+        EnzymeSelector.filter('select>option:eq(0)').prop('selected', true);
+        EnzymeSelector.hide();
+    }
+});
+
 // Define drop-in parts
-let NewPartCount = 0;
 $('#addDefinedPart').on('click', function(){
     $( "#NewPartDefinition" ).dialog({
             buttons: [
@@ -358,11 +361,9 @@ $('.UserDefinedParts .assemblyDefinitions').on('click', 'button', function(){
 
 // Remove database plasmids from current reaction
 $('.assemblyDefinition').on('click', '.assemblyPlasmid', function(){
-    const thisCreator = $.data(this, 'creator');
-    const thisIndex = $.data(this, 'projectindex');
-
+    const thisPlasmidID = $.data(this, 'PlasmidID');
     for( var i = 0; i < reactionDefinition.length; i++){
-       if ( reactionDefinition[i][0] === thisCreator && reactionDefinition[i][1] === thisIndex) {
+       if ( reactionDefinition[i] === thisPlasmidID) {
            console.log('Removing '+ reactionDefinition[i]);
            reactionDefinition.splice(i, 1);
        }
@@ -378,26 +379,44 @@ function performPlasmidAssembly(){
     // Get plasmid values from tables
     const plasmidsMasterMix = $('.MasterMix .assemblyDefinitions').children("button.assemblyPlasmid");
     const plasmidsDropIn = $('.DropIn .assemblyDefinitions').children("button.assemblyPlasmid");
+    const linearDefinedParts = $('.UserDefinedParts .assemblyDefinitions').children("button.definedPart");
 
     let plasmidPostData = {};
     let masterMix = [];
     let dropIn = [];
+    let definedParts = [];
 
     for(let i=0;i<plasmidsMasterMix.length;i++){
         const plasmid = $(plasmidsMasterMix[i]);
-        masterMix.push([Number(plasmid.data('creator')), Number(plasmid.data('projectindex'))]);
+        masterMix.push(Number(plasmid.data('PlasmidID')));
     }
     for(let i=0;i<plasmidsDropIn.length;i++){
         const plasmid = $(plasmidsDropIn[i]);
-        dropIn.push([Number(plasmid.data('creator')), Number(plasmid.data('projectindex'))]);
+        dropIn.push(Number(plasmid.data('PlasmidID')));
     }
+    for(let i=0;i<linearDefinedParts.length;i++){
+        const definedPart = $(linearDefinedParts[i]);
+        definedParts.push(
+            {'PartID': definedPart.data('PartID'),
+            'PartSequence': definedPart.data('PartSequence'),
+            });
+    }
+
     plasmidPostData['MasterMix'] = masterMix;
     plasmidPostData['DropIn'] = dropIn;
+    plasmidPostData['DefinedParts'] = definedParts;
 
     // Get reaction definition options
+    const reactionProject = $('#AssemblyProjectSelector option:selected').val();
     const reactionType = $('#reactionTypeSelector option:selected').val();
-    const reactionEnzyme = $('#enzymeTypeSelector option:selected').val();
+    let reactionEnzyme;
+    if(reactionType === 'goldengate'){
+        reactionEnzyme = $('#enzymeTypeSelector option:selected').val();
+    } else{
+        reactionEnzyme = null;
+    }
 
+    plasmidPostData['ReactionProject'] = reactionProject;
     plasmidPostData['ReactionType'] = reactionType;
     plasmidPostData['ReactionEnzyme'] = reactionEnzyme;
 
@@ -419,21 +438,25 @@ function performPlasmidAssembly(){
                     ReportParts += ', ';
                 }
             }
+            if('DefinedPart' in response[i]){
+                ReportParts += ' with defined part ' + response[i]['DefinedPart']
+            }
 
             if (response[i]['success'] === true) {
                 const AssemblyID = response[i]['assembly_id'];
-                ReportStatus = 'Assembly #' + i + ' was added to the Database as User ID ' + AssemblyID;
-
+                ReportStatus = 'Assembly #' + i + ' was added to the Database as Project ID ' + AssemblyID;
                 Assemblyli.className = 'AssemblySuccess';
                 Assemblyli.style.backgroundColor = '#6EA400';
+                Assemblyli.innerText = ReportStatus + ReportParts;
                 ReportContents.append(Assemblyli);
             }
             else{
                 ReportStatus = 'Assembly #' + i + ' failed...';
                 Assemblyli.className = 'AssemblyFailure';
                 Assemblyli.style.backgroundColor = '#EB093C';
+                Assemblyli.innerText = ReportStatus + ReportParts + '\n' + response[i]['error'];
+                ReportContents.append(Assemblyli);
             }
-            Assemblyli.innerText = ReportStatus + ReportParts;
         }
 
         // Initalize and Generate Assembly Report Dialog
@@ -445,10 +468,11 @@ function performPlasmidAssembly(){
                     }
                 }],
             title: "Assembly Results",
-            minWidth: 400,
+            minWidth: 600,
             modal: true,
             beforeClose: function( event, ui ) {
                 $('.assemblyPlasmid').remove();
+                $('.definedPart').remove();
                 reactionDefinition = [];
             }
         }).dialog("open");
@@ -456,7 +480,43 @@ function performPlasmidAssembly(){
 }
 
 // Perform Assembly Reaction
-$('#performReaction').on('click', performPlasmidAssembly);
+$('#performReaction').on('click', function(){
+    // Form validation
+    const plasmidsMasterMix = $('.MasterMix .assemblyDefinitions').children("button.assemblyPlasmid");
+    const plasmidsDropIn = $('.DropIn .assemblyDefinitions').children("button.assemblyPlasmid");
+    const linearDefinedParts = $('.UserDefinedParts .assemblyDefinitions').children("button.definedPart");
+
+    if(plasmidsMasterMix.length < 1){
+        AssemblyDefinitionErrorDialog('At least one Master Mix Plasmid is required!');
+    }else{
+        if(linearDefinedParts.length + plasmidsDropIn.length < 1){
+                AssemblyDefinitionErrorDialog('At least one Drop-In or Defined Part is required!');
+        }else{
+            performPlasmidAssembly();
+        }
+    }
+});
+
+// Error dialog
+function AssemblyDefinitionErrorDialog(message){
+    const AssemblyDefinitionError = $("#AssemblyDefinitionError");
+    AssemblyDefinitionError.text(message);
+    AssemblyDefinitionError.dialog({
+        buttons: [
+            {text: "OK",
+                click: function() {
+                    $( this ).dialog( "close" );
+                }
+            }],
+        title: "Assembly Definition Error",
+        minWidth: 400,
+        modal: true,
+        beforeClose: function( event, ui ) {
+                AssemblyDefinitionError.text("");
+            }
+    }).dialog("open");
+};
+
 
 // #######################
 // #   Attribute Menu    #
