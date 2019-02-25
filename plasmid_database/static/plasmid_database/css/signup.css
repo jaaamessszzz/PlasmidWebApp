@@ -1,0 +1,25 @@
+.flex-signup  li{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style-type: none;
+}
+
+.flex-signup > li {
+    margin: 1em;
+}
+
+.flex-signup > li > small{
+    margin: 0 1em;
+}
+
+.flex-signup > li > label,
+.flex-signup li p {
+    flex: 1 0 200px;
+    max-width: 200px;
+}
+
+.flex-signup > li > label + *{
+    flex: 1 0 200px;
+    max-width: 250px;
+}

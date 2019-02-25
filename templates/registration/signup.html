@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block header %}
+<div class="header">
+    <h1>Sign up</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <form method="post">
+        {% csrf_token %}
+        <ul class="flex-signup">
+        {% for field in form %}
+            <li>
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+                <small style="color: grey">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+                <small style="color: red">{{ error }}</small>
+            {% endfor %}
+            </li>
+        {% endfor %}
+
+        <div class="labeldiv">
+            <button type="submit" class="BlockButton">Sign up</button>
+        </div>
+
+        </ul>
+    </form>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{# CSS #}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/signup.css'%}">
+
+{%  endblock %}
+
+{% block run_scripts %}
+{% endblock %}
