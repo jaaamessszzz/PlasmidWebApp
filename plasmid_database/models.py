@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 
 from dnassembly import Plasmid as dnaPlasmid
+from dnassembly import Feature as dnaFeature
 
 # Create your models here.
 
@@ -82,5 +83,11 @@ class Plasmid(models.Model):
         :return:
         """
         # todo: pull related features, convert to DNAssembly Features, and add to Plasmid
-        return dnaPlasmid(sequence=self.sequence, entity_id=f'{self.creator}_{self.projectindex}', description=self.description)
+        feature_list = list()
+        for feature in self.feature.all():
+            feature_list.append(dnaFeature(name=feature.name, sequence=feature.sequence, feature_type="Feature", strand=1))
+
+        plasmid_dna_entity = dnaPlasmid(sequence=self.sequence, entity_id=self.get_standard_id(), name=self.get_standard_id(), description=self.description, features=feature_list)
+
+        return plasmid_dna_entity
 
