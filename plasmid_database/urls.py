@@ -6,11 +6,11 @@ app_name = 'plasmid_database'
 urlpatterns = [path('signup/', views.new_user, name='new-user'),
                path(r'', views.database, name='database'),
                path(r'download_database_plasmids/', views.download_selected_plasmids, name='download-database-plasmids'),
-               path(r'update_table/', login_required(views.plasmidDatatable.as_view()), name='update_table'),
+               path(r'update_table/', login_required(views.PlasmidDatatable.as_view()), name='update_table'),
                ]
 
 # --- Plasmid Features --- #
-urlpatterns += [path(r'features/', views.features, name='plasmid-features'),
+urlpatterns += [path(r'manage/', views.manage_database, name='plasmid-management'),
                 ]
 
 # --- Add plasmids --- #
@@ -22,12 +22,22 @@ urlpatterns += [path(r'add/', views.add_plasmids, name='add-plasmids'),
                 ]
 
 
-# --- Populate Attribute/Location Dropdowns --- #
-urlpatterns += [path(r'get_attribute_children/', views.get_attribute_children, name='dropdown-attr'),
+# --- Populate Attribute Dropdowns --- #
+urlpatterns += [path(r'get_attribute_tree/', views.get_attribute_tree, name='attr-tree'),
+                path(r'get_attribute_info/', views.get_attribute_info, name='attr-info'),
+                path(r'add_attribute_to_db/', views.add_attribute_to_database, name='attr-add-to-db'),
+                path(r'modify_attribute/', views.modify_attribute, name='attr-modify'),
+                path(r'get_attribute_children/', views.get_attribute_children, name='attr-children'),
                 ]
+
+# --- Populate Location Dropdowns --- #
+urlpatterns += [path(r'get_location_tree/', views.get_location_tree, name='loc-tree'),
+                path(r'get_location_info/', views.get_location_info, name='loc-info'),
+                path(r'add_location_to_db/', views.add_location_to_database, name='loc-add-to-db'),
+                path(r'modify_location/', views.modify_location, name='loc-modify'),
+                ]
+
 
 # --- View Plasmids --- #
-urlpatterns += [path(r'<user_id>/', views.user_plasmids, name='user-plasmids'),
-                path(r'<user_id>/<int:plasmid_id>/', views.plasmid, name='plasmid-view'),
+urlpatterns += [path(r'<project_id>/<int:plasmid_id>/', views.plasmid, name='plasmid-view'),
                 ]
-
