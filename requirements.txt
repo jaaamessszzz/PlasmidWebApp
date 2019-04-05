@@ -1,4 +1,7 @@
+django
 biopython>=1.72
 django-datatables-view>=1.17.0
 psycopg2 >=2.7.7
 dnassembly
+django-filter
+networkx
