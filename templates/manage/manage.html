@@ -17,24 +17,48 @@
         {# Only allow functions for projects where users are members! #}
     </ul>
 </nav>
+
+<div class="pageContent">
+    {# Attributes #}
+    {% include 'manage/manage-attributes.html' %}
+    {# Locations #}
+    {% include 'manage/manage-locations.html' %}
+</div>
 {% endblock %}
 
 {% block javascript %}
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+</script>
 {# javascript #}
 {% load static %}
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.7.2/js/solid.js" integrity="sha384-6FXzJ8R8IC4v/SKPI8oOcRrUkJU8uvFK6YJ4eDY11bJQz4lRw5/wGthflEOX8hjL" crossorigin="anonymous"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.7.2/js/fontawesome.js" integrity="sha384-xl26xwG2NVtJDw2/96Lmg09++ZjrXPc89j0j7JHjLOdSwHDHPHiucUjfllW0Ywrq" crossorigin="anonymous"></script>
+<script src="//cdn.jsdelivr.net/npm/medium-editor@latest/dist/js/medium-editor.min.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/manage/manage-attributes.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/manage/manage-locations.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/manage/manage-features.js' %}"></script>
 
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/medium-editor@latest/dist/css/medium-editor.min.css" type="text/css" media="screen" charset="utf-8">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css'%}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/manage.css' %}">
 {% endblock %}
 
 {% block run_scripts %}
+<script type="text/javascript">
+const CurrentUserID = {{ current_user.id }};
+console.log(CurrentUserID);
+</script>
+
 {% endblock %}
