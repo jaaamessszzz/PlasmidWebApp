@@ -20,12 +20,11 @@
 {# Page Content #}
 <div class="pageContent">
     {# Drag-n-Drop #}
-    {% include 'clone-dragndrop.html' %}
+    {% include 'clone/clone-dragndrop.html' %}
     {# Assembly #}
-    {% include 'clone-assembly.html' %}
+    {% include 'clone/clone-assembly.html' %}
     {# CSV Upload #}
-    {% include 'clone-csvupload.html' %}
-
+    {% include 'clone/clone-csvupload.html' %}
 </div>
 {% endblock %}
 
@@ -35,18 +34,22 @@
     var csrftoken = getCookie('csrftoken');
 </script>
 {# Javascript #}
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/add_plasmids.js' %}"></script>
 
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
 
 {% endblock %}

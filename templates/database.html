@@ -51,15 +51,20 @@
         </table>
     </div>
     <div class="DatatableOptions">
-        <form method="post" action="download_database_plasmids/">
+        <form method="post" action="download_database_plasmids/" style="display: inline-block">
             {% csrf_token %}
             <input type="hidden" name="DownloadSelectedDatabasePlasmids" id="DownloadSelectedDatabasePlasmids">
-            <input type="submit" class="BlockButton" value="Download Selected Plasmids">
+            <button type="submit" id="DownloadPlasmidsSubmitButton" class="BlockButton"><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Selected Plasmids</button>
         </form>
+        <div class="ToggleColumnButtonHolder">
+            <button id="HideDatatableColumnsButton" class="BlockButton">Toggle Columns</button>
+            <div id="ToggleDatatableColumns" class="PopupDialog">
+                <ul>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
-
-
 {% endblock %}
 
 {% block javascript %}
