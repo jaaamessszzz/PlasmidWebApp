@@ -1,0 +1,39 @@
+/************************/
+/* Data Dump Formatting */
+/************************/
+
+.PlasmidDataDump{
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+    list-style-type: none;
+}
+
+.InnerDataDump{
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.PlasmidKey {
+    flex: 1 0 200px;
+    display: inline-block;
+}
+
+.PlasmidValue {
+    flex: 1 1 60%;
+    display: inline-block;
+}
+
+/********************************/
+/* Sequence-Specific Formatting */
+/********************************/
+
+.DisplaySequence {
+    word-wrap: break-word;
+}

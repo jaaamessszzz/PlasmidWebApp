@@ -8,3 +8,40 @@ tr, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_pagina
     font-variant: normal;
     font-size: 10pt;
 }
+
+/*.connected {*/
+    /*position: element(#HideDatatableColumnsButton);*/
+    /*transform: translateY(-100%);*/
+/*}*/
+
+.ToggleColumnButtonHolder{
+    position: relative;
+    display: inline-block;
+    transition-timing-function: ease;
+    transition: height 0.5s;
+}
+
+#HideDatatableColumnsButton {
+    width: 150px;
+}
+
+#ToggleDatatableColumns{
+    width: 150px;
+    display: none;
+    position: absolute;
+    z-index: 1;
+    bottom: 40px;
+    background-color: #052049;
+}
+
+.ToggleColumnButtonHolder label{
+    font-size: 10pt;
+    color: #FFFFFF;
+    padding: 0 1em;
+}
+
+ul{
+    list-style-type: none;
+    padding: 0.5em 1em 0 1em;
+    margin: 0;
+}
