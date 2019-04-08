@@ -198,14 +198,14 @@ label{
 .ReactionDefinition-flex{
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
     align-content: center;
     flex-wrap: wrap;
 }
 
 .ReactionDefinition{
     display:inline-block;
-    align-items: center;
+    align-content: center;
     flex-wrap: wrap;
     margin: 0;
     padding: 0;
@@ -213,17 +213,17 @@ label{
 
 .ReactionProjectContainer{
     order: 1;
-    flex: 1 1 auto;
+    flex: 0 1 33%;
 }
 
 .ReactionTypeContainer{
     order: 2;
-    flex: 1 1 auto;
+    flex: 0 1 33%;
 }
 
-.EnzymeTypeContainer{
+.ReactionEnzymeContainer{
     order: 3;
-    flex: 1 1 auto;
+    flex: 0 1 33%;
 }
 
 .performReactionContainer{

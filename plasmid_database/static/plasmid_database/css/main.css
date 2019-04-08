@@ -158,35 +158,41 @@ body {
 /* Drop Down List Trees */
 /************************/
 
-.DropdownTreeMenu li{
+.DropdownTreeMenu a{
+    text-decoration: none;
+}
+
+.jstree-wholerow-hovered{
+    background-color: #D1D3D3;
+}
+
+.jstree-wholerow-clicked{
+    background-color: #007CBE;
+}
+
+/**************/
+/* Flex Lists */
+/**************/
+
+.GenericListFlex{
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
     list-style-type: none;
-    margin: 0;
-    padding: 0;
 }
 
-.TreeMenuCaret {
-    cursor: pointer;
-    user-select: none;
+.GenericListKey {
+    flex: 1 0 25%;
+    display: inline-block;
 }
 
-.TreeMenuCaret::before {
-  content: "\25B6";
-  color: #052049;
-  display: inline-block;
-  margin-right: 0.4em;
+.GenericListValue {
+    flex: 1 1 75%;
+    display: inline-block;
 }
 
-.caret-down::before {
-  transform: rotate(90deg);
-}
 
-.nested {
-  display: none;
-}
-
-.active {
-  display: block;
-}
 
 /**********************/
 /* General Formatting */
@@ -203,4 +209,8 @@ body {
     font-size: 12px;
     padding: 1em;
     border: none;
+}
+
+.ui-dialog-title {
+    color: white;
 }

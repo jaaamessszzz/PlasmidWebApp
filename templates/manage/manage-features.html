@@ -1,0 +1,66 @@
+<div id="attributes">
+    <div class="container">
+
+        <div class="FeatureForm">
+            <div class="DataTableContainer">
+                <h3>Features</h3>
+                <table id="FeatureDataTable">
+                    <thead>
+                        <tr>
+                            <td>FeatureID</td>
+                            <td>Name</td>
+                            <td>Sequence</td>
+                            <td>Description</td>
+                            <td>Type</td>
+                            <td>Creator</td>
+                        </tr>
+                        <tr class="filterInputsRow">
+                            <th></th>
+                            <th><input type="text" name="FeatureName" id="id_FeatureName" class="filterInputs" placeholder="Filter"></th>
+                            <th><input type="text" name="FeatureSequence" id="id_FeatureSequence" class="filterInputs" placeholder="Filter"></th>
+                            <th><input type="text" name="FeatureDescription" id="id_FeatureDescription" class="filterInputs" placeholder="Filter"></th>
+                            <th>
+                                <select name="FeatureType" id="id_FeatureType" class="filterInputs" required>
+                                <option value=""></option>
+                                {% for feature_type in feature_types %}
+                                    <option value="{{ feature_type.id }}">{{ feature_type.name }}</option>
+                                {% endfor %}
+                                </select>
+                            </th>
+                            <th>
+                                <select name="FeatureCreator" id="id_FeatureCreator" class="filterInputs" required>
+                                <option value=""></option>
+                                {% for feature_creator in users %}
+                                    <option value="{{ feature_creator.id }}">{{ feature_creator.username }}</option>
+                                {% endfor %}
+                                </select>
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <div class="NewFeatureFormContainer">
+
+            </div>
+        </div>
+
+        <div class="FeatureTypeForm">
+            <div class="FeatureTypeDataTable">
+                <h3>Feature Types</h3>
+                <table id="FeatureTypeDataTable">
+                    <thead>
+                        <td>Name</td>
+                        <td>Description</td>
+                        <td>Creator</td>
+                    </thead>
+                </table>
+            </div>
+
+            <div class="NewFeatureTypeContainer">
+
+            </div>
+        </div>
+
+    </div>
+</div>

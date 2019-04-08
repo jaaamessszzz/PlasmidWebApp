@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <div class="header">
+        <h1>{{ plasmid.project.project }} {{ plasmid.projectindex }}</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="DataDumpContainer">
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Project</li>
+            <li class="PlasmidValue">{{ plasmid.project.project }}</li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Project ID</li>
+            <li class="PlasmidValue">{{ plasmid.projectindex }}</li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Creator</li>
+            <li class="PlasmidValue">{{ plasmid.creator }}</li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Features</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump">
+                {% for feat in plasmid.feature.all %}
+                    <li class="PlasmidValue">{{ feat.name }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Attributes</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump">
+                {% for attr in plasmid.attribute.all %}
+                    <li class="PlasmidValue">{{ attr.name }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Locations</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump">
+                {% for loc in plasmid.location.all %}
+                    <li class="PlasmidValue">{{ loc.name }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Description</li>
+            <li class="PlasmidValue">{{ plasmid.description }}</li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Created</li>
+            <li class="PlasmidValue">{{ plasmid.created }}</li>
+        </ul>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Sequence</li>
+            <li class="PlasmidValue">
+                <div class="DisplaySequence">{{ plasmid.sequence.upper }}</div>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{#Benchling API#}
+{#Assembled From#}
+{#User wiki/comment thread#}
+{#Files and associated notes#}
+
+{% block javascript %}
+{% load static %}
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+</script>
+{# Javascript #}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
+
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/plasmid_page.css' %}">
+{% endblock %}
+
+{% block run_scripts %}
+{% endblock %}

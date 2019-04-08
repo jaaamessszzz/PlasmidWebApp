@@ -1,0 +1,57 @@
+<div id="locations">
+    <div class="container">
+        <div class="Settings-Flexbox">
+            <div class="Settings-Flexbox-Container">
+                <div id="DragnDropLoc-TreeJS" class="DropdownTreeMenu"></div>
+                <button class="BlockButton" id="AddNewLocation"><i class="fas fa-fw fa-plus-circle"></i>Add New Root Node</button>
+            </div>
+            <div id="Location-Info-Panel" class="Settings-Flexbox-Container" style="visibility: hidden">
+                <h3 id="CurrentLocationHeader"></h3>
+                <ul id="DisplayLocationInformation" class="DisplayItemDetails">
+                    <li>
+                        <div class="ItemLabel DisplayItem">Creator:</div>
+                        <div class="ItemData DisplayItem" id="CurrentLocationCreator"></div>
+                    </li>
+                    <li>
+                        <div class="ItemLabel DisplayItem">Description:</div>
+                        <div class="ItemData DisplayItem" id="CurrentLocationDescription"></div>
+                    </li>
+                    <li>
+                        <div class="ItemLabel DisplayItem">Children:</div>
+                        <div class="ItemData DisplayItem" id="CurrentLocationChildren"></div>
+                    </li>
+                </ul>
+                <p id="LocationEditErrors" style="color: #eb093c; display: none;"></p>
+                <div style="padding: 1em 0.5em">
+                    <button class="BlockButton" id="AddNewChildLocation"><i class="fas fa-fw fa-plus-circle"></i>Add New Child Node</button>
+                    <button class="BlockButton" id="EditLocation" style="background-color: #6EA400"><i class="fas fa-fw fa-edit"></i>Edit Location</button>
+                    <button class="BlockButton" id="EditLocationSave" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-bookmark"></i></i>Save Edits</button>
+                    <button class="BlockButton" id="EditLocationCancel" style="background-color: #ffdd00; display: none;"><i class="fas fa-fw fa-ban"></i></i>Cancel</button>
+                    <button class="BlockButton" id="DeleteLocation" style="background-color: #eb093c"><i class="fas fa-fw fa-trash"></i></i>Delete Node</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Add New Location Form #}
+    <div id="AddLocationForm" class="container" style="display:none">
+        <div class="labeldiv">
+            <label for="NewLocationName" class="DialogLabel">Location Name:</label>
+            <input type="text" id="NewLocationName" class="DialogInput" placeholder="Location Name">
+        </div>
+        <div class="labeldiv">
+            <label for="NewLocationDescription" class="DialogLabel">Description:</label>
+        </div>
+        <div align="center">
+            <textarea id="NewLocationDescription" class="DialogInput" placeholder="Location Description" rows="3" cols="50"></textarea>
+        </div>
+    </div>
+
+    {# Delete Location Form #}
+    <div id="DeleteLocationForm" class="container" style="display:none">
+        <div class="labeldiv">
+            <div id="LocationDeletionWarning"></div>
+            <strong style="color: #eb093c;">This location and all child locations will be deleted!!!</strong>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,61 @@
+/*******************************/
+/* General Settings Formatting */
+/*******************************/
+
+.Settings-Flexbox {
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: center;
+}
+
+.Settings-Flexbox-Container {
+    display: inline-block;
+    flex: 1 1 45%;
+    padding: 10px;
+}
+
+.DropdownTreeMenu {
+    height: 650px;
+    overflow: scroll;
+}
+
+/*************************************/
+/* Attribute/Location Data Rendering */
+/*************************************/
+
+h3 {
+    padding: 0 1em;
+}
+
+.DisplayItemDetails {
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+    list-style-type: none;
+}
+
+.ItemLabel {
+    display: inline-block;
+    flex: 0 1 150px;
+    min-width: 150px;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.ItemData {
+    display: inline-block;
+    flex: 1 1 70%;
+    padding: 10px;
+}
+
+/*********************/
+/* Dialog Formatting */
+/*********************/
+
+#AttributeDeleteConfirmation, #LocationDeleteConfirmation {
+    background-color: #eb093c;
+    color: #ffffff;
+    font-weight: bold;
+}

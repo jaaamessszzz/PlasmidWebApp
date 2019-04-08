@@ -1,4 +1,3 @@
-
 // ##############################
 // #    Drag-n Drop Plasmids    #
 // ##############################
@@ -22,7 +21,7 @@ function dropHandler(event){
     const FileMetadata = {
         'project': PlasmidProject,
         'features': AddFeatures,
-        'attributes': [1]
+        'attributes': []
     };
 
     if(PlasmidProject !== ''){
@@ -133,10 +132,8 @@ function reportFileUploadStatus(response) {
 
     // Get list element created when file upload started
     let fileUploadStatus = document.getElementsByClassName(responseJSON['filename'])[0];
-
     // Get rid of loading icon
     fileUploadStatus.removeChild(fileUploadStatus.firstChild);
-
     // Update status and color
     if (responseJSON['success'] === true) {
         fileUploadStatus.className += ' uploadSuccess';
@@ -167,22 +164,22 @@ let datatable = $('#filteredPlasmidsTable').DataTable({
             "order": [[ 1, "asc" ]],
             "fixedColumns": true,
             "columnDefs": [
-                { width: 100, targets: 0 },
-                { width: 0, targets: 1 , visible: false},
-                { width: 100, targets: 2},
-                { width: 200, targets: 3,
+                { name: 'id', width: 100, targets: 0, visible: false},
+                { name: 'project', width: 100, targets: 1 },
+                { name: 'projectindex', width: 100, targets: 2},
+                { name: 'features', width: 200, targets: 3,
                     orderable: false,
                     render : function (data, type, row, meta) {
                         return '<div style="overflow:scroll;width:100%;height:2.75em;">' + row[3] + '</div>';
                     }
                 },
-                { width: 200, targets: 4,
+                { name: 'attributes', width: 200, targets: 4,
                     orderable: false,
                     render : function (data, type, row, meta) {
                         return '<div style="overflow:scroll;width:100%;height:2.75em;">' + row[4] + '</div>';
                     }
                 },
-                { width: 200, targets: 5,
+                { name: 'description', width: 200, targets: 5,
                     orderable: false,
                     render : function (data, type, row, meta) {
                         return '<div style="overflow:scroll;width:100%;height:2.75em;">' + row[5] + '</div>';
@@ -195,7 +192,7 @@ let datatable = $('#filteredPlasmidsTable').DataTable({
             "initComplete": function() {
                 // I can't figure out how to get column inputs from  datatable.api()... so here's a map
                 const columnMapping = {
-                    'id_project': 5,
+                    'id_project': 4,
                     'id_projectindex': 3,
                     'id_features': 2,
                     'id_attributes': 1,
@@ -205,7 +202,7 @@ let datatable = $('#filteredPlasmidsTable').DataTable({
                 const table = this;
 
                 $('.filterInputsRow').on( "input paste ValueChange", 'input, select', function () {
-                    const inputFieldID = this.id;
+                    const CurrentColumnName = this.name;
                     let searchJQO;
                     if ($(this).nodeName === 'SELECT'){
                         searchJQO = $('#id_project option:selected');
@@ -214,7 +211,7 @@ let datatable = $('#filteredPlasmidsTable').DataTable({
                     }
                     // const inputValue = $.fn.dataTable.util.escapeRegex(searchJQO.val());
                     const inputValue = searchJQO.val();
-                    const currentColumn = table.api().column(columnMapping[inputFieldID]);
+                    const currentColumn = table.api().column(CurrentColumnName + ':name');
                     currentColumn.search( inputValue, false, false ).draw();
                     });
             },
@@ -239,8 +236,8 @@ function addPlasmidsToReactionPool (event) {
 
     // Add selected rows to reaction definition
     for(let i=0; i<selectedRowsData.length; i++){
-        const selectedUser = selectedRowsData[i][0];
-        const selectedPlasmidID = Number(selectedRowsData[i][1]);
+        const selectedPlasmidID = Number(selectedRowsData[i][0]);
+        const selectedUser = selectedRowsData[i][1];
         const selectedIndex = selectedRowsData[i][2];
 
         // Check if Plasmid has already been added... fucking Javascript
@@ -289,25 +286,34 @@ $('#reactionTypeSelector').on('input', function(){
 });
 
 // Define drop-in parts
+let UnnamedPartCounter = 0;
 $('#addDefinedPart').on('click', function(){
     $( "#NewPartDefinition" ).dialog({
             buttons: [
                 {text: "Add Part",
                     click: function() {
-                        // Get input values
-                        const NewPartID = $('#NewPartID').val();
-                        const NewPartSequence = $('#NewPartSequence').val();
-                        // Create button
-                        const NewPartButton = document.createElement('button');
-                        NewPartButton.innerText = NewPartID;
-                        NewPartButton.className = 'definedPart';
-                        // Assign values
-                        $.data(NewPartButton, 'PartID', NewPartID);
-                        $.data(NewPartButton, 'PartSequence', NewPartSequence);
-                        // Add Part definition to $('.UserDefinedParts .assemblyDefinitions')
-                        $('.UserDefinedParts .assemblyDefinitions').append(NewPartButton);
-                        $(this).dialog( "close" );
+                    // Get input values
+                    const TempPartID = $('#NewPartID').val();
+                    let NewPartID;
+                    if(TempPartID !== ''){
+                        NewPartID = TempPartID;
+                    }else{
+                        UnnamedPartCounter += 1;
+                        NewPartID = 'Part ' + UnnamedPartCounter;
                     }
+                    const NewPartSequence = $('#NewPartSequence').val().trim();
+                    // Create button
+                    const NewPartButton = document.createElement('button');
+                    NewPartButton.innerText = NewPartID;
+                    NewPartButton.className = 'definedPart';
+                    // Assign values
+                    $.data(NewPartButton, 'PartID', NewPartID);
+                    $.data(NewPartButton, 'PartSequence', NewPartSequence);
+                    // Add Part definition to $('.UserDefinedParts .assemblyDefinitions')
+                    $('.UserDefinedParts .assemblyDefinitions').append(NewPartButton);
+                    $(this).dialog( "close" );
+                    },
+                id: "AddDefinedPartButton",
                 }],
             title: "New Part Definition",
             minWidth: 500,
@@ -332,16 +338,11 @@ $('.UserDefinedParts .assemblyDefinitions').on('click', 'button', function(){
     // Open Dialog
     $('#NewPartDefinition').dialog({
         buttons: [
-            {text: "Delete",
-                click: function(){
-                CurrentPart.remove();
-                $(this).dialog( "close" );}
-                },
             {text: "Update Part",
                 click: function(){
                 // Get input values
                 const NewPartID = $('#NewPartID').val();
-                const NewPartSequence = $('#NewPartSequence').val();
+                const NewPartSequence = $('#NewPartSequence').val().trim();
                 // Update Button
                 CurrentPart.text(NewPartID);
                 // Update Part values
@@ -357,6 +358,21 @@ $('.UserDefinedParts .assemblyDefinitions').on('click', 'button', function(){
             document.getElementById("NewPartSequence").value = null;
         }
     });
+});
+
+// Only allow DNA ATCG in Part Sequence Text Area
+const DNARegex = new RegExp('^[ATCGatcg]+$');
+const PartSequenceTextArea = $('#NewPartSequence');
+const DNAWarningMessage = $('#DNAWarningMessage');
+// Part button toggling doesn't work with saved selections for some reason?
+PartSequenceTextArea.on('input paste ValueChange', function(){
+    if(DNARegex.test($(this).val())){
+        $("#AddDefinedPartButton").button("enable");
+        DNAWarningMessage.hide();
+    }else{
+        $("#AddDefinedPartButton").button("disable");
+        DNAWarningMessage.show();
+    }
 });
 
 // Remove database plasmids from current reaction
@@ -420,62 +436,70 @@ function performPlasmidAssembly(){
     plasmidPostData['ReactionType'] = reactionType;
     plasmidPostData['ReactionEnzyme'] = reactionEnzyme;
 
+    // POST and report assembly results
     $.post('/database/perform_assemblies/', {'data': JSON.stringify(plasmidPostData)}, function (response) {
         console.log(response);
-        const ReportContents = $('#AssemblyReport .reportUploadStatusList');
-        // Clear any previous dialog data
-        ReportContents.empty();
-        // Populate dialog
-        for(let i=1;i<Object.keys(response).length + 1; i++){
-            const Assemblyli = document.createElement('li');
-            const ReactionPlasmids = response[i]['reaction_plasmids'];
 
-            let ReportStatus;
-            let ReportParts = '\n';
-            for(let j=0;j<ReactionPlasmids.length;j++){
-                ReportParts += ReactionPlasmids[j][0] + ' ' + ReactionPlasmids[j][1];
-                if (j !== ReactionPlasmids.length - 1){
-                    ReportParts += ', ';
+        if('DNA_error' in response){
+            AssemblyDefinitionErrorDialog(response['DNA_error']);
+        } else{
+            const ReportContents = $('#AssemblyReport .reportUploadStatusList');
+            // Clear any previous dialog data
+            ReportContents.empty();
+            // Populate dialog
+            for(let i=1;i<Object.keys(response).length + 1; i++){
+                const Assemblyli = document.createElement('li');
+                const ReactionPlasmids = response[i]['reaction_plasmids'];
+
+                let ReportStatus;
+                let ReportParts = '\n';
+                for(let j=0;j<ReactionPlasmids.length;j++){
+                    ReportParts += ReactionPlasmids[j][0] + ' ' + ReactionPlasmids[j][1];
+                    if (j !== ReactionPlasmids.length - 1){
+                        ReportParts += ', ';
+                    }
+                }
+                if('DefinedPart' in response[i]){
+                    ReportParts += ' with defined part ' + response[i]['DefinedPart']
+                }
+
+                if (response[i]['success'] === true) {
+                    const AssemblyID = response[i]['assembly_id'];
+                    ReportStatus = 'Assembly #' + i + ' was added to the Database as Project ID ' + AssemblyID;
+                    Assemblyli.className = 'AssemblySuccess';
+                    Assemblyli.style.backgroundColor = '#6EA400';
+                    Assemblyli.innerText = ReportStatus + ReportParts;
+                    ReportContents.append(Assemblyli);
+                }
+                else{
+                    ReportStatus = 'Assembly #' + i + ' failed...';
+                    Assemblyli.className = 'AssemblyFailure';
+                    Assemblyli.style.backgroundColor = '#EB093C';
+                    Assemblyli.innerText = ReportStatus + ReportParts + '\n' + response[i]['error'];
+                    ReportContents.append(Assemblyli);
                 }
             }
-            if('DefinedPart' in response[i]){
-                ReportParts += ' with defined part ' + response[i]['DefinedPart']
-            }
 
-            if (response[i]['success'] === true) {
-                const AssemblyID = response[i]['assembly_id'];
-                ReportStatus = 'Assembly #' + i + ' was added to the Database as Project ID ' + AssemblyID;
-                Assemblyli.className = 'AssemblySuccess';
-                Assemblyli.style.backgroundColor = '#6EA400';
-                Assemblyli.innerText = ReportStatus + ReportParts;
-                ReportContents.append(Assemblyli);
-            }
-            else{
-                ReportStatus = 'Assembly #' + i + ' failed...';
-                Assemblyli.className = 'AssemblyFailure';
-                Assemblyli.style.backgroundColor = '#EB093C';
-                Assemblyli.innerText = ReportStatus + ReportParts + '\n' + response[i]['error'];
-                ReportContents.append(Assemblyli);
-            }
-        }
-
-        // Initalize and Generate Assembly Report Dialog
-        $( "#AssemblyReport" ).dialog({
-            buttons: [
-                {text: "OK",
-                    click: function() {
-                        $( this ).dialog( "close" );
+            // Initalize and Generate Assembly Report Dialog
+            $( "#AssemblyReport" ).dialog({
+                buttons: [
+                    {text: "OK",
+                        click: function() {
+                            $( this ).dialog( "close" );
+                        }
+                    }],
+                title: "Assembly Results",
+                minWidth: 600,
+                modal: true,
+                beforeClose: function( event, ui ) {
+                    if($('#AssemblyReport .reportUploadStatusList').find('.AssemblyFailure').length === 0){
+                        $('.assemblyPlasmid').remove();
+                        $('.definedPart').remove();
+                        reactionDefinition = [];
                     }
-                }],
-            title: "Assembly Results",
-            minWidth: 600,
-            modal: true,
-            beforeClose: function( event, ui ) {
-                $('.assemblyPlasmid').remove();
-                $('.definedPart').remove();
-                reactionDefinition = [];
-            }
-        }).dialog("open");
+                }
+            }).dialog("open");
+        }
     });
 }
 
@@ -497,7 +521,7 @@ $('#performReaction').on('click', function(){
     }
 });
 
-// Error dialog
+// Assembly Definition Error Dialog
 function AssemblyDefinitionErrorDialog(message){
     const AssemblyDefinitionError = $("#AssemblyDefinitionError");
     AssemblyDefinitionError.text(message);
@@ -522,62 +546,23 @@ function AssemblyDefinitionErrorDialog(message){
 // #   Attribute Menu    #
 // #######################
 
-const AttrSelector = $('#dragndrop-attributes');
-// Populate Attribute Menu
-AttrSelector.on('click', '.TreeMenuCaret', function(){
-    let ParentNode = this.parentNode;
-    let ParentNodeJQO = $(ParentNode);
-    let NodeAttrID;
+const AttributeJSTree = $('#DragnDropAttr-TreeJS');
 
-    // Get Attribute PK from data-nodeinit if it exists
-    if (ParentNodeJQO.attr('data-nodeinit')) {
-        NodeAttrID = ParentNodeJQO.attr('data-nodeinit');
-    // Get Attribute PK from $.data()
-    } else {
-        NodeAttrID = ParentNodeJQO.data('attr_pk');
-    }
-
-    console.log(ParentNode);
-    console.log(NodeAttrID);
-
-    if(!ParentNode.classList.contains('loaded')){
-        $.post('/database/get_attribute_children/', {'attr_pk': NodeAttrID}, function (response) {
-            const AttrChildren = response['attr_children'];
-            const NodesWithChildren = response['nodes_with_children'];
-            // Create new list
-            let NestedList = document.createElement('ul');
-            NestedList.classList.add('nested');
-            NestedList.classList.add('active');
-            for(let i=0;i<AttrChildren.length;i++){
-                const ChildAttr = AttrChildren[i];
-                let NewLineList = document.createElement('li');
-                // Add caret if node has children
-                if(NodesWithChildren.includes(ChildAttr[0])){
-                    let NewLineListSpan = document.createElement('span');
-                    NewLineListSpan.className = 'TreeMenuCaret';
-                    NewLineList.appendChild(NewLineListSpan);
-                }
-                NewLineList.textContent = ChildAttr[1];
-                NewLineList.classList.add('terminal');
-                $(NewLineList).data('attr_pk', ChildAttr[0]);
-                NestedList.appendChild(NewLineList);
-            }
-            ParentNodeJQO.append(NestedList);
-            ParentNode.classList.add('loaded');
+$(document).ready(function(){
+    $.post('/database/get_attribute_tree/', function(response){
+        AttributeJSTree.jstree({
+            "core": {
+                "multiple": true,
+                "data": response['data'],
+                'themes': {
+                    'name': 'proton',
+                    'responsive': true
+                },
+            },
+            "plugins" : [ "wholerow" , "sort"],
+            "checkbox" : {
+                "keep_selected_style" : false
+            },
         });
-    } else{
-        ParentNode.querySelector(".nested").classList.toggle("active");
-    }
-
-    // Toggle caret if caret exists
-    if(ParentNode.querySelector('.TreeMenuCaret')){
-        ParentNode.querySelector('.TreeMenuCaret').classList.toggle("caret-down");
-    }
-});
-
-// Select Atrtibutes
-AttrSelector.on('click', 'li', function(){
-    if(this.classList.contains('terminal')){
-        this.classList.toggle('selected');
-    }
+    })
 });
