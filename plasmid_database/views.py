@@ -13,9 +13,12 @@ from django.utils.html import escape
 from django_datatables_view.base_datatable_view import BaseDatatableView
 
 import dnassembly
+from dnassembly.utils.annotation import annotate_moclo
 
 from .models import Plasmid, User, Project, Feature, Attribute, Location
 from .forms import SignUpForm
+
+# todo: separate views into separate files based on page/function
 
 # --- New User Enrollment --- #
 
@@ -48,7 +51,6 @@ class FilterDatatableTemplate(BaseDatatableView):
     def filter_queryset(self, qs):
 
         pprint(self.request.POST)
-        pprint(self.request.GET)
 
         column_index_mapping = {column: self.request.GET.get(f'columns[{index}][search][value]', None)
                                 for index, column in enumerate(self.columns)}
@@ -63,12 +65,14 @@ class FilterDatatableTemplate(BaseDatatableView):
             for current_field, search_term in column_index_mapping.items():
 
                 if search_term not in [None, '']:
-                    if current_field == 'creator':
+                    if current_field in ['creator', 'project']:
                         term_filter = {f'{current_field}__id__iexact': search_term}
-                    elif current_field == 'project':
-                        term_filter = {f'{current_field}__id__iexact': search_term}
+                        column_querysets.append(qs.filter(**term_filter))
+
                     elif current_field == 'projectindex':
                         term_filter = {f'{current_field}__exact': int(search_term)}
+                        column_querysets.append(qs.filter(**term_filter))
+
                     else:
                         # Check if input is valid regex
                         try:
@@ -76,19 +80,43 @@ class FilterDatatableTemplate(BaseDatatableView):
                             is_valid = True
                         except re.error:
                             is_valid = False
+
                         search_method = 'iregex' if is_valid else 'icontains'
 
-                        if current_field in ['feature', 'attribute', 'location']:
+                        if current_field == 'attribute':
+                            # Special case for assembly... Need to take all attributes for a single plasmid into account
+                            # _AssemblyRegex`Part 1|Part 2`Part 3|Part 4
+                            if search_term.startswith('_AssemblyRegex'):
+                                term_split = search_term.split('`')
+
+                                term_filter_positive = {f'attribute__name__iregex': f'^.*({term_split[2]}).*$'}
+                                positive_qs = qs.filter(**term_filter_positive)
+
+                                if term_split[1] == '':
+                                    column_querysets.append(positive_qs)
+
+                                else:
+                                    term_filter_negative = {f'attribute__name__iregex': f'^.*({term_split[1]}).*$'}
+                                    negative_qs = qs.filter(**term_filter_negative)
+                                    attribute_difference_qs = positive_qs.difference(negative_qs)
+                                    column_querysets.append(attribute_difference_qs)
+
+                            else:
+                                term_filter = {f'{current_field}__name__{search_method}': search_term}
+                                column_querysets.append(qs.filter(**term_filter))
+
+                        elif current_field in ['feature', 'location']:
                             term_filter = {f'{current_field}__name__{search_method}': search_term}
+                            column_querysets.append(qs.filter(**term_filter))
+
                         else:
                             term_filter = {f'{current_field}__{search_method}': search_term}
-
-                    column_querysets.append(qs.filter(**term_filter))
+                            column_querysets.append(qs.filter(**term_filter))
 
             if len(column_querysets) == 1:
-                return column_querysets[0]
+                return column_querysets[0].distinct()
             else:
-                return column_querysets[0].intersection(*column_querysets[1:])
+                return column_querysets[0].intersection(*column_querysets[1:]).distinct()
 
 # --- Plasmid Datatables --- #
 
@@ -201,12 +229,15 @@ def add_plasmid_by_file(request):
     Add a file to the database from a genbank file
     """
     response_dict = {'success': False}
+
     if request.method == 'POST' and request.FILES['file']:
 
         # Pull data
         uploaded_file = request.FILES['file']
         plasmid_project = request.POST['project']
         plasmid_attributes = request.POST['attributes']
+
+        response_dict['filename'] = str(uploaded_file.name)
 
         # Convert BytesIO into something BioPython can work with
         upload_stringio = io.StringIO(uploaded_file.file.getvalue().decode('UTF-8'))
@@ -223,14 +254,15 @@ def add_plasmid_by_file(request):
             new_plasmid.save()
 
             # Assign features to plasmid
+            print('Adding Features...')
             if dnassembly_plasmid.features:
                 feature_list = list()
                 for dnassembly_feature in dnassembly_plasmid.features:
                     # Add features to database if required
                     if request.POST.get('features'):
                         # Check database features for duplication
-                        if Feature.objects.filter(creator=request.user, sequence=dnassembly_feature.sequence).exists():
-                            feature_list.append(Feature.objects.get(creator=request.user, sequence=dnassembly_feature.sequence))
+                        if Feature.objects.filter(sequence=dnassembly_feature.sequence).exists():
+                            feature_list.append(Feature.objects.get(sequence=dnassembly_feature.sequence))
                         else:
                             plasmid_feature = Feature(creator=request.user,
                                                       sequence=dnassembly_feature.sequence,
@@ -239,20 +271,44 @@ def add_plasmid_by_file(request):
                             feature_list.append(plasmid_feature)
                     # Check database for feature
                     else:
-                        if Feature.objects.filter(creator=request.user, sequence=dnassembly_feature.sequence).exists():
-                            feature_list.append(Feature.objects.get(creator=request.user, sequence=dnassembly_feature.sequence))
+                        if Feature.objects.filter(sequence=dnassembly_feature.sequence).exists():
+                            feature_list.append(Feature.objects.get(sequence=dnassembly_feature.sequence))
 
                 # todo: annotate new plasmids with existing features in database
                 # Add features to plasmid
                 new_plasmid.feature.add(*feature_list)
 
             # Assign Attributes to plasmid
-            if plasmid_attributes:
-                print(plasmid_attributes)
+            if plasmid_attributes and plasmid_attributes != '':
+                attr_indicies = [int(a) for a in plasmid_attributes]
                 attribute_list = list()
-                for attribute in plasmid_attributes:
+                for attribute in attr_indicies:
                     current_attribute = Attribute.objects.get(id=attribute)
                     attribute_list.append(current_attribute)
+                new_plasmid.attribute.add(*attribute_list)
+
+            # Automatically annotate plasmid parts/cassettes
+            # todo: check if part plasmid
+            print('Annotating Parts...')
+            moclo_parts = annotate_moclo(new_plasmid.sequence)
+            if moclo_parts:
+                attribute_list = list()
+                for part in moclo_parts:
+                    print(part)
+                    current_attribute = Attribute.objects.filter(name=f'Part {part}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
+
+            # todo: check if cassette plasmid
+            # Annotate cassette plasmid, if applicable
+            moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
+            if moclo_cassette:
+                attribute_list = list()
+                for cassette in moclo_cassette:
+                    current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
                 new_plasmid.attribute.add(*attribute_list)
 
             # Report
@@ -260,7 +316,6 @@ def add_plasmid_by_file(request):
             current_creator = str(new_plasmid.project)
             current_creator_index = int(new_plasmid.projectindex)
             response_dict['plasmid_id'] = (current_creator, current_creator_index)
-            response_dict['filename'] = str(uploaded_file.name)
 
         # Catch Exceptions
         except SequenceException as e:
@@ -272,24 +327,15 @@ def add_plasmid_by_file(request):
 
     return JsonResponse(response_dict, status=200)
 
+
 @login_required
-def perform_assemblies(request):
+def standard_assembly(request):
+    """
+    Performs MoClo assembly and pushes to database
+    """
+    print(request.POST)
     post_data = json.loads(request.POST['data'])
     reaction_project = Project.objects.get(id=int(post_data['ReactionProject']))
-
-    # Get master mix plasmids
-    master_mix_plasmids = list()
-    for master_mix_plasmid in post_data['MasterMix']:
-        master_mix_plasmids.append(Plasmid.objects.get(id=master_mix_plasmid))
-
-    assembly_mixins = list()
-    # Get drop-in plasmids
-    for drop_in_plasmid in post_data['DropIn']:
-        assembly_mixins.append([Plasmid.objects.get(id=drop_in_plasmid)])
-
-    # Get defined parts
-    for defined_part in post_data['DefinedParts']:
-        assembly_mixins.append(defined_part)
 
     # Get Reaction Definitions
     reaction_type = post_data.get('ReactionType')
@@ -297,63 +343,115 @@ def perform_assemblies(request):
         enzyme_dict = {'BsaI': BsaI, 'BsmBI': BsmBI}
         reaction_enzyme = enzyme_dict[post_data.get('ReactionEnzyme')]
 
-    response_data = dict()
+    assembly_results = dict()
+    assembly_index_dict = post_data.get('AssemblyRows')
 
-    master_mix_dna = [plasmid.as_dnassembly() for plasmid in master_mix_plasmids]
-    master_mix_ids = [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid in master_mix_plasmids]
-
-    # Enumerate and perform assembly for each drop-in
-    for index, drop_in_set in enumerate(assembly_mixins, start=1):
+    for index, index_list in assembly_index_dict.items():
         # Keep track of current reaction status
-        response_data[index] = dict()
+        assembly_results[index] = dict()
+
+        # Get plasmids for each assembly (row)
+        assembly_db_plasmids = [Plasmid.objects.get(id=plasmid_id) for plasmid_id in set(index_list)]
+        assembly_plasmid_pool = [plasmid.as_dnassembly() for plasmid in assembly_db_plasmids]
+        assembly_ids = [f'{str(plasmid.project)} {int(plasmid.projectindex)}' for plasmid in assembly_db_plasmids]
+        assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
 
         try:
-            if type(drop_in_set) is dict:
-                defined_part_dna = [dnassembly.Part(name=defined_part['PartID'],
-                                                    entity_id=defined_part['PartID'],
-                                                    sequence=defined_part['PartSequence']
-                                                    )]
-                assembly_plasmid_pool = master_mix_dna + defined_part_dna
-                response_data[index]['DefinedPart'] = defined_part['PartID']
-                response_data[index]['reaction_plasmids'] = master_mix_ids
+            gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
+            gg_rxn.digest()
+            assembly_product = gg_rxn.perform_assembly()
 
-            else:
-                assembly_plasmid_pool = master_mix_dna + [plasmid.as_dnassembly() for plasmid in drop_in_set]
-                assembly_plasmid_id_list = master_mix_ids + [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid in drop_in_set]
-                response_data[index]['reaction_plasmids'] = assembly_plasmid_id_list
+            new_plasmid = Plasmid(project=reaction_project,
+                                  sequence=assembly_product.sequence,
+                                  creator=request.user,
+                                  description=assembly_product.description)
+            new_plasmid.save()
 
-        except SequenceException as e:
-            return JsonResponse({'DNA_error': str(e)}, status=200)
-        except Exception as e:
-            return JsonResponse({'DNA_error': str(e)}, status=200)
+            # Pull features from assembly_product and associate with new_plasmid
+            new_plasmid_features = []
+            for feature in assembly_product.features:
+                new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
+            new_plasmid.feature.add(*new_plasmid_features)
 
-        if reaction_type == 'goldengate':
-            try:
-                gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
-                gg_rxn.digest()
-                assembly_product = gg_rxn.perform_assembly()
-                new_plasmid = Plasmid(project=reaction_project,
-                                      sequence=assembly_product.sequence,
-                                      creator=request.user,
-                                      description=assembly_product.description)
-                new_plasmid.save()
-                print(new_plasmid)
+            # Keep track of plasmids that went into assembly (Plasmid.assembly)
+            new_plasmid.assembly.add(*assembly_db_plasmids)
 
-                # todo: pull features from new_plasmid and associate with new entry
-                response_data[index]['success'] = True
-                response_data[index]['assembly_id'] = int(new_plasmid.projectindex)
+            # Annotate part plasmid, if applicable
+            print('Annotating Parts...')
+            moclo_parts = annotate_moclo(new_plasmid.sequence)
+            if moclo_parts:
+                attribute_list = list()
+                for part in moclo_parts:
+                    current_attribute = Attribute.objects.filter(name=f'Part {part}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
 
-            except AssemblyException as assembly_error:
-                print(assembly_error)
-                response_data[index]['success'] = False
-                response_data[index]['error'] = str(assembly_error)
+            # Annotate cassette plasmid, if applicable
+            moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
+            if moclo_cassette:
+                attribute_list = list()
+                for cassette in moclo_cassette:
+                    current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
 
-            except ReactionDefinitionException as definition_error:
-                print(definition_error)
-                response_data[index]['success'] = False
-                response_data[index]['error'] = str(definition_error)
+            assembly_results[index]['success'] = True
+            assembly_results[index]['new_plasmid'] = new_plasmid
+            assembly_results[index]['assembly_id'] = f'{new_plasmid.project} {int(new_plasmid.projectindex)}'
 
-    return JsonResponse(response_data, status=200)
+        except AssemblyException as assembly_error:
+            print(assembly_error)
+            assembly_results[index]['success'] = False
+            assembly_results[index]['error'] = str(assembly_error)
+
+        except ReactionDefinitionException as definition_error:
+            print(definition_error)
+            assembly_results[index]['success'] = False
+            assembly_results[index]['error'] = str(definition_error)
+
+    request.session['results'] = assembly_results
+
+    return JsonResponse({}, status=200)
+
+@login_required
+def assembly_result(request):
+    """
+    Report the result of a set of assemblies
+    """
+    assembly_results = request.session['results']
+    print(assembly_results)
+    return render(request, 'clone/clone-assemblyresult.html', assembly_results)
+
+
+@login_required
+def part_submission(request):
+    """
+    Parse tsv contect to add parts
+    """
+    # Old code for adding parts, use as template
+    try:
+        if type(drop_in_set) is dict:
+            defined_part_dna = [dnassembly.Part(name=defined_part['PartID'],
+                                                entity_id=defined_part['PartID'],
+                                                sequence=defined_part['PartSequence']
+                                                )]
+            assembly_plasmid_pool = master_mix_dna + defined_part_dna
+            response_data[index]['DefinedPart'] = defined_part['PartID']
+            response_data[index]['reaction_plasmids'] = master_mix_ids
+
+        else:
+            assembly_plasmid_pool = master_mix_dna + [plasmid.as_dnassembly() for plasmid in drop_in_set]
+            assembly_plasmid_id_list = master_mix_ids + [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid
+                                                         in drop_in_set]
+            response_data[index]['reaction_plasmids'] = assembly_plasmid_id_list
+
+    except SequenceException as e:
+        return JsonResponse({'DNA_error': str(e)}, status=200)
+    except Exception as e:
+        return JsonResponse({'DNA_error': str(e)}, status=200)
+
 
 # --- Plasmid Features and Related Views --- #
 

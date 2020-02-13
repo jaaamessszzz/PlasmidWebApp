@@ -126,10 +126,10 @@ class Plasmid(models.Model):
         return f'{self.project.project}_{self.projectindex:0>5}'
 
     def get_attributes_as_string(self):
-        return ', '.join([attr.name for attr in self.attribute.all()])
+        return ', '.join(sorted([attr.name for attr in self.attribute.all()]))
 
     def get_features_as_string(self):
-        return ', '.join([feat.name for feat in self.feature.all()])
+        return ', '.join(sorted([feat.name for feat in self.feature.all()]))
 
     def get_locations_as_string(self):
         return ', '.join([loc.name for loc in self.location.all()])

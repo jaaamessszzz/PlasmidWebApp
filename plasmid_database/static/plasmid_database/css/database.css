@@ -6,7 +6,10 @@ tr, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_pagina
     font-family: "Open Sans", Calibri, sans-serif;
     font-style: normal;
     font-variant: normal;
-    font-size: 10pt;
+}
+
+tr {
+    font-size: 8pt;
 }
 
 /*.connected {*/

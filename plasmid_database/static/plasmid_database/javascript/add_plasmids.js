@@ -10,18 +10,20 @@ function dropHandler(event){
     // Get Plasmid Property Definitions
     const PlasmidProject = $('#dragndrop-project option:selected').val();
     const AddFeatures = document.getElementById("dragndrop-features").checked;
-    const AddAttributes = $('#sel option').filter(':selected');
+    const AddAttributes = document.querySelectorAll("[aria-selected='true']");
+    // const AddAttributes = $('#sel option').filter(':selected');
+
 
     let AttributesList = [];
     for (let i=0;i<AddAttributes.length;i++){
         console.log(AddAttributes[i]);
-        AttributesList.push(AddAttributes[i].val());
+        AttributesList.push(AddAttributes[i].id.split('-')[1]);
     }
 
     const FileMetadata = {
         'project': PlasmidProject,
         'features': AddFeatures,
-        'attributes': []
+        'attributes': AttributesList,
     };
 
     if(PlasmidProject !== ''){
@@ -132,6 +134,8 @@ function reportFileUploadStatus(response) {
 
     // Get list element created when file upload started
     let fileUploadStatus = document.getElementsByClassName(responseJSON['filename'])[0];
+    console.log(fileUploadStatus);
+
     // Get rid of loading icon
     fileUploadStatus.removeChild(fileUploadStatus.firstChild);
     // Update status and color
@@ -386,160 +390,6 @@ $('.assemblyDefinition').on('click', '.assemblyPlasmid', function(){
     }
     $(this).remove();
 });
-
-// ############################
-// #    Perform Assemblies    #
-// ############################
-
-function performPlasmidAssembly(){
-    // Get plasmid values from tables
-    const plasmidsMasterMix = $('.MasterMix .assemblyDefinitions').children("button.assemblyPlasmid");
-    const plasmidsDropIn = $('.DropIn .assemblyDefinitions').children("button.assemblyPlasmid");
-    const linearDefinedParts = $('.UserDefinedParts .assemblyDefinitions').children("button.definedPart");
-
-    let plasmidPostData = {};
-    let masterMix = [];
-    let dropIn = [];
-    let definedParts = [];
-
-    for(let i=0;i<plasmidsMasterMix.length;i++){
-        const plasmid = $(plasmidsMasterMix[i]);
-        masterMix.push(Number(plasmid.data('PlasmidID')));
-    }
-    for(let i=0;i<plasmidsDropIn.length;i++){
-        const plasmid = $(plasmidsDropIn[i]);
-        dropIn.push(Number(plasmid.data('PlasmidID')));
-    }
-    for(let i=0;i<linearDefinedParts.length;i++){
-        const definedPart = $(linearDefinedParts[i]);
-        definedParts.push(
-            {'PartID': definedPart.data('PartID'),
-            'PartSequence': definedPart.data('PartSequence'),
-            });
-    }
-
-    plasmidPostData['MasterMix'] = masterMix;
-    plasmidPostData['DropIn'] = dropIn;
-    plasmidPostData['DefinedParts'] = definedParts;
-
-    // Get reaction definition options
-    const reactionProject = $('#AssemblyProjectSelector option:selected').val();
-    const reactionType = $('#reactionTypeSelector option:selected').val();
-    let reactionEnzyme;
-    if(reactionType === 'goldengate'){
-        reactionEnzyme = $('#enzymeTypeSelector option:selected').val();
-    } else{
-        reactionEnzyme = null;
-    }
-
-    plasmidPostData['ReactionProject'] = reactionProject;
-    plasmidPostData['ReactionType'] = reactionType;
-    plasmidPostData['ReactionEnzyme'] = reactionEnzyme;
-
-    // POST and report assembly results
-    $.post('/database/perform_assemblies/', {'data': JSON.stringify(plasmidPostData)}, function (response) {
-        console.log(response);
-
-        if('DNA_error' in response){
-            AssemblyDefinitionErrorDialog(response['DNA_error']);
-        } else{
-            const ReportContents = $('#AssemblyReport .reportUploadStatusList');
-            // Clear any previous dialog data
-            ReportContents.empty();
-            // Populate dialog
-            for(let i=1;i<Object.keys(response).length + 1; i++){
-                const Assemblyli = document.createElement('li');
-                const ReactionPlasmids = response[i]['reaction_plasmids'];
-
-                let ReportStatus;
-                let ReportParts = '\n';
-                for(let j=0;j<ReactionPlasmids.length;j++){
-                    ReportParts += ReactionPlasmids[j][0] + ' ' + ReactionPlasmids[j][1];
-                    if (j !== ReactionPlasmids.length - 1){
-                        ReportParts += ', ';
-                    }
-                }
-                if('DefinedPart' in response[i]){
-                    ReportParts += ' with defined part ' + response[i]['DefinedPart']
-                }
-
-                if (response[i]['success'] === true) {
-                    const AssemblyID = response[i]['assembly_id'];
-                    ReportStatus = 'Assembly #' + i + ' was added to the Database as Project ID ' + AssemblyID;
-                    Assemblyli.className = 'AssemblySuccess';
-                    Assemblyli.style.backgroundColor = '#6EA400';
-                    Assemblyli.innerText = ReportStatus + ReportParts;
-                    ReportContents.append(Assemblyli);
-                }
-                else{
-                    ReportStatus = 'Assembly #' + i + ' failed...';
-                    Assemblyli.className = 'AssemblyFailure';
-                    Assemblyli.style.backgroundColor = '#EB093C';
-                    Assemblyli.innerText = ReportStatus + ReportParts + '\n' + response[i]['error'];
-                    ReportContents.append(Assemblyli);
-                }
-            }
-
-            // Initalize and Generate Assembly Report Dialog
-            $( "#AssemblyReport" ).dialog({
-                buttons: [
-                    {text: "OK",
-                        click: function() {
-                            $( this ).dialog( "close" );
-                        }
-                    }],
-                title: "Assembly Results",
-                minWidth: 600,
-                modal: true,
-                beforeClose: function( event, ui ) {
-                    if($('#AssemblyReport .reportUploadStatusList').find('.AssemblyFailure').length === 0){
-                        $('.assemblyPlasmid').remove();
-                        $('.definedPart').remove();
-                        reactionDefinition = [];
-                    }
-                }
-            }).dialog("open");
-        }
-    });
-}
-
-// Perform Assembly Reaction
-$('#performReaction').on('click', function(){
-    // Form validation
-    const plasmidsMasterMix = $('.MasterMix .assemblyDefinitions').children("button.assemblyPlasmid");
-    const plasmidsDropIn = $('.DropIn .assemblyDefinitions').children("button.assemblyPlasmid");
-    const linearDefinedParts = $('.UserDefinedParts .assemblyDefinitions').children("button.definedPart");
-
-    if(plasmidsMasterMix.length < 1){
-        AssemblyDefinitionErrorDialog('At least one Master Mix Plasmid is required!');
-    }else{
-        if(linearDefinedParts.length + plasmidsDropIn.length < 1){
-                AssemblyDefinitionErrorDialog('At least one Drop-In or Defined Part is required!');
-        }else{
-            performPlasmidAssembly();
-        }
-    }
-});
-
-// Assembly Definition Error Dialog
-function AssemblyDefinitionErrorDialog(message){
-    const AssemblyDefinitionError = $("#AssemblyDefinitionError");
-    AssemblyDefinitionError.text(message);
-    AssemblyDefinitionError.dialog({
-        buttons: [
-            {text: "OK",
-                click: function() {
-                    $( this ).dialog( "close" );
-                }
-            }],
-        title: "Assembly Definition Error",
-        minWidth: 400,
-        modal: true,
-        beforeClose: function( event, ui ) {
-                AssemblyDefinitionError.text("");
-            }
-    }).dialog("open");
-};
 
 
 // #######################

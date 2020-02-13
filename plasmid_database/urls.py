@@ -18,7 +18,9 @@ urlpatterns += [path(r'manage/', views.manage_database, name='plasmid-management
 urlpatterns += [path(r'add/', views.add_plasmids, name='add-plasmids'),
                 path(r'update_filter_table/', login_required(views.PlasmidFilterDatatable.as_view()), name='update-filter-table'),
                 path(r'add_plasmid_by_file/', views.add_plasmid_by_file, name='add-plasmid-by-file'),
-                path(r'perform_assemblies/', views.perform_assemblies, name='perform-assemblies'),
+                path(r'standard_assembly/', views.standard_assembly, name='standard-assembly'),
+                path(r'assembly_results/', views.assembly_result, name='assembly-results'),
+                # path(r'perform_assemblies/', views.perform_assemblies, name='perform-assemblies'),
                 ]
 
 

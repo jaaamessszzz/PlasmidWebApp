@@ -102,6 +102,9 @@ const datatable = $('#plasmid_datatable').DataTable({
 const DownloadPlasmidsSubmitButton = $('#DownloadPlasmidsSubmitButton');
 DownloadPlasmidsSubmitButton.prop("disabled", true);
 
+// Disable Delete button if no rows are selected
+// Implement this...
+
 // Enable row selection on datatable
 datatable.on( 'click', 'tr', function () {
     $(this).toggleClass('selected');

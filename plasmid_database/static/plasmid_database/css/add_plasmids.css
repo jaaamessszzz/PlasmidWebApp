@@ -243,3 +243,99 @@ label{
     margin-bottom: 0.4em;
     border: none;
 }
+
+/*************************/
+/* Standardized Assembly */
+/*************************/
+
+/* General */
+
+.deleteRow{
+    background-color: #eb093c;
+    border-radius: 4px;
+}
+
+.cloneRow{
+    background-color: #007CBE;
+    border-radius: 4px;
+}
+
+.Index{
+    display: none;
+}
+
+#AssemblyTable{
+    width: 100%;
+}
+
+#AssemblyTable tr{
+    text-align: center;
+}
+
+#AssemblyTable th{
+    text-align: center;
+}
+
+/* Table Overlay */
+
+.tableContainer {
+    margin: auto;
+    width: 80%;
+    background-color: white;
+}
+
+#tableOverlay {
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
+}
+
+td {
+    font-size: 8pt;
+}
+
+#MoCloPlasmidsTable tr:hover{
+ background:rgba(20,20,20,0.2);
+}
+
+.dark{
+    color: black;
+}
+
+/*************/
+/* Add Parts */
+/*************/
+
+/* General */
+
+form{
+    font-size: 8pt;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+#partInstructionsButton{
+    width: 100%;
+    margin-top: 1em;
+}
+
+#partInstructionsDiv{
+    display: block;
+    overflow: hidden;
+    transition: max-height 2s ease-in-out;
+}
+
+textarea{
+    width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}

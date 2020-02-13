@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <div class="header">
+        <h1>Assembly Result</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+{# Create table for assembly results #}
+<div class="container">
+    {% for result in results %}
+        <div class="assemblyResult">
+            <p>{{ result }}</p>
+            <p>{{ results.result.success }}</p>
+            <p>{{ results.result.reaction_plasmids }}</p>
+        </div>
+
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+{% load static %}
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+</script>
+
+{# Javascript #}
+
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
+
+{% endblock %}

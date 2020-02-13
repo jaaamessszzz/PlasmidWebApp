@@ -11,20 +11,28 @@
 {# Tab Navigation #}
 <nav class="SubNavigationBar">
     <ul class="pageTabs">
-        <li><a href="#assembly">Plasmid Assembly</a>
+        <li><a href="#parts">Part Plasmids</a>
+        <li><a href="#standardized">MoClo Assembly</a>
         <li><a href="#drag-n-drop">Drag-n-Drop</a>
-        <li><a href="#csv_upload">Upload CSV</a>
+        {# <li><a href="#assembly">Plasmid Assembly</a> #}
+        {# <li><a href="#csv_upload">Upload CSV</a>  #}
     </ul>
 </nav>
 
 {# Page Content #}
 <div class="pageContent">
+    {# MoClo Part Plasmids #}
+    {% include 'clone/clone-parts.html' %}
+    {# MoClo Cassette Assembly #}
+    {% include 'clone/clone-standardized.html' %}
     {# Drag-n-Drop #}
     {% include 'clone/clone-dragndrop.html' %}
+
     {# Assembly #}
-    {% include 'clone/clone-assembly.html' %}
+    {# {% include 'clone/clone-assembly.html' %} #}
     {# CSV Upload #}
-    {% include 'clone/clone-csvupload.html' %}
+    {#  {% include 'clone/clone-csvupload.html' %} #}
+
 </div>
 {% endblock %}
 
@@ -40,6 +48,8 @@
 
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/add_plasmids.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/clone-parts.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/clone-standardized.js' %}"></script>
 
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
@@ -49,7 +59,6 @@
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
 
 {% endblock %}
