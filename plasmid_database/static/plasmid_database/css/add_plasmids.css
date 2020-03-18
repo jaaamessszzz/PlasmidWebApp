@@ -278,12 +278,13 @@ label{
 
 /* Table Overlay */
 
-.tableContainer {
+.overlayContainer {
     margin: auto;
     width: 80%;
     background-color: white;
 }
 
+/* todo: generalize table overlay CSS */
 #tableOverlay {
   position: fixed; /* Sit on top of the page content */
   display: none; /* Hidden by default */
@@ -331,6 +332,10 @@ form{
     display: block;
     overflow: hidden;
     transition: max-height 2s ease-in-out;
+}
+
+#partErrors{
+    display: none;
 }
 
 textarea{

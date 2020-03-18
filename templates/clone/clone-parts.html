@@ -3,20 +3,41 @@
         <div id="partInstructionsButton"><b>Instructions.</b></div>
         <div id="partInstructionsDiv">
             <p style="font-size:10px;margin-top:0">
-                Part entry format (tab-delimited): UserID  Description  Part Type  Sequence<br>
+                Part entry format (tab-delimited): Description  Part Type  Sequence<br>
                 Recognized parts: 1 2 3 3a 3b 4 4a 4b 5 6 7 8 8a 8b<br>
-                Sequences can be DNA or Protein (they will be recognized automatically)<br>
+                Define parts spanning multiple part types with a dash e.g. 2-4<br>
+                Sequences are DNA (ATCGatcg)<br>
                 One new line per part!<br>
             </p>
         </div>
 
-
         <textarea id="partEntry" wrap="off" rows="25" placeholder="Paste your part sequences here!"></textarea>
-        <p>Sites to remove:
-            <input type="checkbox" name="BsaI" value="BsaI" checked>BsaI
-            <input type="checkbox" name="BsmBI" value="BsmBI" checked>BsmBI
-            <input type="checkbox" name="NotI" value="NotI" checked>NotI
-        </p>
-        <p><button id="submitParts">Submit</button></p>
+
+        <form id="partForm">
+            <label for="partProject">Select Project: </label>
+            <select id="partProject" name="Part Project">
+                {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.project }}</option>
+                {% endfor %}
+            </select>
+            <br>
+            <label for="partEntryVectors">Select Part Entry Vector: </label>
+            <select id="partEntryVectors" name="Entry Vectors">
+                {% for plasmid in partEntryVectors %}
+                    <option value="{{ plasmid.id }}">{{ plasmid.get_standard_id }}</option>
+                {% endfor %}
+            </select>
+            <br>
+            <input type="checkbox" id="addStandard" name="addStandard" value="addStandard" checked>
+            <label for="addStandard">Standardize parts</label>
+            <br>
+            <button class="partButton dark" type="submit" id="submitParts">Create Parts!</button>
+        </form>
+
+        <div id="partErrors">
+            <p>There were errors with your parts! Please fix the following:</p>
+            <ul id="partErrorList"></ul>
+        </div>
+
     </div>
 </div>

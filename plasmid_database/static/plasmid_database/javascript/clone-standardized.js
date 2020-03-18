@@ -16,6 +16,7 @@ class Node {
     }
 }
 
+// todo: figure out how to export/import in javascript...
 // https://www.geeksforgeeks.org/implementation-linkedlist-javascript/
 class PlasmidMap {
     // Cirular double linked list for plasmid part definitions 5'->3'
