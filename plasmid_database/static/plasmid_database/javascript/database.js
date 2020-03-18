@@ -102,18 +102,27 @@ const datatable = $('#plasmid_datatable').DataTable({
 const DownloadPlasmidsSubmitButton = $('#DownloadPlasmidsSubmitButton');
 DownloadPlasmidsSubmitButton.prop("disabled", true);
 
-// Disable Delete button if no rows are selected
+// Show/Hide delete button with "ARE YOU SUPER SURE" prompt
 // Implement this...
+const deletePlasmidsSubmitButton = $('#DeleteSelectedDatabasePlasmids');
+deletePlasmidsSubmitButton.prop("disabled", true);
+
 
 // Enable row selection on datatable
 datatable.on( 'click', 'tr', function () {
     $(this).toggleClass('selected');
+
     // Disable download button if no rows are selected
+    // Toggle delete plasmid button
     const SelectedPlasmids = datatable.rows('.selected').data();
     if(SelectedPlasmids.length === 0){
         DownloadPlasmidsSubmitButton.prop("disabled", true);
+        deletePlasmidsSubmitButton.prop("disabled", true);
+        deletePlasmidsSubmitButton.hide();
     } else {
         DownloadPlasmidsSubmitButton.prop("disabled", false);
+        deletePlasmidsSubmitButton.prop("disabled", false);
+        deletePlasmidsSubmitButton.show();
     }
 });
 
@@ -128,21 +137,91 @@ datatable.on('click', function(){
     $('#DownloadSelectedDatabasePlasmids').val(JSON.stringify(PlasmidIDs));
 });
 
+//===========================//
+// Delete Selected Plasmids //
+//=========================//
+
+// Show Confirmation Prompt
+const deleteButton = $('#DeleteSelectedDatabasePlasmids');
+deleteButton.on('click', function(){
+
+    let deletePlasmidInfo = document.getElementById('deletePlasmidInfo');
+    let errorPlasmidInfo = document.getElementById('errorPlasmidInfo');
+
+    // Clear Confirmation Prompt
+    deletePlasmidInfo.innerHTML = '';
+    errorPlasmidInfo.innerHTML = '';
+
+    document.getElementById('errorPlasmidInfoContainer').style.display = "none";
+
+    const SelectedPlasmids = datatable.rows('.selected').data();
+    console.log(SelectedPlasmids);
+
+    // List plasmids selected for deletion
+    for(let i=0;i<SelectedPlasmids.length;i++){
+        let currentPlasmid = SelectedPlasmids[i];
+        let plasmidRow = document.createElement('tr');
+        // Add plasmid Project (1), Index (2), and Description (5)
+        [1, 2, 5].forEach(function(index){
+            let plasmidCell = document.createElement('td');
+            plasmidCell.textContent = currentPlasmid[index];
+            plasmidRow.appendChild(plasmidCell);
+        });
+        if(currentPlasmid[7] === currentUser){
+            deletePlasmidInfo.appendChild(plasmidRow);
+        } else{
+            errorPlasmidInfo.appendChild(plasmidRow);
+        }
+
+        if (errorPlasmidInfo.innerHTML !== ''){
+            document.getElementById('errorPlasmidInfoContainer').style.display = "block";
+        }
+    }
+    document.getElementById("deletePlasmidsOverlay").style.display = "block";
+});
+
+// Hide confirmation prompt
+$('#cancelDeleteButton').on('click', function(){
+    document.getElementById("deletePlasmidsOverlay").style.display = "none";
+});
+
+// Delete Plasmids and rerender table
+$('#confirmDeletePlasmidsButton').on('click', function () {
+    let deletedPKs = [];
+    const SelectedPlasmids = datatable.rows('.selected').data();
+    for(let i=0;i<SelectedPlasmids.length;i++) {
+        if(SelectedPlasmids[i][7] === currentUser){
+            deletedPKs.push(SelectedPlasmids[i][0]);
+        }
+    }
+    let postData =  {'deletedPKs': deletedPKs};
+
+    // NOTE: Logged-in User is validated server-side as well!
+    $.post('/database/delete_user_plasmids/', postData, function () {
+        datatable.draw();
+        document.getElementById('deletePlasmidInfo').innerHTML = '';
+        document.getElementById('errorPlasmidInfo').innerHTML = '';
+        document.getElementById("deletePlasmidsOverlay").style.display = "none";
+    });
+});
+
 //=============================//
 // Show/hide Datatable columns //
 //=============================//
 
+const columnToggle = $('#ToggleDatatableColumns');
+
 // Playing with hovering dialog
 $('#HideDatatableColumnsButton').on('click', function(){
-    $('#ToggleDatatableColumns').slideToggle(400);
+    columnToggle.slideToggle(400);
 });
 
-$('#ToggleDatatableColumns').on('click', 'input', function(){
+columnToggle.on('click', 'input', function(){
     datatable.column($(this).val()).visible(this.checked);
 });
 
 // Allow label clicks to toggle checkboxes
-$('#ToggleDatatableColumns').on('click', 'label', function(){
+columnToggle.on('click', 'label', function(){
     const ColumnCheckbox = $(this.previousSibling);
     this.previousSibling.checked = !this.previousSibling.checked;
     datatable.column(ColumnCheckbox.val()).visible(this.previousSibling.checked);

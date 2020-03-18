@@ -51,11 +51,17 @@
         </table>
     </div>
     <div class="DatatableOptions">
+        {# Download selected plasmids #}
         <form method="post" action="download_database_plasmids/" style="display: inline-block">
             {% csrf_token %}
             <input type="hidden" name="DownloadSelectedDatabasePlasmids" id="DownloadSelectedDatabasePlasmids">
-            <button type="submit" id="DownloadPlasmidsSubmitButton" class="BlockButton"><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Selected Plasmids</button>
+            <button type="submit" id="DownloadPlasmidsSubmitButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Selected Plasmids</button>
         </form>
+
+        {# Delete selected plasmids #}
+        <button id="DeleteSelectedDatabasePlasmids" class="BlockButton"><i class="fas fa-trash fa-fw" data-fa-transform="grow-8"></i>  Delete Selected Plasmids</button>
+
+        {# Toggle table columns #}
         <div class="ToggleColumnButtonHolder">
             <button id="HideDatatableColumnsButton" class="BlockButton">Toggle Columns</button>
             <div id="ToggleDatatableColumns" class="PopupDialog">
@@ -65,6 +71,45 @@
         </div>
     </div>
 </div>
+
+{# Delete Plasmids Confirmation Overlay #}
+<div id="deletePlasmidsOverlay">
+    <div class="overlayContainer">
+        <div>
+            <h2>Plasmids to be deleted:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Index</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="deletePlasmidInfo">
+                </tbody>
+            </table>
+
+            <div id="errorPlasmidInfoContainer" style="display: none">
+                <h4>You do not have permission to delete the following plasmids:</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Index</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="errorPlasmidInfo">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p>Are you sure you want to delete these plasmids from the database?</p>
+
+        <button type="button" id="confirmDeletePlasmidsButton" class="dark BlockButton">YES I'M SURE</button>
+        <button type="button" id="cancelDeleteButton" class="dark BlockButton">NO GET ME OUT OF HERE</button>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascript %}
@@ -72,6 +117,7 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 {% load static %}
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/database.js' %}"></script>
+
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css'%}">
@@ -81,5 +127,6 @@
 {#Script#}
 <script type="text/javascript">
 var csrftoken = getCookie('csrftoken');
+var currentUser = '{{ user }}';
 </script>
 {% endblock %}
