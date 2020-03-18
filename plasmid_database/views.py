@@ -14,6 +14,7 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 
 import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
+from dnassembly.reactions.moclo import MoCloPartFromSequence
 
 from .models import Plasmid, User, Project, Feature, Attribute, Location
 from .forms import SignUpForm
@@ -170,6 +171,7 @@ def download_selected_plasmids(request):
 
     zip_file.close()
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
+    response['Content-Type'] = 'application/zip'
     return response
 
 @login_required
@@ -179,6 +181,26 @@ def database(request):
         'projects': Project.objects.all(),
     }
     return render(request, 'database.html', context)
+
+# --- Add Plasmid and Related Views --- #
+@login_required
+def delete_user_plasmids(request):
+    if request.user.is_authenticated:
+        username = request.user.username
+        plasmids_to_delete = [int(a) for a in request.POST.getlist('deletedPKs[]')]
+        print(plasmids_to_delete)
+        plasmid_qs = Plasmid.objects.filter(id__in=plasmids_to_delete, creator__username=username)
+        print(plasmid_qs)
+        print(plasmid_qs)
+        if plasmid_qs.count() == 0:
+            return JsonResponse({'success': False}, status=200)
+        if plasmid_qs.count() == len(plasmids_to_delete):
+            print('Attempting to delete...')
+            plasmid_qs.delete()
+        return JsonResponse({'success': True}, status=200)
+    else:
+        return JsonResponse({'success': False}, status=200)
+
 
 # --- Add Plasmid and Related Views --- #
 
@@ -196,6 +218,7 @@ def add_plasmids(request):
     context['projects'] = Project.objects.all()
     context['attribute_roots'] = Attribute.objects.filter(subcategory__isnull=True)
     context['roots_with_children'] = [attr.id for attr in context['attribute_roots'] if Attribute.objects.filter(subcategory=attr)]
+    context['partEntryVectors'] = Plasmid.objects.filter(attribute__name='Part Entry Vector')
     return render(request, 'clone/clone.html', context)
 
 
@@ -353,7 +376,7 @@ def standard_assembly(request):
         # Get plasmids for each assembly (row)
         assembly_db_plasmids = [Plasmid.objects.get(id=plasmid_id) for plasmid_id in set(index_list)]
         assembly_plasmid_pool = [plasmid.as_dnassembly() for plasmid in assembly_db_plasmids]
-        assembly_ids = [f'{str(plasmid.project)} {int(plasmid.projectindex)}' for plasmid in assembly_db_plasmids]
+        assembly_ids = [plasmid.get_standard_id() for plasmid in assembly_db_plasmids]
         assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
 
         try:
@@ -415,6 +438,107 @@ def standard_assembly(request):
 
     return JsonResponse({}, status=200)
 
+
+@login_required
+def part_assembly(request):
+    """
+    Performs MoClo assembly specifically for parts and pushes to database
+    :return:
+    """
+    print(request.POST)
+
+    # Unpack POST data
+    entry_vector_id = int(request.POST.get('entryVectorID'))
+    dropin_vector = Plasmid.objects.get(id=entry_vector_id)
+    part_dict = request.POST.get('parts')
+    addStandard = request.POST.get('addStandard')
+    reaction_enzyme = BsmBI
+    reaction_project = Project.objects.get(id=int(request.POST.get('projectID')))
+
+    # Prepare return data
+    assembly_results = dict()
+
+    response_dict = {}
+    response_dict['results'] = {}
+    response_dict['errors'] = []
+
+    if len(part_dict) == 0:
+        response_dict['errors'].append('No new parts were defined!')
+        return JsonResponse(response_dict, status=200)
+
+    for index, part_definition in part_dict.items():
+        # part_definition = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription]
+
+        leftPartOverhang = part_definition[0][0]
+        rightPartOverhang = part_definition[0][1]
+        partSequence = part_definition[1]
+        userDescription = part_definition[2]
+
+        # Create dnassembly Part from sequence
+        user_defined_part = MoCloPartFromSequence(partSequence, leftPartOverhang, rightPartOverhang, description=userDescription, standardize=addStandard)
+
+        # Get plasmids for each assembly (row)
+        assembly_plasmid_pool = [dropin_vector.as_dnassembly(), user_defined_part]
+        assembly_ids = [f'{str(dropin_vector.project)} {int(dropin_vector.projectindex)}']
+        assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
+
+        try:
+            gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
+            gg_rxn.digest()
+            assembly_product = gg_rxn.perform_assembly()
+
+            new_plasmid = Plasmid(project=reaction_project,
+                                  sequence=assembly_product.sequence,
+                                  creator=request.user,
+                                  description=assembly_product.description)
+            new_plasmid.save()
+
+            # Pull features from assembly_product and associate with new_plasmid
+            new_plasmid_features = []
+            for feature in assembly_product.features:
+                new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
+            new_plasmid.feature.add(*new_plasmid_features)
+
+            # Annotate part plasmid, if applicable
+            print('Annotating Parts...')
+            moclo_parts = annotate_moclo(new_plasmid.sequence)
+            if moclo_parts:
+                attribute_list = list()
+                for part in moclo_parts:
+                    current_attribute = Attribute.objects.filter(name=f'Part {part}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
+
+            # Annotate cassette plasmid, if applicable
+            moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
+            if moclo_cassette:
+                attribute_list = list()
+                for cassette in moclo_cassette:
+                    current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
+
+            assembly_results[index]['success'] = True
+            assembly_results[index]['new_plasmid'] = new_plasmid
+            assembly_results[index]['assembly_id'] = f'{new_plasmid.project} {int(new_plasmid.projectindex)}'
+
+        except AssemblyException as assembly_error:
+            print(assembly_error)
+            assembly_results[index]['success'] = False
+            assembly_results[index]['error'] = str(assembly_error)
+
+        except ReactionDefinitionException as definition_error:
+            print(definition_error)
+            assembly_results[index]['success'] = False
+            assembly_results[index]['error'] = str(definition_error)
+
+    request.session['results'] = assembly_results
+
+    return JsonResponse(response_dict, status=200)
+
+
 @login_required
 def assembly_result(request):
     """
@@ -422,35 +546,7 @@ def assembly_result(request):
     """
     assembly_results = request.session['results']
     print(assembly_results)
-    return render(request, 'clone/clone-assemblyresult.html', assembly_results)
-
-
-@login_required
-def part_submission(request):
-    """
-    Parse tsv contect to add parts
-    """
-    # Old code for adding parts, use as template
-    try:
-        if type(drop_in_set) is dict:
-            defined_part_dna = [dnassembly.Part(name=defined_part['PartID'],
-                                                entity_id=defined_part['PartID'],
-                                                sequence=defined_part['PartSequence']
-                                                )]
-            assembly_plasmid_pool = master_mix_dna + defined_part_dna
-            response_data[index]['DefinedPart'] = defined_part['PartID']
-            response_data[index]['reaction_plasmids'] = master_mix_ids
-
-        else:
-            assembly_plasmid_pool = master_mix_dna + [plasmid.as_dnassembly() for plasmid in drop_in_set]
-            assembly_plasmid_id_list = master_mix_ids + [[str(plasmid.creator), int(plasmid.projectindex)] for plasmid
-                                                         in drop_in_set]
-            response_data[index]['reaction_plasmids'] = assembly_plasmid_id_list
-
-    except SequenceException as e:
-        return JsonResponse({'DNA_error': str(e)}, status=200)
-    except Exception as e:
-        return JsonResponse({'DNA_error': str(e)}, status=200)
+    return render(request, 'clone/clone-assemblyresult.html', {'results': assembly_results})
 
 
 # --- Plasmid Features and Related Views --- #
@@ -645,5 +741,56 @@ def plasmid(request, project_id, plasmid_id):
         raise Http404
 
     requested_plasmid = get_object_or_404(Plasmid, project__project=project_id, projectindex=plasmid_id)
-    context={'plasmid': requested_plasmid}
+    context = {}
+    context['plasmid'] = requested_plasmid
+    context['current_user'] = request.user
+    context['attrString'] = json.dumps([f'Attribute-{attr.id}' for attr in requested_plasmid.attribute.all()])
+    context['locString'] = json.dumps([f'Location-{loc.id}' for loc in requested_plasmid.location.all()])
     return render(request, 'plasmid_page.html', context)
+
+def update_plasmid(request):
+    """Update location, attribute, and description information for a plasmid"""
+    user_id = int(request.user.id)
+    requested_plasmid = request.POST['plasmidPK']
+    locationPKs = [int(loc) for loc in request.POST.getlist('locationPKs[]')]
+    attributePKs = [int(attr) for attr in request.POST.getlist('attributePKs[]')]
+    newDescription = request.POST['newDescription']
+
+    plasmid_to_modify = Plasmid.objects.get(id=int(requested_plasmid))
+    response_dict = dict()
+
+    if plasmid_to_modify.creator.id != user_id:
+        response_dict['Success'] = False
+        response_dict['Error'] = f'You can only edit your own plasmids!'
+    else:
+        try:
+            # Update description
+            plasmid_to_modify.description = newDescription
+            response_dict['newDescription'] = newDescription
+            # Update attributes
+            plasmid_to_modify.attribute.clear()
+            new_attributes = Attribute.objects.filter(id__in=attributePKs)
+            attribute_list = [attr for attr in new_attributes]
+            plasmid_to_modify.attribute.add(*attribute_list)
+            response_dict['newAttributes'] = [attr.name for attr in attribute_list]
+            # Update locations
+            plasmid_to_modify.location.clear()
+            new_locations = Location.objects.filter(id__in=locationPKs)
+            location_list = [loc for loc in new_locations]
+            plasmid_to_modify.location.add(*location_list)
+            response_dict['newLocations'] = [loc.name for loc in location_list]
+
+            print('Updating description!')
+            plasmid_to_modify.save(update_fields=['description'], force_update=True)
+            print('description updated...')
+
+            print(response_dict['newDescription'])
+            print(response_dict['newAttributes'])
+            print(response_dict['newLocations'])
+            response_dict['Success'] = True
+
+        except Exception as e:
+            print(e)
+            response_dict['Success'] = False
+            response_dict['Error'] = [str(e)]
+    return JsonResponse(response_dict)

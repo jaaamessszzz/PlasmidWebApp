@@ -6,6 +6,7 @@ app_name = 'plasmid_database'
 urlpatterns = [path('signup/', views.new_user, name='new-user'),
                path(r'', views.database, name='database'),
                path(r'download_database_plasmids/', views.download_selected_plasmids, name='download-database-plasmids'),
+               path(r'delete_user_plasmids/', views.delete_user_plasmids, name='delete-user-plasmids'),
                path(r'update_table/', login_required(views.PlasmidDatatable.as_view()), name='update_table'),
                ]
 
@@ -19,10 +20,10 @@ urlpatterns += [path(r'add/', views.add_plasmids, name='add-plasmids'),
                 path(r'update_filter_table/', login_required(views.PlasmidFilterDatatable.as_view()), name='update-filter-table'),
                 path(r'add_plasmid_by_file/', views.add_plasmid_by_file, name='add-plasmid-by-file'),
                 path(r'standard_assembly/', views.standard_assembly, name='standard-assembly'),
+                path(r'part_assembly/', views.part_assembly, name='part-assembly'),
                 path(r'assembly_results/', views.assembly_result, name='assembly-results'),
                 # path(r'perform_assemblies/', views.perform_assemblies, name='perform-assemblies'),
                 ]
-
 
 # --- Populate Attribute Dropdowns --- #
 urlpatterns += [path(r'get_attribute_tree/', views.get_attribute_tree, name='attr-tree'),
@@ -42,4 +43,5 @@ urlpatterns += [path(r'get_location_tree/', views.get_location_tree, name='loc-t
 
 # --- View Plasmids --- #
 urlpatterns += [path(r'<project_id>/<int:plasmid_id>/', views.plasmid, name='plasmid-view'),
+                path(r'update_plasmid/', views.update_plasmid, name='update-plasmid'),
                 ]
