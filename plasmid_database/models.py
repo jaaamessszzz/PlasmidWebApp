@@ -135,14 +135,15 @@ class Plasmid(models.Model):
         return ', '.join([loc.name for loc in self.location.all()])
 
     def save(self, *args, **kwargs):
-        last_plasmid = Plasmid.objects.filter(project=self.project).order_by('projectindex').last()
-        if not last_plasmid or last_plasmid.projectindex is None:
-            plasmid_index = 1
-        else:
-            plasmid_index = last_plasmid.projectindex + 1
-        self.projectindex = plasmid_index
+        if not self.pk and not self.projectindex:
+            last_plasmid = Plasmid.objects.filter(project=self.project).order_by('projectindex').last()
+            if not last_plasmid or last_plasmid.projectindex is None:
+                plasmid_index = 1
+            else:
+                plasmid_index = last_plasmid.projectindex + 1
+            self.projectindex = plasmid_index
 
-        models.Model.save(self, *args, **kwargs)
+        super().save(*args, **kwargs)
         return self.creator, self.projectindex
 
     def as_dnassembly(self):
