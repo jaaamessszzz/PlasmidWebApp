@@ -51,10 +51,7 @@ LocationJSTree.on('select_node.jstree', function(event, data){
        document.getElementById('CurrentLocationChildren').textContent = response['Children'];
 
        // Only show delete button if user made location
-       if(response['CreatorID'] !== CurrentUserID){
-           $('#DeleteLocation').hide();
-           $('#EditLocation').hide();
-       } else{
+       if(response['CreatorID'] === CurrentUserID){
            $('#DeleteLocation').show();
            $('#EditLocation').show();
        }

@@ -50,6 +50,10 @@ h3 {
     padding: 10px;
 }
 
+#DeleteLocation, #EditLocation {
+    display: none;
+}
+
 /*********************/
 /* Dialog Formatting */
 /*********************/
