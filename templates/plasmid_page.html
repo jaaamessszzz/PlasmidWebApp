@@ -9,18 +9,22 @@
 {% block content %}
 <div class="container">
     <div class="DataDumpContainer">
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Project</li>
             <li class="PlasmidValue">{{ plasmid.project.project }}</li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Project ID</li>
             <li class="PlasmidValue">{{ plasmid.projectindex }}</li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Creator</li>
             <li class="PlasmidValue">{{ plasmid.creator }}</li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Features</li>
             <li class="PlasmidValue">
@@ -31,40 +35,64 @@
                 </ul>
             </li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Attributes</li>
             <li class="PlasmidValue">
-                <ul class="InnerDataDump">
+                <ul class="InnerDataDump" id="ulAttributes">
                 {% for attr in plasmid.attribute.all %}
                     <li class="PlasmidValue">{{ attr.name }}</li>
                 {% endfor %}
                 </ul>
             </li>
+            <li>
+                <div class="Settings-Flexbox-Container">
+                    <div id="DragnDropAttr-TreeJS" class="DropdownTreeMenu" style="display: none;"></div>
+                </div>
+            </li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Locations</li>
             <li class="PlasmidValue">
-                <ul class="InnerDataDump">
+                <ul class="InnerDataDump" id="ulLocations">
                 {% for loc in plasmid.location.all %}
                     <li class="PlasmidValue">{{ loc.name }}</li>
                 {% endfor %}
                 </ul>
             </li>
+            <li>
+                <div class="Settings-Flexbox-Container">
+                    <div id="DragnDropLoc-TreeJS" class="DropdownTreeMenu" style="display: none;"></div>
+                </div>
+            </li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Description</li>
-            <li class="PlasmidValue">{{ plasmid.description }}</li>
+            <li class="PlasmidValue">
+                <div id="PlasmidDescription">{{ plasmid.description }}</div>
+            </li>
         </ul>
+
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Created</li>
             <li class="PlasmidValue">{{ plasmid.created }}</li>
         </ul>
-{#        <ul class="PlasmidDataDump">#}
-{#            <li class="PlasmidKey">Sequence</li>#}
-{#            <li class="PlasmidValue">#}
-{#                <div class="DisplaySequence">{{ plasmid.sequence.upper }}</div>#}
-{#            </li>#}
-{#        </ul>#}
+
+        <div style="padding: 1em 0.5em">
+            <button class="BlockButton" id="EditPlasmid" style="display: none">Edit Plasmid</button>
+            <button class="BlockButton" id="SavePlasmid" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-edit"></i>Save Plasmid</button>
+            <button class="BlockButton" id="CancelEdits" style="background-color: #eb093c; display: none;"><i class="fas fa-fw fa-ban"></i>Cancel</button>
+        </div>
+
+        <div style="display: none">
+            <p>There were errors associated with your edits:</p>
+            <ul id="PlasmidEditErrors" >
+
+            </ul>
+        </div>
+
     </div>
 </div>
 {% endblock %}
@@ -76,14 +104,27 @@
 
 {% block javascript %}
 {% load static %}
+
 <script type="text/javascript">
     var csrftoken = getCookie('csrftoken');
+
+    const CurrentUserID = "{{ current_user.id }}";
+    console.log(CurrentUserID);
+
+    {#  Pass plasmid information to JS  #}
+    const plasmidCreator = "{{ plasmid.creator.id }}";
+    const plasmidPK = "{{ plasmid.id }}";
+    const plasmidLocations = JSON.parse("{{ locString|escapejs }}");
+    const plasmidAttributes = JSON.parse("{{ attrString|escapejs }}");
+    const plasmidDescription = "{{ plasmid.description }}";
 </script>
+
 {# Javascript #}
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/plasmid_page.js' %}"></script>
 
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">

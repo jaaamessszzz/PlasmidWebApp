@@ -30,6 +30,12 @@
     display: inline-block;
 }
 
+.Settings-Flexbox-Container {
+    display: inline-block;
+    flex: 1 1 45%;
+    padding: 10px;
+}
+
 /********************************/
 /* Sequence-Specific Formatting */
 /********************************/
