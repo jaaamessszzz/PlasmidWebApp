@@ -102,10 +102,6 @@ button{
     color: white;
 }
 
-label{
-    font-size: 10pt;
-}
-
 .button-flex{
     display: flex;
     flex-direction: row;

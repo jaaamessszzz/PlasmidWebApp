@@ -56,6 +56,8 @@ $('#partForm').submit(function(e) {
     // Validate Rows
     let rowErrors = [];
     const DNARegex = new RegExp('^[ATCGatcg]+$');
+    // todo: split up restriction site recognition based on user inputs
+    // todo: check for restriction sites at beginning/end of sequence (assumes part 3)
     const RxnSiteRegex = new RegExp('^CGTCTC|GAGACG|GGTCTC|GAGACC|GCGGCCGC|CGCCGGCG$');
 
     // Part entry format (tab-delimited): Description  Part Type  Sequence
@@ -147,7 +149,7 @@ $('#partForm').submit(function(e) {
 
         $.ajax({
             url: '/database/part_assembly/',
-            data: postData,
+            data: {'data': JSON.stringify(postData)},
             method: "POST",
             success: function () {
                 window.location.href = '/database/assembly_results/';

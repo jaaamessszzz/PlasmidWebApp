@@ -445,15 +445,18 @@ def part_assembly(request):
     Performs MoClo assembly specifically for parts and pushes to database
     :return:
     """
-    print(request.POST)
 
     # Unpack POST data
-    entry_vector_id = int(request.POST.get('entryVectorID'))
+    post_data = json.loads(request.POST.get('data'))
+    entry_vector_id = int(post_data.get('entryVectorID'))
     dropin_vector = Plasmid.objects.get(id=entry_vector_id)
-    part_dict = request.POST.get('parts')
-    addStandard = request.POST.get('addStandard')
+    part_dict = post_data.get('parts')
+    addStandard = post_data.get('addStandard')
     reaction_enzyme = BsmBI
-    reaction_project = Project.objects.get(id=int(request.POST.get('projectID')))
+    reaction_project = Project.objects.get(id=int(post_data.get('projectID')))
+
+    # DEBUGGING
+    pprint(post_data)
 
     # Prepare return data
     assembly_results = dict()
@@ -467,8 +470,11 @@ def part_assembly(request):
         return JsonResponse(response_dict, status=200)
 
     for index, part_definition in part_dict.items():
-        # part_definition = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription]
 
+        # Create new dict for part
+        assembly_results[index] = {}
+
+        # part_definition = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription]
         leftPartOverhang = part_definition[0][0]
         rightPartOverhang = part_definition[0][1]
         partSequence = part_definition[1]
