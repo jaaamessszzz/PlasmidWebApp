@@ -12,7 +12,7 @@ class User(AbstractUser):
 
 
 class Project(models.Model):
-    project = models.TextField()
+    project = models.TextField(unique=True)
     initials = models.CharField(max_length=10, unique=True)
     description = models.TextField()
     members = models.ManyToManyField(User)
@@ -31,7 +31,8 @@ class Feature(models.Model):
 
 class FeatureType(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    name = models.TextField()
+    name = models.TextField(unique=True)
+    color = models.TextField(null=True)
     description = models.TextField(null=True)
 
 
@@ -109,7 +110,6 @@ class Plasmid(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     projectindex = models.IntegerField()
-    userid = models.TextField(null=True)
     sequence = models.TextField()
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -158,3 +158,7 @@ class Plasmid(models.Model):
         plasmid_dna_entity = dnaPlasmid(sequence=self.sequence, entity_id=self.get_standard_id(), name=self.get_standard_id(), description=self.description, features=feature_list)
         return plasmid_dna_entity
 
+
+class PlasmidAlias(models.Model):
+    alias = models.TextField(max_length=20)
+    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE)
