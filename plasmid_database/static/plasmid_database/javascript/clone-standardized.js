@@ -265,7 +265,7 @@ function performPlasmidAssembly(assemblyForm){
             let partPKs = [];
 
             for (let cell of row.cells){
-                if(cell.className.startsWith('Part')){
+                if(!cell.className.startsWith('Options')){
                     // Skip rows where
                     if(!cell.classList.contains('Filled')){
                         rowComplete = false;
@@ -273,7 +273,6 @@ function performPlasmidAssembly(assemblyForm){
                     }
                     let cellPartPK = $(cell).data('partPK');
                     partPKs.push(cellPartPK);
-
                 }
             }
 
@@ -394,6 +393,8 @@ MoCloDatatable.on('click', 'tr', function () {
         let elementStripped = element.replace(/(^\s+|\s+$)/g,'');  // How does JavaScript not have a built-in strip???
         if(elementStripped.startsWith('Part')){
             partParts.push(elementStripped.replace(' ', '_'));
+        } else if (elementStripped.startsWith('Con')){
+            partParts.push(elementStripped.split(' ')[1]);
         }
     });
 
