@@ -16,7 +16,7 @@ import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
-from .models import Plasmid, User, Project, Feature, Attribute, Location
+from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType
 from .forms import SignUpForm
 
 # todo: separate views into separate files based on page/function
@@ -311,8 +311,6 @@ def add_plasmid_by_file(request):
                 new_plasmid.attribute.add(*attribute_list)
 
             # Automatically annotate plasmid parts/cassettes
-            # todo: check if part plasmid
-            print('Annotating Parts...')
             moclo_parts = annotate_moclo(new_plasmid.sequence)
             if moclo_parts:
                 attribute_list = list()
@@ -322,9 +320,6 @@ def add_plasmid_by_file(request):
                     for attr in current_attribute:
                         attribute_list.append(attr)
                 new_plasmid.attribute.add(*attribute_list)
-
-            # todo: check if cassette plasmid
-            # Annotate cassette plasmid, if applicable
             moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
             if moclo_cassette:
                 attribute_list = list()
@@ -455,9 +450,6 @@ def part_assembly(request):
     reaction_enzyme = BsmBI
     reaction_project = Project.objects.get(id=int(post_data.get('projectID')))
 
-    # DEBUGGING
-    pprint(post_data)
-
     # Prepare return data
     assembly_results = dict()
 
@@ -525,6 +517,12 @@ def part_assembly(request):
                     for attr in current_attribute:
                         attribute_list.append(attr)
                 new_plasmid.attribute.add(*attribute_list)
+
+            # Add partSequence as Feature for part 2/3/4
+            if all([leftPartOverhang[0] in ('2', '3', '4'), rightPartOverhang[0] in ('2', '3', '4'), leftPartOverhang[0] == rightPartOverhang[0]]):
+                part_featuretype = FeatureType.objects.get(name='Part')
+                part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)
+                part_feature.save()
 
             assembly_results[index]['success'] = True
             assembly_results[index]['new_plasmid'] = new_plasmid
