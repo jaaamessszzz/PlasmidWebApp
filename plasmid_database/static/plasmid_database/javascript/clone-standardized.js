@@ -301,9 +301,6 @@ function performPlasmidAssembly(assemblyForm){
                 window.location.href = '/database/assembly_results/';
             }
         });
-
-        // Send form, report assembly results
-        // $.post('/database/standard_assembly/', {'data': JSON.stringify(plasmidPostData)});
     }
 
 }
