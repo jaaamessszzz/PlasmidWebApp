@@ -5,4 +5,4 @@ django-datatables-view>=1.17.0
 docopt
 pymysql
 psycopg2>=2.7.7
-dnassembly>=0.1
+dnassembly>=0.1.1
