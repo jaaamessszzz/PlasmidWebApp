@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-</head>
+{% extends "base.html" %}
 
-<body>
+{% block header %}
     <div class="header">
         {% if user.is_authenticated %}
             <h1>Welcome {{ user.username.capitalize }}</h1>
@@ -13,12 +8,12 @@
             <h1>Welcome</h1>
         {% endif %}
         {% block nav %}
-            {% include "base.html" %}
         {% endblock %}
     </div>
+{% endblock %}
 
+{% block content %}
     <div class="container", style="text-align: center">
         <p>Landing page for the plasmid database. Not entirely sure what is going to live here...</p>
     </div>
-</body>
-</html>
+{% endblock %}
