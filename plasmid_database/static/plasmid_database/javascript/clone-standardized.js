@@ -317,9 +317,9 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
             "processing": true,
             "serverSide": true,
             "deferRender": true,
-            "paging": false,
-            "scroller": true,
-            "sScrollY": 500,
+            "paging": true,
+            "scroller": true,  // Scroller isn't working for some reason...
+            "scrollY": 600,
             "orderCellsTop": true,
             "order": [[ 1, "asc" ]],
             "fixedColumns": true,
@@ -331,19 +331,19 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
                 { name: 'features', width: 200, targets: 3,
                     orderable: false,
                     render : function (data, type, row, meta) {
-                        return '<div style="overflow:scroll;width:100%;height:2.75em;">' + row[3] + '</div>';
+                        return '<div style="overflow:scroll;width:100%;height:4em;">' + row[3] + '</div>';
                     }
                 },
                 { name: 'attributes', width: 200, targets: 4,
                     orderable: false,
                     render : function (data, type, row, meta) {
-                        return '<div style="overflow:scroll;width:100%;height:2.75em;">' + row[4] + '</div>';
+                        return '<div style="overflow:scroll;width:100%;height:4em;">' + row[4] + '</div>';
                     }
                 },
                 { name: 'description', width: 200, targets: 5,
                     orderable: false,
                     render : function (data, type, row, meta) {
-                        return '<div style="overflow:scroll;width:100%;height:2.75em;">' + row[5] + '</div>';
+                        return '<div style="overflow:scroll;width:100%;height:4em;">' + row[5] + '</div>';
                     }
                 },
             ],
