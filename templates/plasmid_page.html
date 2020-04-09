@@ -26,6 +26,17 @@
         </ul>
 
         <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Aliases</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump">
+                {% for altname in plasmid.aliases.all %}
+                    <li class="PlasmidValue">{{ altname.alias }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Features</li>
             <li class="PlasmidValue">
                 <ul class="InnerDataDump">
@@ -44,8 +55,6 @@
                     <li class="PlasmidValue">{{ attr.name }}</li>
                 {% endfor %}
                 </ul>
-            </li>
-            <li>
                 <div class="Settings-Flexbox-Container">
                     <div id="DragnDropAttr-TreeJS" class="DropdownTreeMenu" style="display: none;"></div>
                 </div>
@@ -60,12 +69,11 @@
                     <li class="PlasmidValue">{{ loc.name }}</li>
                 {% endfor %}
                 </ul>
-            </li>
-            <li>
                 <div class="Settings-Flexbox-Container">
                     <div id="DragnDropLoc-TreeJS" class="DropdownTreeMenu" style="display: none;"></div>
                 </div>
             </li>
+
         </ul>
 
         <ul class="PlasmidDataDump">

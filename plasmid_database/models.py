@@ -125,6 +125,9 @@ class Plasmid(models.Model):
     def get_standard_id(self):
         return f'{self.project.project}_{self.projectindex:0>5}'
 
+    def get_aliases_as_string(self):
+        return ', '.join(sorted([altname.alias for altname in self.aliases.all()]))
+
     def get_attributes_as_string(self):
         return ', '.join(sorted([attr.name for attr in self.attribute.all()]))
 
@@ -161,4 +164,4 @@ class Plasmid(models.Model):
 
 class PlasmidAlias(models.Model):
     alias = models.TextField(max_length=20)
-    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE)
+    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='aliases')

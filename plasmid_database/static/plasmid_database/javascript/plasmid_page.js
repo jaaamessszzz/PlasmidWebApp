@@ -29,8 +29,8 @@ $('#EditPlasmid').on('click', function () {
              $(this).jstree("select_node", plasmidLocations);
         });
     });
-
-    document.getElementById('DragnDropLoc-TreeJS').style.display = 'block';
+    document.getElementById('ulLocations').style.display = 'none';
+    document.getElementById('DragnDropLoc-TreeJS').style.display = 'inline-block';
 
     // Load and show attribute tree
     $.post('/database/get_attribute_tree/', function(response){
@@ -52,6 +52,7 @@ $('#EditPlasmid').on('click', function () {
              $(this).jstree("select_node", plasmidAttributes);
         });
     });
+    document.getElementById('ulAttributes').style.display = 'none';
     document.getElementById('DragnDropAttr-TreeJS').style.display = 'inline-block';
 
     // Make description editable
@@ -98,6 +99,7 @@ $('#SavePlasmid').on('click', function(){
                 newLocation.className = 'PlasmidValue';
                 plasmidLocations.appendChild(newLocation);
             });
+            plasmidLocations.style.display = 'inline-block';
             let plasmidAttributes = document.getElementById('ulAttributes');
             plasmidAttributes.innerHTML = '';
             response['newAttributes'].forEach(function (element) {
@@ -106,6 +108,7 @@ $('#SavePlasmid').on('click', function(){
                 newAttribute.className = 'PlasmidValue';
                 plasmidAttributes.appendChild(newAttribute);
             });
+            plasmidAttributes.style.display = 'inline-block';
             let plasmidDescriptionDiv = document.getElementById('PlasmidDescription');
             plasmidDescriptionDiv.textContent = response['newDescription'];
 
@@ -128,6 +131,9 @@ $('#SavePlasmid').on('click', function(){
 // Cancel Edits
 $('#CancelEdits').on('click', function(){
     let plasmidDescriptionDiv = document.getElementById('PlasmidDescription');
+    document.getElementById('ulLocations').style.display = 'inline-block';
+    document.getElementById('ulAttributes').style.display = 'inline-block';
+
     plasmidDescriptionDiv.textContent = plasmidDescription;
     closeEditing();
 });

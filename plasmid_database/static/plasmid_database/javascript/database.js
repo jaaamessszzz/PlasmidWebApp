@@ -7,34 +7,44 @@ const datatable = $('#plasmid_datatable').DataTable({
     "orderCellsTop": true,
     "search": { "regex": true },
     "order": [[ 1, "asc" ]],
-    // "fixedColumns": true,
+    "fixedColumns": true,
     "columnDefs": [
         { name: 'id', width: 0, targets: 0, visible: false },
         { name: 'project',width: 100, targets: 1 },
-        { name: 'projectindex',width: 100, targets: 2 },
-        { name: 'features',width: 200, targets: 3,
-            orderable: false,
+        { name: 'projectindex',width: 100, targets: 2,
+            render : function (data, type, row, meta) {
+                    return "<a href=" + row[1] + "/" + row[2] +">" + row[2] + "</a>";
+                    },
+        },
+        { name: 'alias', width: 150, targets: 3,
+            orderable: false,  // I can't figure out how to order aliases, issue with how DatatableView evaluates querysets for related name FKs
             render : function (data, type, row, meta) {
                     return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[3] + "</div>";
                     },
         },
-        { name: 'attributes',
-            width: 200, targets: 4,
-            orderable: false,
-            render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[4] + "</div>";
-            },
-        },
-        { name: 'description', width: 200, targets: 5,
+        { name: 'feature', width: 200, targets: 4,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[5] + "</div>";
+                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[4] + "</div>";
                     },
         },
-        { name: 'location', width: 100, targets: 6,
+        { name: 'attribute',
+            width: 200, targets: 5,
+            orderable: false,
+            render: function (data, type, row, meta) {
+                return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[5] + "</div>";
+            },
+        },
+        { name: 'description', width: 200, targets: 6,
+            orderable: false,
+            render : function (data, type, row, meta) {
+                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[6] + "</div>";
+                    },
+        },
+        { name: 'location', width: 100, targets: 7,
             orderable: false},
-        { name: 'creator', width: 100, targets: 7 },
-        { name: 'date', width: 100, targets: 8 },
+        { name: 'creator', width: 100, targets: 8 },
+        { name: 'date', width: 100, targets: 9 },
     ],
     "drawCallback": function( settings ) {
         this.api().columns.adjust();
@@ -45,6 +55,7 @@ const datatable = $('#plasmid_datatable').DataTable({
         $('.filterInputsRow').on( "input paste ValueChange", 'input, select', function () {
             const CurrentColumnName = this.name;
             const currentColumn = table.api().column(this.name + ':name');
+            console.log(CurrentColumnName);
 
             let searchJQO;
             if ($(this).nodeName === 'SELECT'){
@@ -63,6 +74,8 @@ const datatable = $('#plasmid_datatable').DataTable({
             }
             // const inputValue = $.fn.dataTable.util.escapeRegex(searchJQO.val());
             const inputValue = searchJQO.val();
+            console.log(currentColumn);
+            console.log(inputValue);
             currentColumn.search( inputValue, false, false ).draw();
         });
 
@@ -167,7 +180,7 @@ deleteButton.on('click', function(){
             plasmidCell.textContent = currentPlasmid[index];
             plasmidRow.appendChild(plasmidCell);
         });
-        if(currentPlasmid[7] === currentUser){
+        if(currentPlasmid[8] === currentUser){
             deletePlasmidInfo.appendChild(plasmidRow);
         } else{
             errorPlasmidInfo.appendChild(plasmidRow);
@@ -190,7 +203,7 @@ $('#confirmDeletePlasmidsButton').on('click', function () {
     let deletedPKs = [];
     const SelectedPlasmids = datatable.rows('.selected').data();
     for(let i=0;i<SelectedPlasmids.length;i++) {
-        if(SelectedPlasmids[i][7] === currentUser){
+        if(SelectedPlasmids[i][8] === currentUser){
             deletedPKs.push(SelectedPlasmids[i][0]);
         }
     }

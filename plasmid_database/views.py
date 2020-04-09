@@ -56,6 +56,8 @@ class FilterDatatableTemplate(BaseDatatableView):
         column_index_mapping = {column: self.request.GET.get(f'columns[{index}][search][value]', None)
                                 for index, column in enumerate(self.columns)}
 
+        pprint(column_index_mapping)
+
         # Return unaltered qs if there is no user input
         if all([value in [None, ''] for value in column_index_mapping.values()]):
             return qs
@@ -110,6 +112,10 @@ class FilterDatatableTemplate(BaseDatatableView):
                             term_filter = {f'{current_field}__name__{search_method}': search_term}
                             column_querysets.append(qs.filter(**term_filter))
 
+                        elif current_field == 'alias':
+                            term_filter = {f'aliases__alias__{search_method}': search_term}
+                            column_querysets.append(qs.filter(**term_filter))
+
                         else:
                             term_filter = {f'{current_field}__{search_method}': search_term}
                             column_querysets.append(qs.filter(**term_filter))
@@ -124,8 +130,8 @@ class FilterDatatableTemplate(BaseDatatableView):
 class PlasmidDatatable(FilterDatatableTemplate):
 
     model = Plasmid
-    columns = ['id', 'project', 'projectindex', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
-    order_columns = ['id', 'project', 'projectindex', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
+    columns = ['id', 'project', 'projectindex', 'alias', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
+    order_columns = ['id', 'project', 'projectindex', 'alias', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
     max_display_length = 100
 
     def render_column(self, row, column):
@@ -138,6 +144,7 @@ class PlasmidDatatable(FilterDatatableTemplate):
                 escape(int(item.id)),
                 escape(str(item.project.project).capitalize()),
                 escape(item.projectindex),
+                item.get_aliases_as_string(),
                 item.get_features_as_string(),
                 item.get_attributes_as_string(),
                 item.description,
