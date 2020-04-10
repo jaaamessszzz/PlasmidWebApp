@@ -25,7 +25,7 @@ SECRET_KEY = '35ylx3bap^79$j2f*4syz8x^t%ubuq@og30)ufw34@7ajmq5)#'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['plasmiddb.eba-p3hji2ct.us-west-2.elasticbeanstalk.com', '34.216.218.13']
+ALLOWED_HOSTS = ['plasmiddb.eba-p3hji2ct.us-west-2.elasticbeanstalk.com']
 
 
 # Application definition
