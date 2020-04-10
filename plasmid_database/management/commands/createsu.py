@@ -10,5 +10,5 @@ from plasmid_database.models import User
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        if not User.objects.filter(username="admin").exists():
+        if not User.objects.filter(username="Admin").exists():
             User.objects.create_superuser("Admin", "admin@admin.com", "plasmid")
