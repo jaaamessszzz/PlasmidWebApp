@@ -34,7 +34,7 @@ def add_moclo_attributes(user):
 
     # Check for existing modular cloning tree
     if len(Attribute.objects.filter(name='Modular Cloning')) > 0:
-        raise Exception('It looks like Modular Cloning Attributes have already been added to the database!')
+        print('It looks like Modular Cloning Attributes have already been added to the database!')
 
     modular_cloning = Attribute(name='Modular Cloning', description='Modular Cloning designations.', creator=user, subcategory=None)
     modular_cloning.save()
