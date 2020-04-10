@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         # Positional arguments
-        parser.add_argument('user', nargs='1', type=str)
+        parser.add_argument('user', nargs=1, type=str)
 
     def handle(self, *args, **options):
         username = options['user']
