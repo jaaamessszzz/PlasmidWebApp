@@ -90,7 +90,8 @@ const assemblyTable = $('#AssemblyTable');
 let cloneTableRow = null;
 
 // Select assembly type
-$('#reactionTypeSelector').change(function(){
+let assemblyType = $('#reactionTypeSelector');
+assemblyType.change(function(){
     initializeTable($(this).val())
 });
 
@@ -386,11 +387,12 @@ MoCloDatatable.on('click', 'tr', function () {
 
     let partParts = [];
 
+    // todo: validate partParts based on assembly type...
     partPartString.forEach(function(element){
         let elementStripped = element.replace(/(^\s+|\s+$)/g,'');  // How does JavaScript not have a built-in strip???
-        if(elementStripped.startsWith('Part')){
+        if(elementStripped.startsWith('Part') && assemblyType.val() === 'Cassette'){
             partParts.push(elementStripped.replace(' ', '_'));
-        } else if (elementStripped.startsWith('Con')){
+        } else if (elementStripped.startsWith('Con') && assemblyType.val() === 'MultiCassette'){
             partParts.push(elementStripped.split(' ')[1]);
         }
     });
