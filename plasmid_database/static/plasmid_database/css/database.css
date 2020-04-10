@@ -31,11 +31,11 @@ ul{
 }
 
 #HideDatatableColumnsButton {
-    width: 150px;
+    width: 180px;
 }
 
 #ToggleDatatableColumns{
-    width: 150px;
+    width: 180px;
     display: none;
     position: absolute;
     z-index: 1;
