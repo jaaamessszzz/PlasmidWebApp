@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         username = options['user']
-        user = User.objects.get(name=username)
+        user = User.objects.get(username=username)
 
         self.add_moclo_attributes(user)
         self.add_default_features(user)
