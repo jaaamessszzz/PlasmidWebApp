@@ -1,54 +1,67 @@
 const datatable = $('#plasmid_datatable').DataTable({
-    "dom": "liprt",
+    "dom": "irt",
     "ajax": '/database/update_table/',
     "processing": true,
     "serverSide": true,
     "deferRender": true,
+    scrollY: 600,
+    scroller: true,
     "orderCellsTop": true,
     "search": { "regex": true },
     "order": [[ 1, "asc" ]],
-    "fixedColumns": true,
+    "autoWidth": false,
+    "columns": [
+        null,
+        { "width": "5%" },
+        { "width": "5%" },
+        { "width": "5%" },
+        { "width": "15%" },
+        { "width": "15%" },
+        { "width": "25%" },
+        { "width": "5%" },
+        { "width": "5%" },
+        { "width": "5%" },
+    ],
     "columnDefs": [
-        { name: 'id', width: 0, targets: 0, visible: false },
-        { name: 'project',width: 100, targets: 1 },
-        { name: 'projectindex',width: 100, targets: 2,
+        { name: 'id', targets: 0, visible: false },
+        { name: 'project', targets: 1 },
+        { name: 'projectindex', targets: 2,
             render : function (data, type, row, meta) {
                     return "<a href=" + row[1] + "/" + row[2] +">" + row[2] + "</a>";
                     },
         },
-        { name: 'alias', width: 150, targets: 3,
+        { name: 'alias', targets: 3,
             orderable: false,  // I can't figure out how to order aliases, issue with how DatatableView evaluates querysets for related name FKs
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[3] + "</div>";
+                    return "<div style='overflow:scroll;height:2.75em;'>" + row[3] + "</div>";
                     },
         },
-        { name: 'feature', width: 200, targets: 4,
+        { name: 'feature', targets: 4,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[4] + "</div>";
+                    return "<div style='overflow:scroll;height:2.75em;'>" + row[4] + "</div>";
                     },
         },
-        { name: 'attribute',
-            width: 200, targets: 5,
+        { name: 'attribute', targets: 5,
             orderable: false,
             render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[5] + "</div>";
+                return "<div style='overflow:scroll;height:2.75em;'>" + row[5] + "</div>";
             },
         },
-        { name: 'description', width: 200, targets: 6,
+        { name: 'description', targets: 6,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;width:100%;height:2.75em;'>" + row[6] + "</div>";
+                    return "<div style='overflow:scroll;height:2.75em;'>" + row[6] + "</div>";
                     },
         },
-        { name: 'location', width: 100, targets: 7,
+        { name: 'location', targets: 7,
             orderable: false},
-        { name: 'creator', width: 100, targets: 8 },
-        { name: 'date', width: 100, targets: 9 },
+        { name: 'creator', targets: 8 },
+        { name: 'date', targets: 9 },
     ],
-    "drawCallback": function( settings ) {
-        this.api().columns.adjust();
-    },
+    // "drawCallback": function( settings ) {
+    //     this.api().columns.adjust();
+    // },
     "initComplete": function() {
 
         const table = this;
@@ -87,7 +100,7 @@ const datatable = $('#plasmid_datatable').DataTable({
             const CurrentIndex = element[0];
             const CurrentColumn = element[1];
             const ColumnHeader = CurrentColumn['textContent'];
-            if(CurrentColumn['style']['width'] !== '0px'){
+            if(ColumnHeader !== 'ProjectID'){
                 // If column is not hidden initially, add to #ToggleDatatableColumns
                 const ToggleRow = document.createElement('li');
                 const RowCheckbox = document.createElement('input');

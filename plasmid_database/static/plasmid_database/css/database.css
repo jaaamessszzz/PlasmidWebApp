@@ -2,6 +2,13 @@
     margin: 2%;
 }
 
+#plasmid_datatable {
+    width: 100%;
+    table-layout: fixed;
+    word-wrap:break-word;
+    border-collapse: collapse;
+}
+
 tr, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate {
     font-family: "Open Sans", Calibri, sans-serif;
     font-style: normal;
@@ -38,7 +45,7 @@ ul{
     width: 180px;
     display: none;
     position: absolute;
-    z-index: 1;
+    z-index: 999999999999999;
     bottom: 40px;
     background-color: #052049;
 }
