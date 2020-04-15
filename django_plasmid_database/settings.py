@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['plasmiddb.eba-p3hji2ct.us-west-2.elasticbeanstalk.com']
 
-
 # Application definition
 
 INSTALLED_APPS = [
