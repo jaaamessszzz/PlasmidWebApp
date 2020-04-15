@@ -25,7 +25,8 @@ class Command(BaseCommand):
 
         # Check for existing modular cloning tree
         if len(Attribute.objects.filter(name='Modular Cloning')) > 0:
-            raise CommandError('It looks like Modular Cloning Attributes have already been added to the database!')
+            print('It looks like Modular Cloning Attributes have already been added to the database!')
+            return
 
         modular_cloning = Attribute(name='Modular Cloning', description='Modular Cloning designations.', creator=user, subcategory=None)
         modular_cloning.save()
@@ -69,5 +70,6 @@ class Command(BaseCommand):
         feature_types = ['Part', 'Open Reading Frame', 'Promoter', 'Ribosome Binding Site', 'Terminator',
                          'Origin of Replication', 'Resistance Marker']
         for type in feature_types:
-            featuretype = FeatureType(name=type, creator=user)
-            featuretype.save()
+            if len(FeatureType.objects.filter(name=type)) == 0:
+                featuretype = FeatureType(name=type, creator=user)
+                featuretype.save()
