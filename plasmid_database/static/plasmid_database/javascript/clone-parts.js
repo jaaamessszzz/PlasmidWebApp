@@ -76,7 +76,7 @@ $('#partForm').submit(function(e) {
 
         // Part type syntax: 3 | 2-4 | 5-1
         // Use plasmid map to automatically determine multi-component parts
-        let tk_parts = ['1', '2a', '2b', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'];
+        let tk_parts = ['1', '2', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'];
         let partTypeRaw = rowElements[1].trim();
         let leftPartOverhang;
         let rightPartOverhang;
