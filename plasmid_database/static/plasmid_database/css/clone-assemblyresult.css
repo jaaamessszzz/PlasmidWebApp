@@ -1,0 +1,9 @@
+#assemblyResultsTable {
+    margin: 1em;
+    table-layout: fixed;
+}
+
+#assemblyResultsTable td {
+    text-align: center;
+    word-break: break-all;
+}
