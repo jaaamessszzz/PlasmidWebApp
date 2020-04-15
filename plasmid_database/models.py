@@ -2,8 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 
-from dnassembly import Plasmid as dnaPlasmid
-from dnassembly import Feature as dnaFeature
+from dnassembly.dna import Plasmid as dnaPlasmid
+from dnassembly.dna import Feature as dnaFeature
 
 # Create your models here.
 
@@ -123,7 +123,7 @@ class Plasmid(models.Model):
         unique_together = ('project', 'projectindex',)
 
     def get_standard_id(self):
-        return f'{self.project.project}_{self.projectindex:0>5}'
+        return f'p{self.project.project}_{self.projectindex:0>5}'
 
     def get_aliases_as_string(self):
         return ', '.join(sorted([altname.alias for altname in self.aliases.all()]))

@@ -170,7 +170,7 @@ def download_selected_plasmids(request):
         plasmid_name = f'{plasmid.get_standard_id()}.gb'
         plasmid_genbank = plasmid.as_dnassembly()
         plasmid_io = io.StringIO()
-        dnassembly.write_genbank(plasmid_genbank, output=plasmid_io, to_stream=True)
+        dnassembly.io.write_genbank(plasmid_genbank, output=plasmid_io, to_stream=True)
         plasmid_io.seek(0)
         # Add to ZIP
         zip_path = os.path.join(zip_subdir, plasmid_name)
@@ -187,7 +187,7 @@ def database(request):
         'users': User.objects.all(),
         'projects': Project.objects.all(),
     }
-    return render(request, 'database.html', context)
+    return render(request, 'plasmid_database/database.html', context)
 
 # --- Add Plasmid and Related Views --- #
 @login_required
@@ -214,8 +214,9 @@ def delete_user_plasmids(request):
 import io
 import re
 import dnassembly
-from dnassembly import SequenceException, StickyEndAssembly
-from dnassembly import AssemblyException, ReactionDefinitionException, SequenceException
+from dnassembly.io import read_genbank, ReadAs
+from dnassembly.reactions import StickyEndAssembly, AssemblyException, ReactionDefinitionException
+from dnassembly.dna import SequenceException
 from Bio.Restriction import BsaI, BsmBI
 
 @login_required
@@ -226,7 +227,7 @@ def add_plasmids(request):
     context['attribute_roots'] = Attribute.objects.filter(subcategory__isnull=True)
     context['roots_with_children'] = [attr.id for attr in context['attribute_roots'] if Attribute.objects.filter(subcategory=attr)]
     context['partEntryVectors'] = Plasmid.objects.filter(attribute__name='Part Entry Vector')
-    return render(request, 'clone/clone.html', context)
+    return render(request, 'plasmid_database/clone/clone.html', context)
 
 
 class PlasmidFilterDatatable(FilterDatatableTemplate):
@@ -271,7 +272,7 @@ def add_plasmid_by_file(request):
 
         # Convert BytesIO into something BioPython can work with
         upload_stringio = io.StringIO(uploaded_file.file.getvalue().decode('UTF-8'))
-        dnassembly_plasmid = dnassembly.read_genbank(upload_stringio, dnassembly.ReadAs.Plasmid)
+        dnassembly_plasmid = read_genbank(upload_stringio, ReadAs.Plasmid)
 
         try:
             # Add plasmid to database
@@ -436,6 +437,7 @@ def standard_assembly(request):
             assembly_results[index]['success'] = False
             assembly_results[index]['error'] = str(definition_error)
 
+    request.session['assembly_type'] = 'cassette'
     request.session['results'] = assembly_results
 
     return JsonResponse({}, status=200)
@@ -480,12 +482,15 @@ def part_assembly(request):
         userDescription = part_definition[2]
 
         # Create dnassembly Part from sequence
-        user_defined_part = MoCloPartFromSequence(partSequence, leftPartOverhang, rightPartOverhang, description=userDescription, standardize=addStandard)
+        user_defined_part, primers = MoCloPartFromSequence(partSequence, leftPartOverhang, rightPartOverhang, description=userDescription, standardize=addStandard)
 
         # Get plasmids for each assembly (row)
         assembly_plasmid_pool = [dropin_vector.as_dnassembly(), user_defined_part]
-        assembly_ids = [f'{str(dropin_vector.project)} {int(dropin_vector.projectindex)}']
+        assembly_ids = [f'{dropin_vector.get_standard_id()}']
         assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
+        assembly_results[index]['primer_F'] = primers[0]
+        assembly_results[index]['primer_R'] = primers[1]
+        assembly_results[index]['insert'] = user_defined_part.sequence
 
         try:
             gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
@@ -527,13 +532,14 @@ def part_assembly(request):
 
             # Add partSequence as Feature for part 2/3/4
             if all([leftPartOverhang[0] in ('2', '3', '4'), rightPartOverhang[0] in ('2', '3', '4'), leftPartOverhang[0] == rightPartOverhang[0]]):
-                part_featuretype = FeatureType.objects.get(name='Part')
-                part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)
-                part_feature.save()
+                if len(Feature.objects.filter(sequence=partSequence)) == 0:
+                    part_featuretype = FeatureType.objects.get(name='Part')
+                    part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)
+                    part_feature.save()
 
             assembly_results[index]['success'] = True
             assembly_results[index]['new_plasmid'] = new_plasmid
-            assembly_results[index]['assembly_id'] = f'{new_plasmid.project} {int(new_plasmid.projectindex)}'
+            assembly_results[index]['assembly_id'] = f'{new_plasmid.project.project} {int(new_plasmid.projectindex)}'
 
         except AssemblyException as assembly_error:
             print(assembly_error)
@@ -545,6 +551,7 @@ def part_assembly(request):
             assembly_results[index]['success'] = False
             assembly_results[index]['error'] = str(definition_error)
 
+    request.session['assembly_type'] = 'part'
     request.session['results'] = assembly_results
 
     return JsonResponse(response_dict, status=200)
@@ -556,8 +563,9 @@ def assembly_result(request):
     Report the result of a set of assemblies
     """
     assembly_results = request.session['results']
+    assembly_type = request.session['assembly_type']
     print(assembly_results)
-    return render(request, 'clone/clone-assemblyresult.html', {'results': assembly_results})
+    return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results, 'assembly_type': assembly_type})
 
 
 # --- Plasmid Features and Related Views --- #
@@ -570,7 +578,7 @@ def manage_database(request):
     context['projects'] = Project.objects.all()
     context['attribute_roots'] = Attribute.objects.filter(subcategory__isnull=True)
     context['attribute_roots_with_children'] = [attr.id for attr in context['attribute_roots'] if Attribute.objects.filter(subcategory=attr)]
-    return render(request, 'manage/manage.html', context)
+    return render(request, 'plasmid_database/manage/manage.html', context)
 
 # --- Attribute Dropdown Views --- #
 
@@ -757,7 +765,7 @@ def plasmid(request, project_id, plasmid_id):
     context['current_user'] = request.user
     context['attrString'] = json.dumps([f'Attribute-{attr.id}' for attr in requested_plasmid.attribute.all()])
     context['locString'] = json.dumps([f'Location-{loc.id}' for loc in requested_plasmid.location.all()])
-    return render(request, 'plasmid_page.html', context)
+    return render(request, 'plasmid_database/plasmid_page.html', context)
 
 def update_plasmid(request):
     """Update location, attribute, and description information for a plasmid"""
