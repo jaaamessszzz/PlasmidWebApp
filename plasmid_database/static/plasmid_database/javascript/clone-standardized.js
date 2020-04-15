@@ -319,16 +319,14 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
             "serverSide": true,
             "deferRender": true,
             "paging": true,
-            "scroller": true,  // Scroller isn't working for some reason...
-            "scrollY": 600,
             "orderCellsTop": true,
             "order": [[ 1, "asc" ]],
             "fixedColumns": true,
-            "autoWidth": true,
+            "autoWidth": false,
             "columnDefs": [
-                { name: 'id', width: 100, targets: 0, visible: false},
-                { name: 'project', width: 100, targets: 1 },
-                { name: 'projectindex', width: 100, targets: 2},
+                { name: 'id', width: 0, targets: 0, visible: false},
+                { name: 'project', width: 50, targets: 1 },
+                { name: 'projectindex', width: 50, targets: 2},
                 { name: 'features', width: 200, targets: 3,
                     orderable: false,
                     render : function (data, type, row, meta) {
