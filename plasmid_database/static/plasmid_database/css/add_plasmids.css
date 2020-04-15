@@ -295,6 +295,10 @@ button{
   cursor: pointer; /* Add a pointer on hover */
 }
 
+#closeOverlayButton {
+    width: 100%;
+}
+
 td {
     font-size: 8pt;
 }
