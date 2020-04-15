@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <div class="header">
+        <h1>Assembly Results</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+{# Create table for assembly results #}
+<div class="container">
+    <table id="assemblyResultsTable" style="width:100%">
+        <tr>
+            <th style="width:10%">Index</th>
+            <th style="width:10%">Success</th>
+            <th style="width:10%">Assembly ID</th>
+            {% if assembly_type == 'part' %}
+                <th style="width:20%">Primers</th>
+                <th style="width:50%">Insert</th>
+            {% endif %}
+            {% if assembly_type == 'cassette' %}
+                <th style="width:35%">Reaction Plasmids</th>
+                <th style="width:35%">Notes</th>
+            {% endif %}
+        </tr>
+
+        {% for result, result_dict in results.items %}
+            <tr>
+                <td>{{ result }}</td>
+                <td>{{ result_dict.success }}</td>
+                <td>{{ result_dict.new_plasmid.get_standard_id }}</td>
+                {% if assembly_type == 'part' %}
+                    <td>F: {{ result_dict.primer_F }}<br>R: {{ result_dict.primer_R }}</td>
+                    <td>{{ result_dict.insert }}</td>
+                {% endif %}
+                {% if assembly_type == 'cassette' %}
+                    <td>{{ result_dict.reaction_plasmids }}</td>
+                    <td></td> {# Do cassettes need notes? #}
+                {% endif %}
+            </tr>
+        {% endfor %}
+
+    </table>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{% load static %}
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+</script>
+
+{# Javascript #}
+
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/clone-assemblyresult.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
+
+{% endblock %}
