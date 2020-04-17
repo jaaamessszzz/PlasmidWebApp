@@ -39,7 +39,14 @@
 {% block javascript %}
 {% load static %}
 <script type="text/javascript">
-    var csrftoken = getCookie('csrftoken');
+    const csrftoken = getCookie('csrftoken');
+    let user_index = 0;
+    {% for project in projects %}
+        {% if project.project == user.username %}
+            user_index = {{ user.id }};
+        {% endif %}
+    {% endfor %}
+    console.log(user_index);
 </script>
 {# Javascript #}
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>

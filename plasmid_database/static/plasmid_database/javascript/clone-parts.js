@@ -169,3 +169,11 @@ $('#partForm').submit(function(e) {
         document.getElementById('partErrors').style.display = 'block';
     }
 });
+
+// Page Loaded
+$(document).ready(function(){
+    // Set Project to User
+    document.getElementById('partProject').value = user_index;
+    console.log('Page loaded!');
+    pageLoaded = true;
+});

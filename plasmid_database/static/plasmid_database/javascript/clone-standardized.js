@@ -321,7 +321,6 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
             "paging": true,
             "orderCellsTop": true,
             "order": [[ 1, "asc" ]],
-            "fixedColumns": true,
             "autoWidth": false,
             "columnDefs": [
                 { name: 'id', width: 0, targets: 0, visible: false},
@@ -408,16 +407,29 @@ MoCloDatatable.on('click', 'tr', function () {
     // Reset currentPart selection and selectedRowData
     selectedRowData = null;
     currentPart = null;
+
+    // Clear filters
+    document.getElementById('id_project').value = '';
+    document.getElementById('id_projectindex').value = '';
+    document.getElementById('id_features').value = '';
+    document.getElementById('id_description').value = '';
 });
 
 // Hide overlay
 $('#closeOverlayButton').on('click', function () {
     currentPart = null;
     document.getElementById("tableOverlay").style.display = "none";
+    // Clear filters
+    document.getElementById('id_project').value = '';
+    document.getElementById('id_projectindex').value = '';
+    document.getElementById('id_features').value = '';
+    document.getElementById('id_description').value = '';
 });
 
 // Page Loaded
 $(document).ready(function(){
+    // Set Project to User
+    document.getElementById('AssemblyProjectSelector').value = user_index;
     console.log('Page loaded!');
     pageLoaded = true;
 });

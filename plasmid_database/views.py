@@ -130,8 +130,8 @@ class FilterDatatableTemplate(BaseDatatableView):
 class PlasmidDatatable(FilterDatatableTemplate):
 
     model = Plasmid
-    columns = ['id', 'project', 'projectindex', 'alias', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
-    order_columns = ['id', 'project', 'projectindex', 'alias', 'feature', 'attribute', 'description', 'location', 'creator', 'created']
+    columns = ['id', 'project', 'projectindex', 'alias', 'description', 'feature', 'attribute', 'location', 'creator', 'created']
+    order_columns = ['id', 'project', 'projectindex', 'alias', 'description', 'feature', 'attribute', 'location', 'creator', 'created']
     max_display_length = 100
 
     def render_column(self, row, column):
@@ -145,9 +145,9 @@ class PlasmidDatatable(FilterDatatableTemplate):
                 escape(str(item.project.project).capitalize()),
                 escape(item.projectindex),
                 item.get_aliases_as_string(),
-                item.get_features_as_string(),
-                item.get_attributes_as_string(),
                 item.description,
+                item.get_attributes_as_string(),
+                item.get_features_as_string(),
                 item.get_locations_as_string(),
                 str(item.creator),
                 item.created.strftime('%Y-%m-%d %H:%M:%S')
@@ -500,7 +500,7 @@ def part_assembly(request):
             new_plasmid = Plasmid(project=reaction_project,
                                   sequence=assembly_product.sequence,
                                   creator=request.user,
-                                  description=assembly_product.description)
+                                  description=userDescription)
             new_plasmid.save()
 
             # Pull features from assembly_product and associate with new_plasmid

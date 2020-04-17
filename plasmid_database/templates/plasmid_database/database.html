@@ -16,9 +16,9 @@
                 <th>Project</th>
                 <th>ID</th>
                 <th>Alias</th>
-                <th>Features</th>
-                <th>Attributes</th>
                 <th>Description</th>
+                <th>Attributes</th>
+                <th>Features</th>
                 <th>Location</th>
                 <th>Creator</th>
                 <th>Created</th>
@@ -35,9 +35,9 @@
                 </th>
                 <th><input type="number" name="projectindex" min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
                 <th><input type="text" name="alias" id="id_alias" class="filterInputs" placeholder="Filter"></th>
-                <th><input type="text" name="feature" id="id_feature" class="filterInputs" placeholder="Filter"></th>
-                <th><input type="text" name="attribute" id="id_attribute" class="filterInputs" placeholder="Filter"></th>
                 <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
+                <th><input type="text" name="attribute" id="id_attribute" class="filterInputs" placeholder="Filter"></th>
+                <th><input type="text" name="feature" id="id_feature" class="filterInputs" placeholder="Filter"></th>
                 <th><input type="text" name="location" id="id_location" class="filterInputs" placeholder="Filter"></th>
                 <th>
                     <select name="creator" id="id_creator" form="plasmidFilterInputs" class="filterInputs" required>
@@ -75,7 +75,7 @@
 </div>
 
 {# Delete Plasmids Confirmation Overlay #}
-<div id="deletePlasmidsOverlay">
+<div id="deletePlasmidsOverlay" style="display: none">
     <div class="overlayContainer">
         <div>
             <h2>Plasmids to be deleted:</h2>
@@ -118,6 +118,7 @@
 {# Javascript #}
 <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+
 {% load static %}
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/database.js' %}"></script>
 

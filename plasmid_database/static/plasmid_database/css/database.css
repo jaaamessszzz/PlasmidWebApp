@@ -6,6 +6,7 @@
     width: 100%;
     table-layout: fixed;
     word-wrap:break-word;
+    word-break:  break-all;
     border-collapse: collapse;
 }
 

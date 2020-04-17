@@ -1,12 +1,13 @@
 const datatable = $('#plasmid_datatable').DataTable({
-    "dom": "irt",
+    "dom": "lirpt",
     "ajax": '/database/update_table/',
     "processing": true,
     "serverSide": true,
     "deferRender": true,
-    scrollY: 600,
-    scroller: true,
     "orderCellsTop": true,
+    "paging": true,
+    "pagingType": "full_numbers",
+    "lengthMenu": [10, 25, 50, 100, 250, 500],
     "search": { "regex": true },
     "order": [[ 1, "asc" ]],
     "autoWidth": false,
@@ -15,9 +16,9 @@ const datatable = $('#plasmid_datatable').DataTable({
         { "width": "5%" },
         { "width": "5%" },
         { "width": "5%" },
-        { "width": "15%" },
-        { "width": "15%" },
         { "width": "25%" },
+        { "width": "15%" },
+        { "width": "15%" },
         { "width": "5%" },
         { "width": "5%" },
         { "width": "5%" },
@@ -33,25 +34,25 @@ const datatable = $('#plasmid_datatable').DataTable({
         { name: 'alias', targets: 3,
             orderable: false,  // I can't figure out how to order aliases, issue with how DatatableView evaluates querysets for related name FKs
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:2.75em;'>" + row[3] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;'>" + row[3] + "</div>";
                     },
         },
-        { name: 'feature', targets: 4,
+        { name: 'description', targets: 4,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:2.75em;'>" + row[4] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;'>" + row[4] + "</div>";
                     },
         },
         { name: 'attribute', targets: 5,
             orderable: false,
             render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;height:2.75em;'>" + row[5] + "</div>";
+                return "<div style='overflow:scroll;height:3.5em;'>" + row[5] + "</div>";
             },
         },
-        { name: 'description', targets: 6,
+        { name: 'feature', targets: 6,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:2.75em;'>" + row[6] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;'>" + row[6] + "</div>";
                     },
         },
         { name: 'location', targets: 7,

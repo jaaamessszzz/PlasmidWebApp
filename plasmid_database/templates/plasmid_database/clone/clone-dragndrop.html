@@ -20,38 +20,12 @@
 
             <div class="UploadOptions">
 
-                <h3>Define Plasmid Properties</h3>
-                <p>Uploaded plasmids will have these properties automatically assigned to them.</p>
-
                 <div class="flex-container DragnDropUploadOptions">
-
-                    <div class="DragnDropUploadOption">
-{#                        <div class="labeldiv">#}
-{#                            <label for="dragndrop-attributes">Assign attributes:#}
-{#                                <div class="DropdownTreeMenu">#}
-{#                                    <ul id="dragndrop-attributes">#}
-{#                                        {% for attribute in attribute_roots %}#}
-{#                                            <li id="attr-{{ attribute.id }}" data-nodeinit="{{ attribute.id }}" data-depth=0 data-sourcetable="attribute" class="rootNode">#}
-{#                                                {% if attribute.id in roots_with_children %}#}
-{#                                                    <span class="TreeMenuCaret">{{ attribute.name }}</span>#}
-{#                                                {% else %}#}
-{#                                                    <span>{{ attribute.name }}</span>#}
-{#                                                {% endif %}#}
-{#                                            </li>#}
-{#                                        {% endfor %}#}
-{#                                    </ul>#}
-{#                                </div>#}
-{#                            </label>#}
-{#                        </div>#}
-
-                    <div id="DragnDropAttr-TreeJS" class="DropdownTreeMenu"></div>
-
-                    </div>
 
                     <div class="DragnDropUploadOption">
                         <div class="labeldiv">
                             <label for="dragndrop-project" style="padding: 0.5em;" required>Select project:
-                                <select id="dragndrop-project" class="dragndrop-properties" style="width: 50%">
+                                <select id="dragndrop-project" class="dragndrop-properties">
                                     <option value=""></option>
                                     {% for project in projects %}
                                         <option value="{{ project.id }}">{{ project.project }}</option>
