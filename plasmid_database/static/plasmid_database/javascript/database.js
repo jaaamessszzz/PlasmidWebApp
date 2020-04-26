@@ -34,25 +34,25 @@ const datatable = $('#plasmid_datatable').DataTable({
         { name: 'alias', targets: 3,
             orderable: false,  // I can't figure out how to order aliases, issue with how DatatableView evaluates querysets for related name FKs
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;'>" + row[3] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[3] + "</div>";
                     },
         },
         { name: 'description', targets: 4,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;'>" + row[4] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[4] + "</div>";
                     },
         },
         { name: 'attribute', targets: 5,
             orderable: false,
             render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;height:3.5em;'>" + row[5] + "</div>";
+                return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[5] + "</div>";
             },
         },
         { name: 'feature', targets: 6,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;'>" + row[6] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[6] + "</div>";
                     },
         },
         { name: 'location', targets: 7,
