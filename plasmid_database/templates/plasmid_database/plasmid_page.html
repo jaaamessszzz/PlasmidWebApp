@@ -66,7 +66,7 @@
             <li class="PlasmidValue">
                 <ul class="InnerDataDump" id="ulLocations">
                 {% for loc in plasmid.location.all %}
-                    <li class="PlasmidValue">{{ loc.name }}</li>
+                    <li class="PlasmidValue">{{ loc.get_full_location }}</li>
                 {% endfor %}
                 </ul>
                 <div class="Settings-Flexbox-Container">

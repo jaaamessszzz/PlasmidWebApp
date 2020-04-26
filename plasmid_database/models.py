@@ -105,6 +105,16 @@ class Location(models.Model):
             location_list.append(populate_node(node))
         return location_list
 
+    def get_full_location(self):
+        """Traverse tree up to root node to report full location"""
+        location_list = []
+        current_location = self
+        while current_location.subcategory is not None:
+            location_list.append(current_location.name)
+            current_location = current_location.subcategory
+        location_list.append(current_location.name)
+        return '|'.join(reversed(location_list))
+
 
 class Plasmid(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
