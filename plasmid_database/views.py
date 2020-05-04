@@ -372,7 +372,7 @@ def add_plasmid_by_file(request):
 @login_required
 def standard_assembly(request):
     """
-    Performs MoClo assembly and pushes to database
+    Performs MoClo assembly assuming standardized parts and pushes to database
     """
     print(request.POST)
     post_data = json.loads(request.POST['data'])
@@ -406,6 +406,20 @@ def standard_assembly(request):
                                   sequence=assembly_product.sequence,
                                   creator=request.user,
                                   description=assembly_product.description)
+
+            # Use Part 2-4 for cassette assembly description
+            if post_data.get('ReactionEnzyme') == 'BsaI':
+                plasmid_attributes= [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
+                seen_description_list = list()
+                new_description_list = list()
+                for part in ['Part 2', 'Part 3a', 'Part 3b', 'Part 4a', 'Part 4b']:
+                    for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
+                        if part in attribute and part_plasmid not in seen_description_list:
+                            new_description_list.append(part_plasmid.description)
+                            seen_description_list.append(part_plasmid)
+                new_description = '|'.join(new_description_list)
+                new_plasmid.description = new_description
+
             new_plasmid.save()
 
             # Pull features from assembly_product and associate with new_plasmid
