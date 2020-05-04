@@ -24,7 +24,7 @@ class PlasmidMap {
     constructor(){
         this.head = null;
         this.size = 0;
-        this.tk_parts = ['1', '2a', '2b', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'];
+        this.tk_parts = ['1', '2', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'];
     }
 
     add(part){
@@ -303,7 +303,6 @@ function performPlasmidAssembly(assemblyForm){
             }
         });
     }
-
 }
 
 
