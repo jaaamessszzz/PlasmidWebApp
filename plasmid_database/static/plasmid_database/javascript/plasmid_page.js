@@ -125,7 +125,7 @@ $('#SavePlasmid').on('click', function(){
                 plasmidErrors.appendChild(errorItem);
             });
         }
-    })
+    });
 });
 
 // Cancel Edits
