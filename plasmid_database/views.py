@@ -600,6 +600,9 @@ def manage_database(request):
 
 @login_required
 def update_feature(request):
+
+    # --- Validate Request --- #
+
     # Unpack Request
     feature_type_PK = int(request.POST['newType'])
     feature_name = request.POST['newName']
@@ -608,7 +611,7 @@ def update_feature(request):
     user_id = int(request.user.id)
     response_dict = {'Success': False, 'Errors': []}
 
-    if request.POST['action'] == 'update':
+    if request.POST['action'] in ['update', 'delete']:
         requested_feature = int(request.POST['featureID'])
         feature_to_modify = Feature.objects.get(id=requested_feature)
         if feature_to_modify.creator.id != user_id:
@@ -622,36 +625,50 @@ def update_feature(request):
         response_dict['Errors'].append('Invalid action!')
         return JsonResponse(response_dict)
 
-    # Validate new Feature Name and Sequence
-    if feature_name is None or feature_name.strip() == '':
-        response_dict['Errors'].append('Features require a name!')
-    if re.fullmatch('^[ATCGatcg.]+$', feature_sequence) is None:
-        response_dict['Errors'].append('Feature sequence can only contain [ATCG.]!')
+    # --- Execute Request --- #
 
-    try:
-        # Update name
-        feature_to_modify.name = feature_name
-        response_dict['newName'] = feature_name
-        # Update type
-        feature_type = FeatureType.objects.get(id=feature_type_PK)
-        feature_to_modify.type = feature_type
-        response_dict['newType'] = feature_type.name
-        # Update description
-        feature_to_modify.description = feature_description
-        response_dict['newDescription'] = feature_description
-        # Update sequence
-        feature_to_modify.sequence = feature_sequence
-        response_dict['newSequence'] = feature_sequence
+    # If delete, just delete. No validation needed
+    if request.POST['action'] == 'delete':
+        try:
+            feature_to_modify.delete()
+            response_dict['Success'] = True
+        except Exception as e:
+            print(e)
+            response_dict['Success'] = False
+            response_dict['Error'] = [str(e)]
 
-        feature_to_modify.save()
-        response_dict['Success'] = True
+    # Add or edit feature
+    elif request.POST['action'] in ['new', 'update']:
+        # Validate new Feature Name and Sequence
+        if feature_name is None or feature_name.strip() == '':
+            response_dict['Errors'].append('Features require a name!')
+        if re.fullmatch('^[ATCGatcg.]+$', feature_sequence) is None:
+            response_dict['Errors'].append('Feature sequence can only contain [ATCG.]!')
 
-    except Exception as e:
-        print(e)
-        response_dict['Success'] = False
-        response_dict['Error'] = [str(e)]
+        try:
+            # Update name
+            feature_to_modify.name = feature_name
+            response_dict['newName'] = feature_name
+            # Update type
+            feature_type = FeatureType.objects.get(id=feature_type_PK)
+            feature_to_modify.type = feature_type
+            response_dict['newType'] = feature_type.name
+            # Update description
+            feature_to_modify.description = feature_description
+            response_dict['newDescription'] = feature_description
+            # Update sequence
+            feature_to_modify.sequence = feature_sequence
+            response_dict['newSequence'] = feature_sequence
+
+            feature_to_modify.save()
+            response_dict['Success'] = True
+
+        except Exception as e:
+            print(e)
+            response_dict['Success'] = False
+            response_dict['Error'] = [str(e)]
+
     return JsonResponse(response_dict)
-
 
 # --- Attribute Dropdown Views --- #
 

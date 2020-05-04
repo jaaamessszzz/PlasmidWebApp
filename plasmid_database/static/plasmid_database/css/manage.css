@@ -63,3 +63,88 @@ h3 {
     color: #ffffff;
     font-weight: bold;
 }
+
+/*********************************/
+/* Table formatting
+/*********************************/
+
+tr, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate {
+    font-family: "Open Sans", Calibri, sans-serif;
+    font-style: normal;
+    font-variant: normal;
+}
+
+tr {
+    font-size: 8pt;
+}
+
+/* Feature/Project Forms */
+
+.newForm{
+    background-color: #007CBE;
+    border-radius: 4px;
+    color: white;
+}
+
+.deleteForm{
+    background-color: #eb093c;
+    border-radius: 4px;
+    color: white;
+    width: 5%;
+}
+
+.uploadForm{
+    background-color: #6EA400;
+    border-radius: 4px;
+    color: white;
+    width: 20%;
+}
+
+.editForm{
+    background-color: #6EA400;
+    border-radius: 4px;
+    color: white;
+    width: 20%;
+}
+
+.saveForm{
+    background-color: #6EA400;
+    border-radius: 4px;
+    color: white;
+    width: 20%;
+}
+
+.cancelForm{
+    background-color: #ffdd00;
+    border-radius: 4px;
+    color: white;
+    width: 20%;
+}
+.addFeatureForm, #selectedFeatureForm{
+    margin: 1em;
+    width: 100%;
+}
+
+.FeatureFormRow {
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.FeatureFormValue {
+    flex: 1 1 20%;
+    display: inline-block;
+}
+
+.FeatureFormForm {
+    flex: 1 1 80%;
+    display: inline-block;
+}
+
+.dialogDeleteButton {
+    color: #eb093c;
+}
