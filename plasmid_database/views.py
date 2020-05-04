@@ -564,8 +564,8 @@ def part_assembly(request):
                 if len(Feature.objects.filter(sequence=partSequence)) == 0:
                     part_featuretype = FeatureType.objects.get(name='Part')
                     part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)
-                    new_plasmid.feature.add(part_feature)
                     part_feature.save()
+                    new_plasmid.feature.add(part_feature)
 
             assembly_results[index]['success'] = True
             assembly_results[index]['new_plasmid'] = new_plasmid
