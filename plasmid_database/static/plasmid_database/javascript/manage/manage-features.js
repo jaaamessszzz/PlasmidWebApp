@@ -243,8 +243,6 @@ function deleteFeature(feature){
                 text: "DELETE!",
                 class : 'dialogDeleteButton',
                 click: function(){
-                    console.log('deleting ' + data['featureName']);
-
                     $.post('/database/update_feature/', data, function(response){
                         if(response['Success'] === true){
                             // Update Feature Specs
