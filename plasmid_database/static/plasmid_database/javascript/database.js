@@ -212,13 +212,13 @@ deleteButton.on('click', function(){
     for(let i=0;i<SelectedPlasmids.length;i++){
         let currentPlasmid = SelectedPlasmids[i];
         let plasmidRow = document.createElement('tr');
-        // Add plasmid Project (1), Index (2), and Description (5)
-        [1, 2, 5].forEach(function(index){
+        // Add plasmid Project (1), Index (2), and Description (4)
+        [1, 2, 4].forEach(function(index){
             let plasmidCell = document.createElement('td');
             plasmidCell.textContent = currentPlasmid[index];
             plasmidRow.appendChild(plasmidCell);
         });
-        if(currentPlasmid[8] === currentUser){
+        if(currentPlasmid[11] === currentUser){
             deletePlasmidInfo.appendChild(plasmidRow);
         } else{
             errorPlasmidInfo.appendChild(plasmidRow);
@@ -241,7 +241,7 @@ $('#confirmDeletePlasmidsButton').on('click', function () {
     let deletedPKs = [];
     const SelectedPlasmids = datatable.rows('.selected').data();
     for(let i=0;i<SelectedPlasmids.length;i++) {
-        if(SelectedPlasmids[i][8] === currentUser){
+        if(SelectedPlasmids[i][11] === currentUser){
             deletedPKs.push(SelectedPlasmids[i][0]);
         }
     }
