@@ -70,6 +70,11 @@ class Command(BaseCommand):
         feature_types = ['Part', 'Open Reading Frame', 'Promoter', 'Ribosome Binding Site', 'Terminator',
                          'Origin of Replication', 'Resistance Marker']
         for type in feature_types:
+<<<<<<< HEAD
             if len(FeatureType.objects.filter(name=type)) == 0:
                 featuretype = FeatureType(name=type, creator=user)
                 featuretype.save()
+=======
+            featuretype = FeatureType(name=type, creator=user)
+            featuretype.save()
+>>>>>>> e4fe7fe284de12d678e850ea0097cfb7ea1d42e1
