@@ -399,6 +399,7 @@ $('.assemblyDefinition').on('click', '.assemblyPlasmid', function(){
 const AttributeJSTree = $('#DragnDropAttr-TreeJS');
 
 $(document).ready(function(){
+    document.getElementById('dragndrop-project').value = user_index;  // Drag-n-drop
     $.post('/database/get_attribute_tree/', function(response){
         AttributeJSTree.jstree({
             "core": {

@@ -43,7 +43,7 @@
     let user_index = 0;
     {% for project in projects %}
         {% if project.project == user.username %}
-            user_index = {{ user.id }};
+            user_index = {{ project.id }};
         {% endif %}
     {% endfor %}
     console.log(user_index);
