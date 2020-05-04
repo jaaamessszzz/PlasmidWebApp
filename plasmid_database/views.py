@@ -51,12 +51,8 @@ class FilterDatatableTemplate(BaseDatatableView):
 
     def filter_queryset(self, qs):
 
-        pprint(self.request.POST)
-
         column_index_mapping = {column: self.request.GET.get(f'columns[{index}][search][value]', None)
                                 for index, column in enumerate(self.columns)}
-
-        pprint(column_index_mapping)
 
         # Return unaltered qs if there is no user input
         if all([value in [None, ''] for value in column_index_mapping.values()]):
@@ -116,13 +112,28 @@ class FilterDatatableTemplate(BaseDatatableView):
                             term_filter = {f'aliases__alias__{search_method}': search_term}
                             column_querysets.append(qs.filter(**term_filter))
 
+                        elif current_field == 'assembly':
+                            # Convert user input to Plasmid IDs
+                            for assembly_plasmid in search_term.split(','):
+                                standard_match = re.match(r"([a-zA-Z]+)([0-9]+)", assembly_plasmid.strip(), re.I)
+                                if standard_match:
+                                    project, project_id = standard_match.groups()
+                                    try:
+                                        plasmid = Plasmid.objects.get(project__project__iexact=project, projectindex=int(project_id))
+                                        term_filter = {f'assembly__id__exact': plasmid.id}
+                                        column_querysets.append(qs.filter(**term_filter))
+                                    except Exception as e:
+                                        print(e)
                         else:
                             term_filter = {f'{current_field}__{search_method}': search_term}
                             column_querysets.append(qs.filter(**term_filter))
 
-            if len(column_querysets) == 1:
+            if len(column_querysets) == 0:
+                return qs
+            elif len(column_querysets) == 1:
                 return column_querysets[0].distinct()
             else:
+                print(column_querysets)
                 return column_querysets[0].intersection(*column_querysets[1:]).distinct()
 
 # --- Plasmid Datatables --- #
@@ -130,9 +141,9 @@ class FilterDatatableTemplate(BaseDatatableView):
 class PlasmidDatatable(FilterDatatableTemplate):
 
     model = Plasmid
-    columns = ['id', 'project', 'projectindex', 'alias', 'description', 'feature', 'attribute', 'location', 'creator', 'created']
-    order_columns = ['id', 'project', 'projectindex', 'alias', 'description', 'feature', 'attribute', 'location', 'creator', 'created']
-    max_display_length = 100
+    columns = ['id', 'project', 'projectindex', 'alias', 'description', 'attribute', 'resistance', 'feature', 'location', 'status', 'assembly',  'creator', 'created']
+    order_columns = ['id', 'project', 'projectindex', 'alias', 'description', 'attribute', 'resistance', 'feature', 'location', 'status', 'assembly',  'creator', 'created']
+    max_display_length = 500
 
     def render_column(self, row, column):
         return super(PlasmidDatatable, self).render_column(row, column)
@@ -141,16 +152,19 @@ class PlasmidDatatable(FilterDatatableTemplate):
         json_data = []
         for item in qs:
             json_data.append([
-                escape(int(item.id)),
-                escape(str(item.project.project).capitalize()),
-                escape(item.projectindex),
-                item.get_aliases_as_string(),
-                item.description,
-                item.get_attributes_as_string(),
-                item.get_features_as_string(),
-                item.get_locations_as_string(),
-                str(item.creator),
-                item.created.strftime('%Y-%m-%d %H:%M:%S')
+                escape(int(item.id)),  # id
+                escape(str(item.project.project)),  # project
+                escape(item.projectindex),  # projectindex
+                item.get_aliases_as_string(),  # alias
+                item.description,  # description
+                item.get_attributes_as_string(),  # attribute
+                item.get_resistance_as_string(),  # resistance
+                item.get_features_as_string(),  # feature
+                item.get_locations_as_string(),  # location
+                item.status,  # status
+                item.get_assembly_plasmids_as_string(),  # assembly
+                str(item.creator),  # creator
+                item.created.strftime('%Y-%m-%d %H:%M:%S')  # created
             ])
         return json_data
 
@@ -189,7 +203,8 @@ def database(request):
     }
     return render(request, 'plasmid_database/database.html', context)
 
-# --- Add Plasmid and Related Views --- #
+# --- Delete Plasmid and Related Views --- #
+
 @login_required
 def delete_user_plasmids(request):
     if request.user.is_authenticated:
@@ -577,9 +592,66 @@ def manage_database(request):
     context['current_user'] = request.user
     context['users'] = User.objects.all()
     context['projects'] = Project.objects.all()
+    context['feature_types'] = FeatureType.objects.all()
     context['attribute_roots'] = Attribute.objects.filter(subcategory__isnull=True)
     context['attribute_roots_with_children'] = [attr.id for attr in context['attribute_roots'] if Attribute.objects.filter(subcategory=attr)]
     return render(request, 'plasmid_database/manage/manage.html', context)
+
+
+@login_required
+def update_feature(request):
+    # Unpack Request
+    feature_type_PK = int(request.POST['newType'])
+    feature_name = request.POST['newName']
+    feature_description = request.POST['newDescription']
+    feature_sequence = request.POST['newSequence']
+    user_id = int(request.user.id)
+    response_dict = {'Success': False, 'Errors': []}
+
+    if request.POST['action'] == 'update':
+        requested_feature = int(request.POST['featureID'])
+        feature_to_modify = Feature.objects.get(id=requested_feature)
+        if feature_to_modify.creator.id != user_id:
+            response_dict['Errors'].append('You can only edit your own features!')
+            return JsonResponse(response_dict)
+
+    elif request.POST['action'] == 'new':
+        feature_to_modify = Feature(creator=User.objects.get(id=user_id))
+
+    else:
+        response_dict['Errors'].append('Invalid action!')
+        return JsonResponse(response_dict)
+
+    # Validate new Feature Name and Sequence
+    if feature_name is None or feature_name.strip() == '':
+        response_dict['Errors'].append('Features require a name!')
+    if re.fullmatch('^[ATCGatcg.]+$', feature_sequence) is None:
+        response_dict['Errors'].append('Feature sequence can only contain [ATCG.]!')
+
+    try:
+        # Update name
+        feature_to_modify.name = feature_name
+        response_dict['newName'] = feature_name
+        # Update type
+        feature_type = FeatureType.objects.get(id=feature_type_PK)
+        feature_to_modify.type = feature_type
+        response_dict['newType'] = feature_type.name
+        # Update description
+        feature_to_modify.description = feature_description
+        response_dict['newDescription'] = feature_description
+        # Update sequence
+        feature_to_modify.sequence = feature_sequence
+        response_dict['newSequence'] = feature_sequence
+
+        feature_to_modify.save()
+        response_dict['Success'] = True
+
+    except Exception as e:
+        print(e)
+        response_dict['Success'] = False
+        response_dict['Error'] = [str(e)]
+    return JsonResponse(response_dict)
+
 
 # --- Attribute Dropdown Views --- #
 
@@ -723,17 +795,56 @@ def modify_location(request):
 
 # --- Feature Table Views --- #
 
-@login_required
-class FeatureDatatable(FilterDatatableTemplate):
-
-    model = Plasmid
-    columns = ['id', 'name', 'sequence', 'description', 'type', 'creator']
-    order_columns = ['id', 'name', 'sequence', 'description', 'type', 'creator']
+class FeatureDatatable(BaseDatatableView):
+    model = Feature
+    columns = ['id', 'name', 'description', 'sequence', 'type', 'creator']
+    order_columns = ['id', 'name', 'description', 'sequence', 'type', 'creator']
     max_display_length = 10
 
     # Other things
     def render_column(self, row, column):
         return super(FeatureDatatable, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+
+        pprint(self.request.POST)
+
+        column_index_mapping = {column: self.request.GET.get(f'columns[{index}][search][value]', None)
+                                for index, column in enumerate(self.columns)}
+
+        pprint(column_index_mapping)
+
+        # Return unaltered qs if there is no user input
+        if all([value in [None, ''] for value in column_index_mapping.values()]):
+            return qs
+
+        # Search
+        else:
+            column_querysets = list()
+            for current_field, search_term in column_index_mapping.items():
+
+                if search_term not in [None, '']:
+                    if current_field in ['creator', 'type']:
+                        term_filter = {f'{current_field}__id__iexact': search_term}
+                        column_querysets.append(qs.filter(**term_filter))
+
+                    else:
+                        # Check if input is valid regex
+                        try:
+                            re.compile(search_term)
+                            is_valid = True
+                        except re.error:
+                            is_valid = False
+
+                        search_method = 'iregex' if is_valid else 'icontains'
+
+                        term_filter = {f'{current_field}__{search_method}': search_term}
+                        column_querysets.append(qs.filter(**term_filter))
+
+            if len(column_querysets) == 1:
+                return column_querysets[0].distinct()
+            else:
+                return column_querysets[0].intersection(*column_querysets[1:]).distinct()
 
     def prepare_results(self, qs):
         json_data = []
@@ -741,9 +852,9 @@ class FeatureDatatable(FilterDatatableTemplate):
             json_data.append([
                 escape(int(item.id)),
                 escape(str(item.name.capitalize())),
-                str(item.sequence),
                 str(item.description),
-                str(item.type),
+                str(item.sequence),
+                str(item.type.name) if item.type is not None else str(item.type),
                 str(item.creator),
             ])
         return json_data

@@ -12,16 +12,19 @@ const datatable = $('#plasmid_datatable').DataTable({
     "order": [[ 1, "asc" ]],
     "autoWidth": false,
     "columns": [
-        null,
-        { "width": "5%" },
-        { "width": "5%" },
-        { "width": "5%" },
-        { "width": "25%" },
-        { "width": "15%" },
-        { "width": "15%" },
-        { "width": "5%" },
-        { "width": "5%" },
-        { "width": "5%" },
+        null,  // PKs
+        { "width": "5%" },  // Project
+        { "width": "5%" },  // ProjectIndex
+        { "width": "5%" },  // Alias
+        { "width": "25%" },  // Description
+        { "width": "15%" },  // Attribute
+        { "width": "10%" },  // Resistance
+        { "width": "15%" },  // Feature
+        { "width": "5%" },  // Location
+        { "width": "5%" },  // Status
+        { "width": "5%" },  // Assembly
+        { "width": "5%" },  // Creator
+        { "width": "5%" },  // Created
     ],
     "columnDefs": [
         { name: 'id', targets: 0, visible: false },
@@ -49,16 +52,33 @@ const datatable = $('#plasmid_datatable').DataTable({
                 return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[5] + "</div>";
             },
         },
-        { name: 'feature', targets: 6,
+        { name: 'resistance', targets: 6,
             orderable: false,
+            render: function (data, type, row, meta) {
+                return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[6] + "</div>";
+            },
+        },
+        { name: 'feature', targets: 7,
+            orderable: false,
+            visible: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[6] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[7] + "</div>";
                     },
         },
-        { name: 'location', targets: 7,
+        { name: 'location', targets: 8,
             orderable: false},
-        { name: 'creator', targets: 8 },
-        { name: 'date', targets: 9 },
+        { name: 'status', targets: 9,
+            visible: false,
+        },
+        { name: 'assembly', targets: 10,
+            orderable: false,
+            visible: false,
+            render : function (data, type, row, meta) {
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[10] + "</div>";
+                    },
+        },
+        { name: 'creator', targets: 11 },
+        { name: 'date', targets: 12 },
     ],
     // "drawCallback": function( settings ) {
     //     this.api().columns.adjust();
@@ -73,14 +93,18 @@ const datatable = $('#plasmid_datatable').DataTable({
 
             let searchJQO;
             if ($(this).nodeName === 'SELECT'){
-
+                // todo: optimize this...
                 if (CurrentColumnName === 'project'){
                     searchJQO = $('#id_project option:selected')
                 }else{
                     if(CurrentColumnName === 'creator'){
                         searchJQO = $('#id_creator option:selected');
                     } else{
-                        searchJQO = $(this);
+                        if(CurrentColumnName === 'status'){
+                        searchJQO = $('#id_status option:selected');
+                    } else {
+                            searchJQO = $(this);
+                        }
                     }
                 }
             } else{
@@ -109,7 +133,7 @@ const datatable = $('#plasmid_datatable').DataTable({
                 RowCheckbox.class = 'ColumnToggleRow';
                 RowCheckbox.name = ColumnHeader;
                 RowCheckbox.value = CurrentIndex;
-                RowCheckbox.checked = true;
+                RowCheckbox.checked = !['Features', 'Assembly'].includes(ColumnHeader);
                 const RowLabel = document.createElement('label');
                 RowLabel.for = ColumnHeader;
                 RowLabel.textContent = ColumnHeader;

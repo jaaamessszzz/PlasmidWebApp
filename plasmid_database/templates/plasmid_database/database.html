@@ -18,8 +18,11 @@
                 <th>Alias</th>
                 <th>Description</th>
                 <th>Attributes</th>
+                <th>Resistance</th>
                 <th>Features</th>
                 <th>Location</th>
+                <th>Status</th>
+                <th>Assembly</th>
                 <th>Creator</th>
                 <th>Created</th>
             </tr>
@@ -37,8 +40,18 @@
                 <th><input type="text" name="alias" id="id_alias" class="filterInputs" placeholder="Filter"></th>
                 <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
                 <th><input type="text" name="attribute" id="id_attribute" class="filterInputs" placeholder="Filter"></th>
+                <th><input type="text" name="resistance" id="id_resistance" class="filterInputs" placeholder="Filter"></th>
                 <th><input type="text" name="feature" id="id_feature" class="filterInputs" placeholder="Filter"></th>
                 <th><input type="text" name="location" id="id_location" class="filterInputs" placeholder="Filter"></th>
+                <th>
+                    <select name="status" id="id_status" form="plasmidFilterInputs" class="filterInputs" required>
+                        <option value=""></option>
+                        <option value="Designed">Designed</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Abandoned">Abandoned</option>
+                    </select>
+                </th>
+                <th><input type="text" name="assembly" id="id_assembly" class="filterInputs" placeholder="Filter"></th>
                 <th>
                     <select name="creator" id="id_creator" form="plasmidFilterInputs" class="filterInputs" required>
                     <option value=""></option>

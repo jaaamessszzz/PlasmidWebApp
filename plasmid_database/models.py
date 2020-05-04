@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy
 
 from dnassembly.dna import Plasmid as dnaPlasmid
 from dnassembly.dna import Feature as dnaFeature
@@ -128,12 +129,18 @@ class Plasmid(models.Model):
     location = models.ManyToManyField(Location)
     assembly = models.ManyToManyField("self", blank=True)
 
+    DESIGNED = 'Designed'
+    VERIFIED = 'Verified'
+    ABANDONED = 'Abandoned'
+    STATUS_CHOICES = [(DESIGNED, DESIGNED), (VERIFIED, VERIFIED), (ABANDONED, ABANDONED)]
+
+    status = models.TextField(choices=STATUS_CHOICES, default=DESIGNED)
 
     class Meta:
         unique_together = ('project', 'projectindex',)
 
     def get_standard_id(self):
-        return f'p{self.project.project}_{self.projectindex:0>5}'
+        return f'p{self.project.project.capitalize()}_{self.projectindex:0>5}'
 
     def get_aliases_as_string(self):
         return ', '.join(sorted([altname.alias for altname in self.aliases.all()]))
@@ -146,6 +153,16 @@ class Plasmid(models.Model):
 
     def get_locations_as_string(self):
         return ', '.join([loc.name for loc in self.location.all()])
+
+    def get_resistance_as_string(self):
+        """Return subset of features that are FeatureType resistance"""
+        all_features = [feat.name for feat in self.feature.all()]
+        print(all_features)
+        return ', '.join(sorted([feat.name for feat in self.feature.all() if feat.type is not None and feat.type.name == 'Resistance Marker']))
+
+    def get_assembly_plasmids_as_string(self):
+        """Get consituent plasmids"""
+        return ', '.join([plasmid.get_standard_id() for plasmid in self.assembly.all()])
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.projectindex:
