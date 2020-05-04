@@ -256,6 +256,17 @@ $('#confirmDeletePlasmidsButton').on('click', function () {
     });
 });
 
+// Datatable instructions collapsible
+$('#databaseInstructionsButton').on('click', function(){
+    let collapsibleDiv = document.getElementById('databaseInstructionsDiv');
+    if (collapsibleDiv.style.display === "block"){
+        collapsibleDiv.style.display = "none";
+    } else {
+        collapsibleDiv.style.display = "block";
+    }
+});
+
+
 //=============================//
 // Show/hide Datatable columns //
 //=============================//
