@@ -617,11 +617,6 @@ def update_feature(request):
 
     # --- Validate Request --- #
 
-    # Unpack Request
-    feature_type_PK = int(request.POST['newType'])
-    feature_name = request.POST['newName']
-    feature_description = request.POST['newDescription']
-    feature_sequence = request.POST['newSequence']
     user_id = int(request.user.id)
     response_dict = {'Success': False, 'Errors': []}
 
@@ -653,6 +648,13 @@ def update_feature(request):
 
     # Add or edit feature
     elif request.POST['action'] in ['new', 'update']:
+
+        # Unpack Request
+        feature_type_PK = int(request.POST['newType'])
+        feature_name = request.POST['newName']
+        feature_description = request.POST['newDescription']
+        feature_sequence = request.POST['newSequence']
+
         # Validate new Feature Name and Sequence
         if feature_name is None or feature_name.strip() == '':
             response_dict['Errors'].append('Features require a name!')
