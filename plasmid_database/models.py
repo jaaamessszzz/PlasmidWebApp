@@ -127,7 +127,6 @@ class Plasmid(models.Model):
     feature = models.ManyToManyField(Feature)
     attribute = models.ManyToManyField(Attribute)
     location = models.ManyToManyField(Location)
-    assembly = models.ManyToManyField("self", blank=True)
 
     DESIGNED = 'Designed'
     VERIFIED = 'Verified'
@@ -157,12 +156,11 @@ class Plasmid(models.Model):
     def get_resistance_as_string(self):
         """Return subset of features that are FeatureType resistance"""
         all_features = [feat.name for feat in self.feature.all()]
-        print(all_features)
         return ', '.join(sorted([feat.name for feat in self.feature.all() if feat.type is not None and feat.type.name == 'Resistance Marker']))
 
     def get_assembly_plasmids_as_string(self):
         """Get consituent plasmids"""
-        return ', '.join([plasmid.get_standard_id() for plasmid in self.assembly.all()])
+        return ', '.join([plasmid.input.get_standard_id() for plasmid in self.plasmidproduct.filter(product__id=self.id)])
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.projectindex:
@@ -192,3 +190,12 @@ class Plasmid(models.Model):
 class PlasmidAlias(models.Model):
     alias = models.TextField(max_length=20)
     plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='aliases')
+
+
+class PlasmidAssembly(models.Model):
+    product = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='plasmidproduct')
+    input = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='plasmidinput')
+
+    class Meta:
+        unique_together = ('product', 'input',)
+

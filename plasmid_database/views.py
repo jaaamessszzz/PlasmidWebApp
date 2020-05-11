@@ -16,7 +16,7 @@ import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
-from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType
+from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType, PlasmidAssembly
 from .forms import SignUpForm
 
 # todo: separate views into separate files based on page/function
@@ -120,7 +120,7 @@ class FilterDatatableTemplate(BaseDatatableView):
                                     project, project_id = standard_match.groups()
                                     try:
                                         plasmid = Plasmid.objects.get(project__project__iexact=project, projectindex=int(project_id))
-                                        term_filter = {f'assembly__id__exact': plasmid.id}
+                                        term_filter = {f'plasmidinput__id__exact': plasmid.id}
                                         column_querysets.append(qs.filter(**term_filter))
                                     except Exception as e:
                                         print(e)
@@ -429,7 +429,10 @@ def standard_assembly(request):
             new_plasmid.feature.add(*new_plasmid_features)
 
             # Keep track of plasmids that went into assembly (Plasmid.assembly)
-            new_plasmid.assembly.add(*assembly_db_plasmids)
+            # new_plasmid.assembly.add(*assembly_db_plasmids)
+            for input_plasmid in assembly_db_plasmids:
+                new_product_input = PlasmidAssembly(product=new_plasmid, input=input_plasmid)
+                new_product_input.save()
 
             # Annotate part plasmid, if applicable
             print('Annotating Parts...')

@@ -76,13 +76,13 @@
 
         </ul>
 
-        {% if plasmid.assembly.count > 0 %}
+        {% if plasmid.plasmidproduct.count > 0 %}
             <ul class="PlasmidDataDump">
                 <li class="PlasmidKey">Assembled From</li>
                 <li class="PlasmidValue">
                     <ul class="InnerDataDump">
-                    {% for assembly in plasmid.assembly.all %}
-                        <li class="PlasmidValue">{{ assembly.get_standard_id }}</li>
+                    {% for assembly in plasmid.plasmidproduct.all %}
+                        <li class="PlasmidValue">{{ assembly.input.get_standard_id }}</li>
                     {% endfor %}
                     </ul>
                 </li>
