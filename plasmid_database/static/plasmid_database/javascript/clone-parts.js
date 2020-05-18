@@ -127,7 +127,7 @@ $('#partForm').submit(function(e) {
         }
         // Check for restriction sites
         if (RxnSiteRegex.test(partSequence)){
-            rowErrors.push('Row ' + index + ' contains a BsaI/BsmBI/NotI restriciton site!');
+            rowErrors.push('Row ' + index + ' contains one or more BsaI/BsmBI/NotI restriction sites!');
         }
         // Check codons for coding sequences
         if (leftPartOverhang.includes('3') && rightPartOverhang.includes('3')){
