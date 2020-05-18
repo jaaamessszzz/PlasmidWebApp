@@ -146,7 +146,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "plasmid_database", "static")
 
 # Redirect to home URL after login
 LOGIN_REDIRECT_URL = '/'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Pickle instead of JSON
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
