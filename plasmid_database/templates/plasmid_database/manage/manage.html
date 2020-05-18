@@ -13,7 +13,7 @@
         <li><a href="#locations">Locations</a>
         <li><a href="#attributes">Attributes</a>
         <li><a href="#features">Features</a>
-        <li><a href="#Projects">Projects</a>
+        <li><a href="#projects">Projects</a>
         {# Only allow functions for projects where users are members! #}
     </ul>
 </nav>
@@ -25,6 +25,8 @@
     {% include 'plasmid_database/manage/manage-locations.html' %}
     {# Features #}
     {% include 'plasmid_database/manage/manage-features.html' %}
+    {# Projects #}
+    {% include 'plasmid_database/manage/manage-projects.html' %}
 </div>
 {% endblock %}
 
