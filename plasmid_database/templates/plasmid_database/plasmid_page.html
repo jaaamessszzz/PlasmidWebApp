@@ -28,10 +28,16 @@
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Aliases</li>
             <li class="PlasmidValue">
-                <ul class="InnerDataDump">
+                <ul id="innerAliasDump" class="InnerDataDump">
                 {% for altname in plasmid.aliases.all %}
-                    <li class="PlasmidValue">{{ altname.alias }}</li>
+                    <li class="PlasmidValue PlasmidAlias">{{ altname.alias }}</li>
                 {% endfor %}
+                    <li class="PlasmidValue" id="addAliasInput" style="display: none;">
+                        <input id="newAliasInput" name="newAliasInput" style="margin: 1em 1em 1em 0">
+                        <button id="newAliasAdd" class="newAliasAdd BlockButton" type="button" style="background-color: #6ea400;">
+                            <i class="fas fa-plus-square"></i> Add New Alias
+                        </button>
+                    </li>
                 </ul>
             </li>
         </ul>
@@ -93,6 +99,13 @@
             <li class="PlasmidKey">Description</li>
             <li class="PlasmidValue">
                 <div id="PlasmidDescription">{{ plasmid.description }}</div>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Status</li>
+            <li class="PlasmidValue">
+                <div id="PlasmidDescription">{{ plasmid.status }}</div>
             </li>
         </ul>
 

@@ -16,7 +16,7 @@ import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
-from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType, PlasmidAssembly
+from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType, PlasmidAssembly, PlasmidAlias
 from .forms import SignUpForm
 
 # todo: separate views into separate files based on page/function
@@ -168,6 +168,7 @@ class PlasmidDatatable(FilterDatatableTemplate):
             ])
         return json_data
 
+
 @login_required
 def download_selected_plasmids(request):
     plasmid_indicies_str = json.loads(request.POST['DownloadSelectedDatabasePlasmids'])
@@ -194,6 +195,75 @@ def download_selected_plasmids(request):
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
     response['Content-Type'] = 'application/zip'
     return response
+
+
+@login_required
+def get_assembly_instructions(request):
+    plasmid_indicies_str = json.loads(request.POST['PlasmidAssemblyInstructions'])
+    plasmid_indicies = [int(index) for index in plasmid_indicies_str]
+    plasmid_records = Plasmid.objects.filter(id__in=plasmid_indicies)
+
+    part_object = Attribute.objects.get(name='Part')
+    attribute_children_qs = Attribute.objects.filter(subcategory=part_object.id)
+
+    # Separate into Part plasmids and others
+    cassette_list = []
+    part_list = []
+
+    for plasmid in plasmid_records:
+        if any([attr in attribute_children_qs for attr in plasmid.attribute.all()]):
+            part_list.append(plasmid)
+        else:
+            cassette_list.append(plasmid)
+
+    # Get part inserts and primers
+    part_dict_list = []
+    for plasmid in part_list:
+        part_dict = {'plasmid': plasmid}
+        part_match = re.search('(?:GGTCTC)(.*)(?:GAGACC)', plasmid.sequence)
+        if part_match is not None:
+            match_sequence = part_match.group(0)
+            print(match_sequence)
+            moclo_parts = annotate_moclo(plasmid.sequence)
+            leftPartOverhang = moclo_parts[0].split()[-1]
+            rightPartOverhang = moclo_parts[-1].split()[-1]
+            user_defined_part, primers = MoCloPartFromSequence(match_sequence, leftPartOverhang, rightPartOverhang)
+            part_dict['insert'] = user_defined_part.sequence
+            part_dict['primer_F'] = primers[0]
+            part_dict['primer_R'] = primers[1]
+        part_dict_list.append(part_dict)
+
+    # Get unique plasmids for cassette assembly
+    all_cassette_assembly_plasmids = []
+    for plasmid in cassette_list:
+        assembly_plasmids = [a for a in plasmid.plasmidproduct.all()]
+        all_cassette_assembly_plasmids += assembly_plasmids
+
+    unique_plasmids = set(all_cassette_assembly_plasmids)
+
+    context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
+    return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
+
+
+@login_required
+def update_status(request):
+    """Update plasmid status from datatable dropdown"""
+    user_id = request.user.id
+    plasmid_id = int(request.POST['plasmid_id'])
+    status_update = request.POST['statusUpdate']
+    requested_plasmid = Plasmid.objects.get(id=plasmid_id)
+
+    if requested_plasmid.creator.id != user_id:
+        print('FAIL')
+        return JsonResponse({'success': False}, status=200)
+    else:
+        if status_update not in ['', 'Abandoned', 'Verified', 'Designed']:
+            print('FAIL')
+            return JsonResponse({'success': False}, status=200)
+        requested_plasmid.status = status_update
+        requested_plasmid.save()
+        return JsonResponse({'success': True}, status=200)
+
 
 @login_required
 def database(request):
@@ -233,6 +303,7 @@ from dnassembly.io import read_genbank, ReadAs
 from dnassembly.reactions import StickyEndAssembly, AssemblyException, ReactionDefinitionException
 from dnassembly.dna import SequenceException
 from Bio.Restriction import BsaI, BsmBI
+
 
 @login_required
 def add_plasmids(request):
@@ -298,6 +369,11 @@ def add_plasmid_by_file(request):
                                   )
             # Plasmid needs pk before assigning many-to-many attributes
             new_plasmid.save()
+
+            # Add plasmid alias from filename
+            plasmid_filename, _ = os.path.splitext(response_dict['filename'])
+            plasmid_alias = PlasmidAlias(alias=plasmid_filename, plasmid=new_plasmid)
+            plasmid_alias.save()
 
             # Assign features to plasmid
             print('Adding Features...')
@@ -697,6 +773,7 @@ def get_attribute_tree(request):
     atrtibute_tree = Attribute.populate_dropdown()
     return JsonResponse({'data': atrtibute_tree})
 
+
 @login_required
 def get_attribute_info(request):
     """Return attribute information"""
@@ -712,6 +789,7 @@ def get_attribute_info(request):
     attribute_dict['Parent'] = int(requested_attribute.subcategory.id) if requested_attribute.subcategory else None
     return JsonResponse(attribute_dict)
 
+
 def add_attribute_to_database(request):
     """Add an attribute to the database"""
     new_attribute_name = request.POST['attribute_name']
@@ -725,6 +803,7 @@ def add_attribute_to_database(request):
         return JsonResponse({'success': True, 'Error': None})
     else:
         return JsonResponse({'success': False, 'Error': 'Root Attribute with that name already exists!'})
+
 
 @login_required
 def modify_attribute(request):
@@ -751,6 +830,7 @@ def modify_attribute(request):
             response_dict['Error'] = str(e)
     return JsonResponse(response_dict)
 
+
 @login_required
 def get_attribute_children(request):
     """For jsTree if attribute/location trees become too big for a single request"""
@@ -775,6 +855,7 @@ def get_location_tree(request):
     atrtibute_tree = Location.populate_dropdown()
     return JsonResponse({'data': atrtibute_tree})
 
+
 @login_required
 def get_location_info(request):
     """Return location information"""
@@ -790,6 +871,7 @@ def get_location_info(request):
     location_dict['Parent'] = int(requested_location.subcategory.id) if requested_location.subcategory else None
     return JsonResponse(location_dict)
 
+
 def add_location_to_database(request):
     """Add an location to the database"""
     new_location_name = request.POST['location_name']
@@ -803,6 +885,7 @@ def add_location_to_database(request):
         return JsonResponse({'success': True, 'Error': None})
     else:
         return JsonResponse({'success': False, 'Error': 'Root Location with that name already exists!'})
+
 
 @login_required
 def modify_location(request):
@@ -901,6 +984,7 @@ class FeatureDatatable(BaseDatatableView):
 def user_plasmids(request, user_id):
     return HttpResponse(f'Plasmids for user {user_id}')
 
+
 @login_required
 def plasmid(request, project_id, plasmid_id):
     database_projects = [project.project for project in Project.objects.all()]
@@ -914,6 +998,7 @@ def plasmid(request, project_id, plasmid_id):
     context['attrString'] = json.dumps([f'Attribute-{attr.id}' for attr in requested_plasmid.attribute.all()])
     context['locString'] = json.dumps([f'Location-{loc.id}' for loc in requested_plasmid.location.all()])
     return render(request, 'plasmid_database/plasmid_page.html', context)
+
 
 def update_plasmid(request):
     """Update location, attribute, and description information for a plasmid"""
@@ -961,3 +1046,26 @@ def update_plasmid(request):
             response_dict['Success'] = False
             response_dict['Error'] = [str(e)]
     return JsonResponse(response_dict)
+
+
+def update_alias(request):
+    """Create or remove plasmid aliases"""
+    user_id = int(request.user.id)
+    plasmid_pk = int(request.POST['plasmid'])
+    alias = request.POST['alias']
+    action = request.POST['action']
+
+    requested_plasmid = Plasmid.objects.get(id=plasmid_pk)
+    if user_id != requested_plasmid.creator.id:
+        return JsonResponse({'Success': False, 'Error': ['You can only edit your own plasmids!']})
+
+    if action == 'delete':
+        requested_plasmid_alias = PlasmidAlias.objects.get(plasmid=requested_plasmid, alias=alias)
+        requested_plasmid_alias.delete()
+        return JsonResponse({'Success': True, 'Error': []})
+    elif action == 'add':
+        plasmid_alias = PlasmidAlias(alias=alias, plasmid=requested_plasmid)
+        plasmid_alias.save()
+        return JsonResponse({'Success': True, 'Error': []})
+    else:
+        return JsonResponse({'Success': False, 'Error': ['Invalid action!']})

@@ -37,44 +37,65 @@ const datatable = $('#plasmid_datatable').DataTable({
         { name: 'alias', targets: 3,
             orderable: false,  // I can't figure out how to order aliases, issue with how DatatableView evaluates querysets for related name FKs
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[3] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
                     },
         },
         { name: 'description', targets: 4,
             orderable: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[4] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
                     },
         },
         { name: 'attribute', targets: 5,
             orderable: false,
             render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[5] + "</div>";
+                return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
             },
         },
         { name: 'resistance', targets: 6,
             orderable: false,
             render: function (data, type, row, meta) {
-                return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[6] + "</div>";
+                return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
             },
         },
         { name: 'feature', targets: 7,
             orderable: false,
             visible: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[7] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
                     },
         },
         { name: 'location', targets: 8,
             orderable: false},
         { name: 'status', targets: 9,
-            visible: false,
+            render : function (data, type, row, meta) {
+                        if (row[11] === currentUser){
+                            // Create dropdown
+                            let wrap = document.createElement("div");
+                            let statusDropdown = document.createElement("select");
+                            statusDropdown.className = 'statusDropdown';
+                            ["Designed", "Abandoned", "Verified"].forEach(function(plasmidStatus){
+                                const dropdownOption = document.createElement("option");
+                                dropdownOption.text = plasmidStatus;
+                                dropdownOption.value = plasmidStatus;
+                                if (plasmidStatus === data){
+                                    dropdownOption.setAttribute("selected", "selected");
+                                }
+                                statusDropdown.add(dropdownOption);
+                            });
+                            wrap.appendChild(statusDropdown);
+                            return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + wrap.innerHTML + "</div>";
+                        }
+                        else{
+                            return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
+                        }
+                    },
         },
         { name: 'assembly', targets: 10,
             orderable: false,
             visible: false,
             render : function (data, type, row, meta) {
-                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + row[10] + "</div>";
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
                     },
         },
         { name: 'creator', targets: 11 },
@@ -89,7 +110,6 @@ const datatable = $('#plasmid_datatable').DataTable({
         $('.filterInputsRow').on( "input paste ValueChange", 'input, select', function () {
             const CurrentColumnName = this.name;
             const currentColumn = table.api().column(this.name + ':name');
-            console.log(CurrentColumnName);
 
             let searchJQO;
             if ($(this).nodeName === 'SELECT'){
@@ -112,8 +132,6 @@ const datatable = $('#plasmid_datatable').DataTable({
             }
             // const inputValue = $.fn.dataTable.util.escapeRegex(searchJQO.val());
             const inputValue = searchJQO.val();
-            console.log(currentColumn);
-            console.log(inputValue);
             currentColumn.search( inputValue, false, false ).draw();
         });
 
@@ -148,6 +166,21 @@ const datatable = $('#plasmid_datatable').DataTable({
 
     },
 });
+
+// Plasmid status update
+$('tbody').on('ValueChange', '.statusDropdown', function(a){
+    const rowData = datatable.row(this.parentNode.parentNode).data();
+    const statusUpdate = a.currentTarget.value;
+    let postData = {'statusUpdate': statusUpdate,
+                    'plasmid_id': rowData[0]
+    }
+    console.log(rowData);
+    console.log(postData);
+    $.post('/database/update_status/', postData, function () {
+        datatable.draw();
+    });
+});
+
 
 // Disable Download button if no rows are selected
 const DownloadPlasmidsSubmitButton = $('#DownloadPlasmidsSubmitButton');
@@ -186,6 +219,7 @@ datatable.on('click', function(){
         PlasmidIDs.push(SelectedPlasmid);
     }
     $('#DownloadSelectedDatabasePlasmids').val(JSON.stringify(PlasmidIDs));
+    $('#PlasmidAssemblyInstructions').val(JSON.stringify(PlasmidIDs));
 });
 
 //===========================//

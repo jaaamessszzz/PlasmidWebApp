@@ -34,9 +34,6 @@ $('#EditPlasmid').on('click', function () {
 
     // Load and show attribute tree
     $.post('/database/get_attribute_tree/', function(response){
-        console.log('Attributes Loaded!!!!!');
-        console.log(plasmidAttributes);
-
         attributeJSTree.jstree({
             "core": {
                 "data": response['data'],
@@ -60,6 +57,14 @@ $('#EditPlasmid').on('click', function () {
     document.getElementById('PlasmidDescription').style.backgroundColor = 'rgba(0, 124, 190, 0.4)';
     document.getElementById('PlasmidDescription').style.borderBottom = 'solid 2px #052049';
 
+    // [X] for each listed alias, input for new aliases
+    const aliasListItems = document.querySelectorAll('.PlasmidAlias');
+    aliasListItems.forEach(function(item){
+       item.innerHTML = "<button class=\"deleteAlias\" type=\"button\" style=\"background-color: #eb093c;\">" +
+           "<i class=\"fas fa-minus-circle\"></i></button>" + item.innerHTML;
+    });
+    document.getElementById('addAliasInput').style.display = 'inline-block';
+
     // Show cancel and save buttons
     document.getElementById('EditPlasmid').style.display = 'none';
     document.getElementById('SavePlasmid').style.display = 'inline-block';
@@ -76,10 +81,6 @@ $('#SavePlasmid').on('click', function(){
     let attributePKs = newAttributes.map(x => x['data']['id']);
     let newDescription = document.getElementById('PlasmidDescription').textContent;
 
-    console.log(locationPKs);
-    console.log(attributePKs);
-    console.log(newDescription);
-
     const data = {
         'locationPKs': locationPKs,
         'attributePKs': attributePKs,
@@ -87,7 +88,6 @@ $('#SavePlasmid').on('click', function(){
         'plasmidPK': plasmidPK,
     };
 
-    console.log(data);
     $.post('/database/update_plasmid/', data, function(response){
         if(response['Success'] === true){
             // Update Plasmid Locations/Attributes/Description
@@ -147,4 +147,51 @@ function closeEditing(){
     document.getElementById('PlasmidDescription').style.borderBottom = null;
     document.getElementById('DragnDropAttr-TreeJS').style.display = 'none';
     document.getElementById('DragnDropLoc-TreeJS').style.display = 'none';
+    // Remove deleteAlias buttons and hide newAlias input
+    document.getElementById('addAliasInput').style.display = 'none';
+    document.getElementById('newAliasInput').value = '';
+    const aliasListItems = document.querySelectorAll('.deleteAlias');
+    aliasListItems.forEach(function(item){
+        item.remove();
+    });
 }
+
+// Listen for addAlias
+$('#newAliasAdd').on('click', function(){
+    const newAliasInput = document.getElementById('newAliasInput');
+    const newAliasInputValue = newAliasInput.value;
+    if (newAliasInputValue.replace(/\s/g, '').length){
+        let data = {'plasmid': plasmidPK, 'alias': newAliasInputValue, 'action': 'add'}
+        $.post('/database/update_alias/', data, function(response){
+            if(response['Success'] === true) {
+                // Clear input box
+                newAliasInput.value = '';
+                // Add list item row with [X]
+                const newAliasItem = document.createElement('li');
+                newAliasItem.className = 'PlasmidValue PlasmidAlias';
+                newAliasItem.innerText = newAliasInputValue;
+                newAliasItem.innerHTML = "<button class=\"deleteAlias\" type=\"button\" style=\"background-color: #eb093c;\">" +
+                    "<i class=\"fas fa-minus-circle\"></i></button>" + newAliasItem.innerHTML;
+                const innerAliasDump = document.getElementById('innerAliasDump');
+                innerAliasDump.prepend(newAliasItem)
+            }
+        });
+    }
+});
+
+// Listen for deleteAlias
+$('#innerAliasDump').on('click', '.deleteAlias', function(element){
+    console.log(element);
+    const aliasListItem = element.currentTarget.parentNode;
+    console.log(aliasListItem);
+    const aliasToDelete = aliasListItem.innerText;
+    let data = {'plasmid': plasmidPK, 'alias': aliasToDelete, 'action': 'delete'}
+    $.post('/database/update_alias/', data, function(response){
+        if(response['Success'] === true) {
+            console.log('asdfd');
+            aliasListItem.remove();
+        } else {
+            console.log(response['Error']);
+        }
+    });
+});

@@ -82,6 +82,14 @@
             <button type="submit" id="DownloadPlasmidsSubmitButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Selected Plasmids</button>
         </form>
 
+        {# Assembly instructions for selected plasmids #}
+        {# todo: update to use javascript instead of... whatever this is... #}
+        <form method="post" action="get_assembly_instructions/" style="display: inline-block">
+            {% csrf_token %}
+            <input type="hidden" name="PlasmidAssemblyInstructions" id="PlasmidAssemblyInstructions">
+            <button type="submit" id="PlasmidAssemblyInstructionsButton" class="BlockButton"><i class="fas fa-wrench" data-fa-transform="grow-8"></i>  Get Assembly Instructions</button>
+        </form>
+
         {# Delete selected plasmids #}
         <button id="DeleteSelectedDatabasePlasmids" class="BlockButton"><i class="fas fa-trash fa-fw" data-fa-transform="grow-8"></i>  Delete Selected Plasmids</button>
 
@@ -137,6 +145,10 @@
 {% endblock %}
 
 {% block javascript %}
+<script type="text/javascript">
+const currentUser = '{{ user }}';
+</script>
+
 {# Javascript #}
 <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.js"></script>
 
@@ -151,7 +163,6 @@
 {% block run_scripts %}
 {#Script#}
 <script type="text/javascript">
-var csrftoken = getCookie('csrftoken');
-var currentUser = '{{ user }}';
+    const csrftoken = getCookie('csrftoken');
 </script>
 {% endblock %}

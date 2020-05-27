@@ -39,7 +39,7 @@ class FeatureType(models.Model):
 
 class Attribute(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(null=True)
     subcategory = models.ForeignKey('Attribute', on_delete=models.CASCADE, null=True)
 

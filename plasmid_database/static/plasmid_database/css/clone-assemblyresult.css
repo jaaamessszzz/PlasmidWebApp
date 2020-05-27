@@ -3,7 +3,7 @@
     table-layout: fixed;
 }
 
-#assemblyResultsTable td {
-    text-align: center;
+td {
+    text-align: left;
     word-break: break-all;
 }

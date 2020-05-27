@@ -6,6 +6,8 @@ app_name = 'plasmid_database'
 urlpatterns = [path('signup/', views.new_user, name='new-user'),
                path(r'', views.database, name='database'),
                path(r'download_database_plasmids/', views.download_selected_plasmids, name='download-database-plasmids'),
+               path(r'get_assembly_instructions/', views.get_assembly_instructions, name='get-assembly-instructions'),
+               path(r'update_status/', views.update_status, name='update-plasmid-status'),
                path(r'delete_user_plasmids/', views.delete_user_plasmids, name='delete-user-plasmids'),
                path(r'update_table/', login_required(views.PlasmidDatatable.as_view()), name='update_table'),
                ]
@@ -17,7 +19,6 @@ urlpatterns += [path(r'manage/', views.manage_database, name='plasmid-management
                 ]
 
 # --- Add plasmids --- #
-
 urlpatterns += [path(r'add/', views.add_plasmids, name='add-plasmids'),
                 path(r'update_filter_table/', login_required(views.PlasmidFilterDatatable.as_view()), name='update-filter-table'),
                 path(r'add_plasmid_by_file/', views.add_plasmid_by_file, name='add-plasmid-by-file'),
@@ -45,4 +46,5 @@ urlpatterns += [path(r'get_location_tree/', views.get_location_tree, name='loc-t
 # --- View Plasmids --- #
 urlpatterns += [path(r'<project_id>/<int:plasmid_id>/', views.plasmid, name='plasmid-view'),
                 path(r'update_plasmid/', views.update_plasmid, name='update-plasmid'),
+                path(r'update_alias/', views.update_alias, name='update-alias'),
                 ]
