@@ -204,15 +204,21 @@ def get_assembly_instructions(request):
     plasmid_records = Plasmid.objects.filter(id__in=plasmid_indicies)
 
     part_object = Attribute.objects.get(name='Part')
-    attribute_children_qs = Attribute.objects.filter(subcategory=part_object.id)
+    part_children_qs = Attribute.objects.filter(subcategory=part_object.id)
+
+    cassette_object = Attribute.objects.get(name='Cassette')
+    cassette_children_qs = Attribute.objects.filter(subcategory=cassette_object.id)
 
     # Separate into Part plasmids and others
     cassette_list = []
     part_list = []
 
     for plasmid in plasmid_records:
-        if any([attr in attribute_children_qs for attr in plasmid.attribute.all()]):
-            part_list.append(plasmid)
+        if any([attr in part_children_qs for attr in plasmid.attribute.all()]):
+            if any([attr in cassette_children_qs for attr in plasmid.attribute.all()]):
+                cassette_list.append(plasmid)
+            else:
+                part_list.append(plasmid)
         else:
             cassette_list.append(plasmid)
 
@@ -835,12 +841,12 @@ def modify_attribute(request):
 def get_attribute_children(request):
     """For jsTree if attribute/location trees become too big for a single request"""
     parent_pk = request.POST['attr_pk']
-    attribute_children_qs = Attribute.objects.filter(subcategory=parent_pk)
+    part_children_qs = Attribute.objects.filter(subcategory=parent_pk)
 
     attribute_children = list()
-    for attr in attribute_children_qs:
+    for attr in part_children_qs:
         attribute_children.append([attr.id, attr.name])
-    nodes_with_children = [attr.id for attr in attribute_children_qs if Attribute.objects.filter(subcategory=attr)]
+    nodes_with_children = [attr.id for attr in part_children_qs if Attribute.objects.filter(subcategory=attr)]
     print(sorted(attribute_children, key=lambda x: x[0]))
     print(nodes_with_children)
     return JsonResponse({'attr_children': sorted(attribute_children, key=lambda x: x[0]),
