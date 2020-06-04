@@ -46,7 +46,8 @@ $('#partForm').submit(function(e) {
     e.preventDefault();
 
     let partPostData = {};
-    let partTextAreaLines = $('#partEntry').val().split('\n');
+    const partEntryField = $('#partEntry');
+    let partTextAreaLines = partEntryField.val().split('\n');
     let addStandardized = document.getElementById("addStandard").checked;
     // Get entry vector
     let entryVectorID = document.getElementById('partEntryVectors').value;
@@ -59,6 +60,11 @@ $('#partForm').submit(function(e) {
     // todo: split up restriction site recognition based on user inputs
     // todo: check for restriction sites at beginning/end of sequence (assumes part 3)
     const RxnSiteRegex = new RegExp('^CGTCTC|GAGACG|GGTCTC|GAGACC|GCGGCCGC|CGCCGGCG$');
+
+    // Empty form check
+    if (partEntryField.val().length === 0){
+        rowErrors.push('Form is empty!');
+    }
 
     // Part entry format (tab-delimited): Description  Part Type  Sequence
     partTextAreaLines.forEach(function(element, idx){
