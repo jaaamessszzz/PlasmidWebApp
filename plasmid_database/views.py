@@ -125,6 +125,7 @@ class FilterDatatableTemplate(BaseDatatableView):
                                         column_querysets.append(qs.filter(**term_filter))
                                     except Exception as e:
                                         print(e)
+                        # todo: enable resistance search
                         else:
                             term_filter = {f'{current_field}__{search_method}': search_term}
                             column_querysets.append(qs.filter(**term_filter))
