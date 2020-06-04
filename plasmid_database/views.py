@@ -246,9 +246,7 @@ def get_assembly_instructions(request):
         all_cassette_assembly_plasmids += assembly_plasmids
 
     unique_plasmid_ids = set(all_cassette_assembly_plasmids)
-    print(unique_plasmid_ids)
-    unique_plasmids = Plasmid.objects.filter(plasmidproduct__input__id__in=unique_plasmid_ids)
-    print(unique_plasmids)
+    unique_plasmids = Plasmid.objects.filter(id__in=unique_plasmid_ids)
 
     context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
     return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
