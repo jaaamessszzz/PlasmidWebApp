@@ -4,6 +4,7 @@ import json
 import zipfile
 from datetime import datetime
 from pprint import pprint
+from itertools import chain
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
@@ -120,7 +121,7 @@ class FilterDatatableTemplate(BaseDatatableView):
                                     project, project_id = standard_match.groups()
                                     try:
                                         plasmid = Plasmid.objects.get(project__project__iexact=project, projectindex=int(project_id))
-                                        term_filter = {f'plasmidinput__id__exact': plasmid.id}
+                                        term_filter = {f'plasmidproduct__input__id__exact': plasmid.id}
                                         column_querysets.append(qs.filter(**term_filter))
                                     except Exception as e:
                                         print(e)
@@ -229,7 +230,6 @@ def get_assembly_instructions(request):
         part_match = re.search('(?:GGTCTC)(.*)(?:GAGACC)', plasmid.sequence)
         if part_match is not None:
             match_sequence = part_match.group(0)
-            print(match_sequence)
             moclo_parts = annotate_moclo(plasmid.sequence)
             leftPartOverhang = moclo_parts[0].split()[-1]
             rightPartOverhang = moclo_parts[-1].split()[-1]
@@ -242,10 +242,13 @@ def get_assembly_instructions(request):
     # Get unique plasmids for cassette assembly
     all_cassette_assembly_plasmids = []
     for plasmid in cassette_list:
-        assembly_plasmids = [a for a in plasmid.plasmidproduct.all()]
+        assembly_plasmids = [a.input.id for a in plasmid.plasmidproduct.all()]
         all_cassette_assembly_plasmids += assembly_plasmids
 
-    unique_plasmids = set(all_cassette_assembly_plasmids)
+    unique_plasmid_ids = set(all_cassette_assembly_plasmids)
+    print(unique_plasmid_ids)
+    unique_plasmids = Plasmid.objects.filter(plasmidproduct__input__id__in=unique_plasmid_ids)
+    print(unique_plasmids)
 
     context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
     return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)

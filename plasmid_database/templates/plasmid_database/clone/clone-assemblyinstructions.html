@@ -51,7 +51,7 @@
         <li class="PlasmidValue">
             <ul class="InnerDataDump">
                 {% for plasmid in unique_plasmids %}
-                    <li class="PlasmidValue">{{ plasmid.input.get_standard_id }}</li>
+                    <li class="PlasmidValue">{{ plasmid.get_standard_id }}</li>
                 {% endfor %}
             </ul>
         </li>
