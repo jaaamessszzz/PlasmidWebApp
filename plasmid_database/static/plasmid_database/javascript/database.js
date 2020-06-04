@@ -9,7 +9,7 @@ const datatable = $('#plasmid_datatable').DataTable({
     "pagingType": "full_numbers",
     "lengthMenu": [10, 25, 50, 100, 250, 500],
     "search": { "regex": true },
-    "order": [[ 1, "asc" ]],
+    "order": [[ 12, "desc" ]],
     "autoWidth": false,
     "columns": [
         null,  // PKs
