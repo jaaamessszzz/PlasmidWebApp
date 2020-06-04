@@ -42,6 +42,19 @@ INSTALLED_APPS = [
     'home.apps.HomeConfig',
 ]
 
+INSTALLED_APPS += ['django.contrib.sites.apps.SitesConfig',
+                   'django.contrib.humanize.apps.HumanizeConfig',
+                   'django_nyt.apps.DjangoNytConfig',
+                   'mptt',
+                   'sekizai',
+                   'sorl.thumbnail',
+                   'wiki.apps.WikiConfig',
+                   'wiki.plugins.attachments.apps.AttachmentsConfig',
+                   'wiki.plugins.notifications.apps.NotificationsConfig',
+                   'wiki.plugins.images.apps.ImagesConfig',
+                   'wiki.plugins.macros.apps.MacrosConfig',
+                   ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -65,6 +78,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Django wiki
+                "sekizai.context_processors.sekizai",
             ],
         },
     },
@@ -141,6 +156,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "plasmid_database", "static")
 
+# --- Django Wiki --- #
+
+SITE_ID = 1
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "plasmid_database", "media")
+
+WIKI_ACCOUNT_HANDLING = False
+WIKI_ACCOUNT_SIGNUP_ALLOWED = False
 
 # --- Mozilla Developer Things --- #
 
