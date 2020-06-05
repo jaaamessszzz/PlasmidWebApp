@@ -41,7 +41,7 @@ def new_user(request):
             user_project.save()
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            return redirect('database')
+            return redirect('plasmid_database:database')
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
