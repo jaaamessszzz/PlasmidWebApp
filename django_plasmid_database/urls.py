@@ -26,6 +26,10 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
 ]
 
+# --- Django comments --- #
+
+urlpatterns += [path('comments/', include('django_comments.urls')),]
+
 # --- Django Wiki --- #
 
 urlpatterns += [path('notifications/', include('django_nyt.urls')),

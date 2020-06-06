@@ -5,7 +5,7 @@
 /* Fonts */
 /*********/
 
-h1, h2, h3, h4, p, a, b, u, ul, li, span, button, label, form, th, td{
+h1, h2, h3, h4, p, a, b, u, ul, li, span, button, label, form, th, td, dd, dt{
   font-family: "Open Sans", Calibri, sans-serif;
   font-style: normal;
   font-variant: normal;

@@ -38,11 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'django_comments',
+    'django.contrib.sites',
     'plasmid_database.apps.PlasmiddbConfig',
     'home.apps.HomeConfig',
 ]
 
-INSTALLED_APPS += ['django.contrib.sites.apps.SitesConfig',
+INSTALLED_APPS += [# 'django.contrib.sites.apps.SitesConfig',
                    'django.contrib.humanize.apps.HumanizeConfig',
                    'django_nyt.apps.DjangoNytConfig',
                    'mptt',

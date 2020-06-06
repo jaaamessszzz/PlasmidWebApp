@@ -7,9 +7,10 @@
 {% endblock %}
 
 {% block content %}
+{% load comments %}
+
 <div class="container">
     <div class="DataDumpContainer">
-
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Project</li>
             <li class="PlasmidValue">{{ plasmid.project.project }}</li>
@@ -123,10 +124,31 @@
         <div style="display: none">
             <p>There were errors associated with your edits:</p>
             <ul id="PlasmidEditErrors" >
-
             </ul>
         </div>
-
+    </div>
+    <div class="plasmidComments">
+        <h2>Comments</h2>
+        {% render_comment_list for plasmid %}
+        {% if user.is_authenticated %}
+            {% get_comment_form for plasmid as form %}
+            <form action="{% comment_form_target %}" method="POST">
+                {% csrf_token %}
+                <h3>New Comment</h3>
+                {{ form.comment }}
+                {{ form.content_type }}
+                {{ form.object_pk }}
+                {{ form.timestamp }}
+                {{ form.security_hash }}
+                <input type="hidden" name="next" value="/database/{{ plasmid.project.project }}/{{ plasmid.projectindex }}/" />
+                <br>
+                <div style="padding: 1em 0.5em">
+                    <input type="submit" value="Add comment" id="id_submit" />
+                </div>
+            </form>
+        {% else %}
+            <p>Please <a href="{% url 'login' %}">log in</a> to leave a comment.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
