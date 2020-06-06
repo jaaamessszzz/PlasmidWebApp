@@ -7,3 +7,4 @@ pymysql
 psycopg2>=2.7.7
 dnassembly>=0.1.5
 wiki
+django-contrib-comments
