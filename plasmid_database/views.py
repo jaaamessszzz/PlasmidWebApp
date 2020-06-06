@@ -369,6 +369,17 @@ def add_plasmid_by_file(request):
         dnassembly_plasmid = read_genbank(upload_stringio, ReadAs.Plasmid)
 
         try:
+            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            type2_match = re.search('GGTCTC|CGTCTC|GAGACG|GAGACC', dnassembly_plasmid.sequence.upper())
+            if type2_match:
+                cp_first_occurrence = dnassembly_plasmid.sequence[type2_match.start():] + dnassembly_plasmid.sequence[:type2_match.start()]
+                type2_forward = re.search('GGTCTC|CGTCTC', cp_first_occurrence)
+                if type2_forward:
+                    cp_type2_start = cp_first_occurrence[type2_forward.start():] + cp_first_occurrence[:type2_forward.start()]
+                    print(dnassembly_plasmid.sequence)
+                    dnassembly_plasmid.sequence = cp_type2_start
+                    print(cp_type2_start)
+
             # Add plasmid to database
             new_plasmid = Plasmid(sequence=dnassembly_plasmid.sequence,
                                   creator=request.user,
