@@ -102,7 +102,7 @@ function initializeTable(assemblyType){
                         'MultiCassette': ['LS-1', '1-2', '2-3', '3-4', '4-5', '5-RE', 'RE-LS']};
 
     // Select and empty existing table
-    let newTableJQO = $('#AssemblyTable');
+    let newTableJQO = assemblyTable;
     newTableJQO.empty();
     let newTable = newTableJQO[0];
 
@@ -196,7 +196,7 @@ assemblyTable.on('click', '.Part', function () {
     const regex_search = '_AssemblyRegex`' + excludePart.join('|') + '`' + includePart;
     console.log(regex_search);
     // Set attribute filter to part value
-    MoCloDatatable.column(4).search(regex_search,true,false).draw();
+    MoCloDatatable.column(6).search(regex_search,true,false).draw();
 });
 
 // Remove Plasmid from Row
@@ -325,22 +325,28 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
                 { name: 'id', width: 0, targets: 0, visible: false},
                 { name: 'project', width: 50, targets: 1 },
                 { name: 'projectindex', width: 50, targets: 2},
-                { name: 'features', width: 200, targets: 3,
+                { name: 'alias', width: 200, targets: 3,
                     orderable: false,
                     render : function (data, type, row, meta) {
-                        return '<div style="overflow:scroll;width:100%;height:4em;">' + row[3] + '</div>';
+                            return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
+                            },
+                },
+                { name: 'features', width: 200, targets: 4,
+                    orderable: false,
+                    render : function (data, type, row, meta) {
+                        return '<div style="overflow:scroll;width:100%;height:4em;">' + data + '</div>';
                     }
                 },
-                { name: 'attributes', width: 200, targets: 4,
+                { name: 'attributes', width: 200, targets: 5,
                     orderable: false,
                     render : function (data, type, row, meta) {
-                        return '<div style="overflow:scroll;width:100%;height:4em;">' + row[4] + '</div>';
+                        return '<div style="overflow:scroll;width:100%;height:4em;">' + data + '</div>';
                     }
                 },
-                { name: 'description', width: 200, targets: 5,
+                { name: 'description', width: 200, targets: 6,
                     orderable: false,
                     render : function (data, type, row, meta) {
-                        return '<div style="overflow:scroll;width:100%;height:4em;">' + row[5] + '</div>';
+                        return '<div style="overflow:scroll;width:100%;height:4em;">' + data + '</div>';
                     }
                 },
             ],
@@ -373,13 +379,12 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
 // Add selected plasmid to MoCloTable
 MoCloDatatable.on('click', 'tr', function () {
     selectedRowData = MoCloDatatable.row(this).data();
-    console.log(selectedRowData);
 
     // Get Parts for selected row
     const partPK = selectedRowData[0];
     const partProject = selectedRowData[1];
     const partIndex = selectedRowData[2];
-    const partPartString = selectedRowData[4].split(',');
+    const partPartString = selectedRowData[6].split(',');
 
     let partParts = [];
 
@@ -392,7 +397,7 @@ MoCloDatatable.on('click', 'tr', function () {
             partParts.push(elementStripped.split(' ')[1]);
         }
     });
-
+    console.log(partParts);
     // Add ID/Part names to table cells
     const currentRow = currentPart.parentNode;
     partParts.forEach(function (partClass) {
@@ -412,6 +417,11 @@ MoCloDatatable.on('click', 'tr', function () {
     document.getElementById('id_projectindex').value = '';
     document.getElementById('id_features').value = '';
     document.getElementById('id_description').value = '';
+    document.getElementById('id_alias').value = '';
+    // Clear search
+    MoCloDatatable.columns().every(function(){
+        this.search('');
+    });
 });
 
 // Hide overlay
@@ -423,6 +433,11 @@ $('#closeOverlayButton').on('click', function () {
     document.getElementById('id_projectindex').value = '';
     document.getElementById('id_features').value = '';
     document.getElementById('id_description').value = '';
+    document.getElementById('id_alias').value = '';
+    // Clear search
+    MoCloDatatable.columns().every(function(){
+        this.search('');
+    });
 });
 
 // Page Loaded

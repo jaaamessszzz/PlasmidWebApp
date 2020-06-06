@@ -73,9 +73,10 @@
                             <th>ProjectIndex</th>
                             <th>Project</th>
                             <th>ID</th>
+                            <th>Alias</th>
+                            <th>Description</th>
                             <th>Features</th>
                             <th>Attributes</th>
-                            <th>Description</th>
                         </tr>
                         <tr class="filterInputsRow">
                             <th></th>
@@ -88,9 +89,10 @@
                                 </select>
                             </th>
                             <th><input type="number" name="projectindex" value=0 min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
+                            <th><input type="text" name="alias" id="id_alias" class="filterInputs" placeholder="Filter"></th>
+                            <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
                             <th><input type="text" name="features" id="id_features" class="filterInputs" placeholder="Filter"></th>
                             <th></th> {# <input type="text" name="attributes" id="id_attributes" class="filterInputs" placeholder="Filter"> #}
-                            <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
                         </tr>
                     </thead>
                 </table>

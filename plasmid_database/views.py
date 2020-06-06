@@ -327,8 +327,8 @@ def add_plasmids(request):
 class PlasmidFilterDatatable(FilterDatatableTemplate):
 
     model = Plasmid
-    columns = ['id', 'project', 'projectindex', 'feature', 'attribute', 'description']
-    order_columns = ['id', 'project', 'projectindex', 'feature', 'attribute', 'description']
+    columns = ['id', 'project', 'projectindex', 'alias', 'description', 'feature', 'attribute']
+    order_columns = ['id', 'project', 'projectindex', 'alias', 'description', 'feature', 'attribute']
     max_display_length = 10
 
     def render_column(self, row, column):
@@ -341,9 +341,10 @@ class PlasmidFilterDatatable(FilterDatatableTemplate):
                 escape(int(item.id)),
                 escape(str(item.project.project).capitalize()),
                 escape(int(item.projectindex)),
+                item.get_aliases_as_string(),
+                item.description,
                 item.get_features_as_string(),
                 item.get_attributes_as_string(),
-                item.description,
             ])
         return json_data
 
@@ -376,9 +377,7 @@ def add_plasmid_by_file(request):
                 type2_forward = re.search('GGTCTC|CGTCTC', cp_first_occurrence)
                 if type2_forward:
                     cp_type2_start = cp_first_occurrence[type2_forward.start():] + cp_first_occurrence[:type2_forward.start()]
-                    print(dnassembly_plasmid.sequence)
                     dnassembly_plasmid.sequence = cp_type2_start
-                    print(cp_type2_start)
 
             # Add plasmid to database
             new_plasmid = Plasmid(sequence=dnassembly_plasmid.sequence,
