@@ -15,6 +15,7 @@ from django.utils.html import escape
 from django_datatables_view.base_datatable_view import BaseDatatableView
 
 import boto3
+from django_comments.models import Comment
 
 import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
@@ -1146,3 +1147,16 @@ def download_file(request):
                                         'Key': str(requested_file.file),
                                     })
     return redirect(url)
+
+
+def delete_comment(request):
+    """Delete a comment"""
+    next = request.POST.get('next', '/')
+    user_id = int(request.user.id)
+    comment_id = int(request.POST.get('comment_id', 0))
+
+    comment = Comment.objects.get(id=comment_id)
+    if comment.user.id == user_id:
+        comment.delete()
+
+    return redirect(next)
