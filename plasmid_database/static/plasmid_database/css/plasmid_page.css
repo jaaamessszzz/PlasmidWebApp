@@ -65,6 +65,10 @@
     width: 60%;
 }
 
+p {
+    word-wrap: break-word;
+}
+
 /********************************/
 /* Sequence-Specific Formatting */
 /********************************/
