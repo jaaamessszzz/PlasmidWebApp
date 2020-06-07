@@ -2,6 +2,7 @@ import io
 import os
 import json
 import zipfile
+import time
 from datetime import datetime
 from pprint import pprint
 from itertools import chain
@@ -13,12 +14,14 @@ from django.http import HttpResponse, JsonResponse, Http404
 from django.utils.html import escape
 from django_datatables_view.base_datatable_view import BaseDatatableView
 
+import boto3
+
 import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
-from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType, PlasmidAssembly, PlasmidAlias
-from .forms import SignUpForm
+from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType, PlasmidAssembly, PlasmidAlias, PlasmidFile
+from .forms import SignUpForm, PlasmidFileForm
 
 # todo: separate views into separate files based on page/function
 
@@ -1010,8 +1013,14 @@ def plasmid(request, project_id, plasmid_id):
         raise Http404
 
     requested_plasmid = get_object_or_404(Plasmid, project__project=project_id, projectindex=plasmid_id)
+
+    print(PlasmidFile.objects.all())
+
+    form = PlasmidFileForm()
     context = {}
     context['plasmid'] = requested_plasmid
+    context['form'] = form
+    context['plasmid_files'] = [filename for filename in requested_plasmid.files.all()]
     context['current_user'] = request.user
     context['attrString'] = json.dumps([f'Attribute-{attr.id}' for attr in requested_plasmid.attribute.all()])
     context['locString'] = json.dumps([f'Location-{loc.id}' for loc in requested_plasmid.location.all()])
@@ -1087,3 +1096,52 @@ def update_alias(request):
         return JsonResponse({'Success': True, 'Error': []})
     else:
         return JsonResponse({'Success': False, 'Error': ['Invalid action!']})
+
+
+def update_file(request):
+    """Create or remove plasmid files"""
+    user_id = int(request.user.id)
+    plasmid_pk = int(request.POST.get('plasmidpk', 0))
+    file_description = request.POST.get('description', '')
+    file_obj = request.FILES.get('file', None)
+    action = request.POST.get('action', None)
+    next = request.POST.get('next', '/')
+
+    if action == 'create':
+        requested_plasmid = Plasmid.objects.get(id=plasmid_pk)
+
+        # Timestamp new file
+        original_filename = file_obj.name
+        file_obj.name = f'{int(time.time())}-{original_filename}'
+
+        # New file
+        new_file = PlasmidFile()
+        new_file.file = file_obj
+        new_file.filename = original_filename
+        new_file.plasmid = requested_plasmid
+        new_file.description = file_description
+        new_file.creator = request.user
+        new_file.save()
+
+    if action == 'delete':
+        file_id = int(request.POST['file_id'])
+        requested_file = PlasmidFile.objects.get(id=file_id)
+        if user_id != requested_file.creator.id:
+            return redirect(next)
+
+        requested_file.delete()
+
+    return redirect(next)
+
+
+def download_file(request):
+    """Download plasmid page files"""
+    file_id = int(request.POST['file_id'])
+    requested_file = PlasmidFile.objects.get(id=file_id)
+    s3 = boto3.client('s3')
+    url = s3.generate_presigned_url(ClientMethod='get_object',
+                                    Params={
+                                        'Bucket': os.environ.get('AWS_STORAGE_BUCKET_NAME'),
+                                        'Key': str(requested_file.file),
+                                    })
+    return redirect(url)

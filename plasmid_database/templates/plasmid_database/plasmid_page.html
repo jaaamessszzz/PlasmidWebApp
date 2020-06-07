@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 
+{% block css %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/plasmid_page.css' %}">
+{% endblock %}
+
 {% block header %}
     <div class="header">
         <h1>{{ plasmid.project.project }} {{ plasmid.projectindex }}</h1>
@@ -11,6 +22,7 @@
 
 <div class="container">
     <div class="DataDumpContainer">
+        <h2>General</h2>
         <ul class="PlasmidDataDump">
             <li class="PlasmidKey">Project</li>
             <li class="PlasmidValue">{{ plasmid.project.project }}</li>
@@ -127,6 +139,67 @@
             </ul>
         </div>
     </div>
+
+    <div class="plasmidFiles">
+        <h2>Files</h2>
+        {% if plasmid_files %}
+        <table id="plasmidFileTable">
+            <tr>
+                <th>Filename</th>
+                <th>Description</th>
+                <th>Creator</th>
+                <th>Options</th>
+            </tr>
+            {% for file in plasmid_files %}
+                <tr>
+                    <td>{{ file.filename }}</td>
+                    <td>{{ file.description }}</td>
+                    <td>{{ file.creator }}</td>
+                    <td>
+                        <form action="{% url 'plasmid_database:download-file' %}" method="post" style="display: inline-block">
+                            {% csrf_token %}
+                            <input type="hidden" name="file_id" value="{{ file.id }}">
+                            <button type="submit" name="submit" style="width:100px; color: white; background-color: #007CBE; border-radius: 4px;">
+                                <i class="fas fa-cloud-download-alt" data-fa-transform="grow-2"></i>
+                            </button>
+                        </form>
+                        <form action="{% url 'plasmid_database:update-file' %}" method="post" style="display: inline-block">
+                            {% csrf_token %}
+                            <input type="hidden" name="file_id" value="{{ file.id }}">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="next" value="/database/{{ plasmid.project.project }}/{{ plasmid.projectindex }}/" />
+                            <button type="submit" name="submit" style="color: white; background-color: #eb093c; border-radius: 4px;">
+                                <i class="fas fa-trash" data-fa-transform="grow-2"></i>
+                            </button>
+                        </form>
+                    </td>
+                <tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+
+        <h3>Add New Files</h3>
+        <form action="{% url 'plasmid_database:update-file' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <ul class="PlasmidDataDump">
+                <li class="PlasmidKey">File</li>
+                <li class="PlasmidValue">
+                    <input type="file" name="file" required="" id="id_file">
+                </li>
+            </ul>
+            <ul class="PlasmidDataDump">
+                <li class="PlasmidKey">Description</li>
+                <li class="PlasmidValue">
+                    <textarea name="description" cols="60" rows="5" required="" id="id_description"></textarea>
+                </li>
+            </ul>
+            <input type="hidden" name="action" value="create" />
+            <input type="hidden" name="next" value="/database/{{ plasmid.project.project }}/{{ plasmid.projectindex }}/" />
+            <input type="hidden" name="plasmidpk" value="{{ plasmid.id }}">
+            <button type="submit" id="id_uploadfile">Upload</button>
+        </form>
+    </div>
+
     <div class="plasmidComments">
         <h2>Comments</h2>
         {% render_comment_list for plasmid %}
@@ -153,11 +226,6 @@
 </div>
 {% endblock %}
 
-{#Benchling API#}
-{#Assembled From#}
-{#User wiki/comment thread#}
-{#Files and associated notes#}
-
 {% block javascript %}
 {% load static %}
 
@@ -181,15 +249,6 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/plasmid_page.js' %}"></script>
-
-{# CSS #}
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/plasmid_page.css' %}">
 {% endblock %}
 
 {% block run_scripts %}

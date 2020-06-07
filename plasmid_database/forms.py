@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.validators import ValidationError
 
-from .models import User, Project
+from .models import User, Project, PlasmidFile
 
 class SignUpForm(UserCreationForm):
     first_name = forms.CharField(max_length=255)
@@ -31,3 +31,9 @@ class SignUpForm(UserCreationForm):
         if Project.objects.filter(initials=initials).exists():
             raise ValidationError("Initials already exist!")
         return initials
+
+
+class PlasmidFileForm(forms.ModelForm):
+    class Meta:
+        model = PlasmidFile
+        fields = ('file', 'description')

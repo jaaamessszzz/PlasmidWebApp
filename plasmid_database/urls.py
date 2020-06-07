@@ -47,4 +47,6 @@ urlpatterns += [path(r'get_location_tree/', views.get_location_tree, name='loc-t
 urlpatterns += [path(r'<project_id>/<int:plasmid_id>/', views.plasmid, name='plasmid-view'),
                 path(r'update_plasmid/', views.update_plasmid, name='update-plasmid'),
                 path(r'update_alias/', views.update_alias, name='update-alias'),
+                path(r'update_file/', views.update_file, name='update-file'),
+                path(r'download_file/', views.download_file, name='download-file'),
                 ]

@@ -199,3 +199,11 @@ class PlasmidAssembly(models.Model):
     class Meta:
         unique_together = ('product', 'input',)
 
+
+class PlasmidFile(models.Model):
+    file = models.FileField()
+    filename = models.TextField()
+    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='files')
+    description = models.TextField()
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
