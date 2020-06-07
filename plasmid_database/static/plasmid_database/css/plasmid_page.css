@@ -76,3 +76,10 @@ p {
 .DisplaySequence {
     word-wrap: break-word;
 }
+
+.sequence_scroll_container {
+    width: 900px;
+    height: 600px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}

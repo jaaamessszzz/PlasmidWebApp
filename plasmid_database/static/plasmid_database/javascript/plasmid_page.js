@@ -3,6 +3,17 @@ $(document).ready(function(){
         console.log(CurrentUserID);
         document.getElementById('EditPlasmid').style.display = 'inline-block';
     }
+
+    const postData = {'plasmidPK': plasmidPK};
+
+    $.post('/database/get_snapgene_stuff/', postData, function(response){
+        document.getElementById('snapgene').innerHTML = response['svg_html'];
+        $('.sg-tooltips-collection').remove()
+        document.getElementById('snapgene_seqJSstatic').innerHTML = response['seqJSstatic'];
+        document.getElementById('snapgene_seqJSdynamic').innerHTML = response['seqJSdynamic'];
+        document.getElementById('snapgene_seqCSS').innerHTML = response['seqCSS'];
+        document.getElementById('snapgene_seq').innerHTML = response['seq_html'];
+    });
 });
 
 let locationJSTree = $('#DragnDropLoc-TreeJS');

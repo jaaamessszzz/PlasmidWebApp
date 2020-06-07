@@ -50,4 +50,5 @@ urlpatterns += [path(r'<project_id>/<int:plasmid_id>/', views.plasmid, name='pla
                 path(r'update_file/', views.update_file, name='update-file'),
                 path(r'download_file/', views.download_file, name='download-file'),
                 path(r'delete_comment/', views.delete_comment, name='delete-comment'),
+                path(r'get_snapgene_stuff/', views.snapgene_request, name='snapgene-request'),
                 ]

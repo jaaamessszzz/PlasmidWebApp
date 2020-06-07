@@ -1016,8 +1016,6 @@ def plasmid(request, project_id, plasmid_id):
 
     requested_plasmid = get_object_or_404(Plasmid, project__project=project_id, projectindex=plasmid_id)
 
-    print(PlasmidFile.objects.all())
-
     form = PlasmidFileForm()
     context = {}
     context['plasmid'] = requested_plasmid
@@ -1160,3 +1158,87 @@ def delete_comment(request):
         comment.delete()
 
     return redirect(next)
+
+
+def snapgene_request(request):
+    """Get snapgene things"""
+
+    import zmq
+    import tempfile
+    from django.contrib.staticfiles.storage import staticfiles_storage
+
+    requested_plasmidpk = request.POST.get('plasmidPK')
+    plasmid = Plasmid.objects.get(id=requested_plasmidpk)
+
+    with tempfile.TemporaryDirectory() as snapscratch:
+        # Write plasmid genbank to tempdir
+        plasmid_name_gb = f'{plasmid.get_standard_id()}.gb'
+        plasmid_name_dna = f'{plasmid.get_standard_id()}.dna'
+
+        plasmid_genbank_path = os.path.join(snapscratch, plasmid_name_gb)
+        plasmid_genbank = plasmid.as_dnassembly()
+        dnassembly.io.write_genbank(plasmid_genbank, output=plasmid_genbank_path)
+
+        # Create .dna file
+        zmq_context = zmq.Context()
+        socket = zmq_context.socket(zmq.REQ)
+        socket.connect("tcp://localhost:5556")
+        plasmid_dna_path = os.path.join(snapscratch, plasmid_name_dna)
+        snapgene_json = {'request': 'importDNAFile',
+                         'inputFile': plasmid_genbank_path,
+                         'outputFile': plasmid_dna_path}
+        socket.send_json(snapgene_json)
+        response = socket.recv_json()
+        print(response)
+        socket.close()
+
+        # Generate svg map
+        plasmid_dom_path = os.path.join(snapscratch, f'{plasmid.get_standard_id()}.txt')
+        snapgene_json = {'request': 'generateSVGMap',
+                         'inputFile': plasmid_dna_path,
+                         'outputSvgDom': plasmid_dom_path
+                         }
+        zmq_context = zmq.Context()
+        socket = zmq_context.socket(zmq.REQ)
+        socket.connect("tcp://localhost:5556")
+        socket.send_json(snapgene_json)
+        response = socket.recv_json()
+        socket.close()
+
+        # Generate svg sequence
+        plasmid_dom_seq_path = os.path.join(snapscratch, f'{plasmid.get_standard_id()}_seq.txt')
+        plasmid_dom_seq_outputSvgJSStatic = os.path.join(snapscratch, f'{plasmid.get_standard_id()}_outputSvgJSStatic.txt')
+        plasmid_dom_seq_outputSvgJSDynamic = os.path.join(snapscratch, f'{plasmid.get_standard_id()}_outputSvgJSDynamic.txt')
+        plasmid_dom_seq_outputSvgCss = os.path.join(snapscratch, f'{plasmid.get_standard_id()}_outputSvgCss.txt')
+
+        snapgene_json = {'request': 'generateSVGSequence',
+                         'inputFile': plasmid_dna_path,
+                         'outputSvgDom': plasmid_dom_seq_path,
+                         'outputSvgJSStatic': plasmid_dom_seq_outputSvgJSStatic,
+                         'outputSvgJSDynamic': plasmid_dom_seq_outputSvgJSDynamic,
+                         'outputSvgCss': plasmid_dom_seq_outputSvgCss,
+                         }
+        zmq_context = zmq.Context()
+        socket = zmq_context.socket(zmq.REQ)
+        socket.connect("tcp://localhost:5556")
+        socket.send_json(snapgene_json)
+        response = socket.recv_json()
+        socket.close()
+
+        with open(plasmid_dom_path, 'r') as html:
+            dom_context = html.read()
+        with open(plasmid_dom_seq_path, 'r') as html_seq:
+            dom_context_seq = html_seq.read()
+        with open(plasmid_dom_seq_outputSvgJSStatic, 'r') as html_seq:
+            seqJSstatic = html_seq.read()
+        with open(plasmid_dom_seq_outputSvgJSDynamic, 'r') as html_seq:
+            seqJSdynamic = html_seq.read()
+        with open(plasmid_dom_seq_outputSvgCss, 'r') as html_seq:
+            seqCSS = html_seq.read()
+
+    return JsonResponse({'svg_html': dom_context,
+                         'seq_html': dom_context_seq,
+                         'seqJSstatic': seqJSstatic,
+                         'seqJSdynamic': seqJSdynamic,
+                         'seqCSS': seqCSS,
+                         })

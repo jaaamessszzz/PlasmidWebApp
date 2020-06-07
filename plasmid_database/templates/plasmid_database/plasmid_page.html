@@ -21,6 +21,15 @@
 {% load comments %}
 
 <div class="container">
+    <h2>Plasmid Map</h2>
+    <div id="snapgene"></div>
+
+    <style id="snapgene_seqCSS"></style>
+    <script id="snapgene_seqJSstatic"></script>
+    <script id="snapgene_seqJSdynamic"></script>
+    <h2>Plasmid Sequence</h2>
+    <div id="snapgene_seq"></div>
+
     <div class="DataDumpContainer">
         <h2>General</h2>
         <ul class="PlasmidDataDump">
@@ -252,6 +261,8 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/plasmid_page.js' %}"></script>
+{# Snapgene stuff #}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/map-seq-interactivity.js' %}"></script>
 {% endblock %}
 
 {% block run_scripts %}
