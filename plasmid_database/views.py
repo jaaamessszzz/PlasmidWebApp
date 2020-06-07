@@ -237,7 +237,8 @@ def get_assembly_instructions(request):
             moclo_parts = annotate_moclo(plasmid.sequence)
             leftPartOverhang = moclo_parts[0].split()[-1]
             rightPartOverhang = moclo_parts[-1].split()[-1]
-            user_defined_part, primers = MoCloPartFromSequence(match_sequence, leftPartOverhang, rightPartOverhang)
+            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartOverhang, rightPartOverhang,
+                                                               standardize=False, create_instructions=True)
             part_dict['insert'] = user_defined_part.sequence
             part_dict['primer_F'] = primers[0]
             part_dict['primer_R'] = primers[1]
