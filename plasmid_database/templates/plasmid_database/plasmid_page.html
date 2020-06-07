@@ -101,7 +101,10 @@
                 <li class="PlasmidValue">
                     <ul class="InnerDataDump">
                     {% for assembly in plasmid.plasmidproduct.all %}
-                        <li class="PlasmidValue">{{ assembly.input.get_standard_id }}</li>
+                        <li class="PlasmidValue">
+                            <a href="{% url 'plasmid_database:plasmid-view' plasmid_id=assembly.input.projectindex project_id=assembly.input.project.project %}">{{ assembly.input.get_standard_id }}</a>
+
+                        </li>
                     {% endfor %}
                     </ul>
                 </li>
