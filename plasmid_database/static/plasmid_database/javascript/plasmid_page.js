@@ -13,6 +13,9 @@ $(document).ready(function(){
         document.getElementById('snapgene_seqJSdynamic').innerHTML = response['seqJSdynamic'];
         document.getElementById('snapgene_seqCSS').innerHTML = response['seqCSS'];
         document.getElementById('snapgene_seq').innerHTML = response['seq_html'];
+
+        document.getElementById('sgPlasmidMap').style.display = 'inline-block';
+        document.getElementById('sgPlasmidSequence').style.display = 'inline-block';
     });
 });
 

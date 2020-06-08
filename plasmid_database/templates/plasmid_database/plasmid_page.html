@@ -9,6 +9,7 @@
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/plasmid_page.css' %}">
+<style id="snapgene_seqCSS"></style>
 {% endblock %}
 
 {% block header %}
@@ -21,15 +22,6 @@
 {% load comments %}
 
 <div class="container">
-    <h2>Plasmid Map</h2>
-    <div id="snapgene"></div>
-
-    <style id="snapgene_seqCSS"></style>
-    <script id="snapgene_seqJSstatic"></script>
-    <script id="snapgene_seqJSdynamic"></script>
-    <h2>Plasmid Sequence</h2>
-    <div id="snapgene_seq"></div>
-
     <div class="DataDumpContainer">
         <h2>General</h2>
         <ul class="PlasmidDataDump">
@@ -150,6 +142,18 @@
             <ul id="PlasmidEditErrors" >
             </ul>
         </div>
+    </div>
+
+    <div id="sgPlasmidMap" style="display: none">
+        <h2>Plasmid Map</h2>
+        <div id="snapgene"></div>
+    </div>
+
+    <div id="sgPlasmidSequence" style="display: none">
+        <script id="snapgene_seqJSstatic"></script>
+        <script id="snapgene_seqJSdynamic"></script>
+        <h2>Plasmid Sequence</h2>
+        <div id="snapgene_seq"></div>
     </div>
 
     <div class="plasmidFiles">
