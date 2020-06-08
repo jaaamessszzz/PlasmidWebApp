@@ -10,3 +10,4 @@ wiki
 django-contrib-comments
 boto3
 django-storages
+zmq
