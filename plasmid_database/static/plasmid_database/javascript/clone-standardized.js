@@ -331,19 +331,19 @@ let MoCloDatatable = $('#MoCloPlasmidsTable').DataTable({
                             return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
                             },
                 },
-                { name: 'features', width: 200, targets: 4,
+                { name: 'description', width: 200, targets: 4,
                     orderable: false,
                     render : function (data, type, row, meta) {
                         return '<div style="overflow:scroll;width:100%;height:4em;">' + data + '</div>';
                     }
                 },
-                { name: 'attributes', width: 200, targets: 5,
+                { name: 'features', width: 200, targets: 5,
                     orderable: false,
                     render : function (data, type, row, meta) {
                         return '<div style="overflow:scroll;width:100%;height:4em;">' + data + '</div>';
                     }
                 },
-                { name: 'description', width: 200, targets: 6,
+                { name: 'attributes', width: 200, targets: 6,
                     orderable: false,
                     render : function (data, type, row, meta) {
                         return '<div style="overflow:scroll;width:100%;height:4em;">' + data + '</div>';
