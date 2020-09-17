@@ -51,7 +51,6 @@ $('#partForm').submit(function(e) {
     let addStandardized = document.getElementById("addStandard").checked;
     // Get entry vector
     let entryVectorID = document.getElementById('partEntryVectors').value;
-    console.log(entryVectorID);
     let projectID = document.getElementById('partProject').value;
 
     // Validate Rows
@@ -59,7 +58,7 @@ $('#partForm').submit(function(e) {
     const DNARegex = new RegExp('^[ATCGatcg]+$');
     // todo: split up restriction site recognition based on user inputs
     // todo: check for restriction sites at beginning/end of sequence (assumes part 3)
-    const RxnSiteRegex = new RegExp('^CGTCTC|GAGACG|GGTCTC|GAGACC|GCGGCCGC|CGCCGGCG$');
+    const RxnSiteRegex = new RegExp('CGTCTC|GAGACG|GGTCTC|GAGACC|GCGGCCGC|CGCCGGCG');
 
     // Empty form check
     if (partEntryField.val().length === 0){
@@ -86,7 +85,7 @@ $('#partForm').submit(function(e) {
         let partTypeRaw = rowElements[1].trim();
         let leftPartOverhang;
         let rightPartOverhang;
-        let partSequence = rowElements[2].trim();
+        let partSequence = rowElements[2].trim().toUpperCase();
 
         if (partTypeRaw.includes('-')){
             // Parts defined as spans
