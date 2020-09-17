@@ -506,25 +506,31 @@ def standard_assembly(request):
                                   creator=request.user,
                                   description=assembly_product.description)
 
+            plasmid_attributes= [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
+            seen_description_list = list()
+            new_description_list = list()
+
             # Use Part 2-4 for cassette assembly description
             if post_data.get('ReactionEnzyme') == 'BsaI':
-                plasmid_attributes= [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
-                seen_description_list = list()
-                new_description_list = list()
                 for part in ['Part 2', 'Part 3a', 'Part 3b', 'Part 4a', 'Part 4b']:
                     for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
                         if part in attribute and part_plasmid not in seen_description_list:
                             new_description_list.append(part_plasmid.description)
                             seen_description_list.append(part_plasmid)
-                new_description = '|'.join(new_description_list)
-                new_plasmid.description = new_description
+
+            # Use cassette descriptions for multicassette assembly description
+            elif post_data.get('ReactionEnzyme') == 'BsmBI':
+                for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
+                    new_description_list.append(part_plasmid.description)
+                    seen_description_list.append(part_plasmid)
+
+            new_description = '|'.join(new_description_list)
+            new_plasmid.description = new_description
 
             new_plasmid.save()
 
             # Pull features from assembly_product and associate with new_plasmid
-            new_plasmid_features = []
-            for feature in assembly_product.features:
-                new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
+            new_plasmid_features = [Feature.objects.get(sequence=feature.sequence) for feature in assembly_product.features]
             new_plasmid.feature.add(*new_plasmid_features)
 
             # Keep track of plasmids that went into assembly (Plasmid.assembly)
