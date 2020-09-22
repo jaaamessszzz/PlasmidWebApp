@@ -617,6 +617,7 @@ def part_assembly(request):
         rightPartOverhang = part_definition[0][1]
         partSequence = part_definition[1]
         userDescription = part_definition[2]
+        partAlias = part_definition[3]
 
         # Create dnassembly Part from sequence
         user_defined_part, primers = MoCloPartFromSequence(partSequence, leftPartOverhang, rightPartOverhang, description=userDescription, standardize=addStandard)
@@ -674,6 +675,11 @@ def part_assembly(request):
                     part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)
                     part_feature.save()
                     new_plasmid.feature.add(part_feature)
+
+            # Associate alias if applicable
+            if partAlias and partAlias != "":
+                plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+                plasmid_alias.save()
 
             assembly_results[index]['success'] = True
             assembly_results[index]['new_plasmid'] = new_plasmid

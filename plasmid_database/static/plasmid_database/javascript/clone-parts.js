@@ -71,7 +71,7 @@ $('#partForm').submit(function(e) {
         let rowElements = element.split('\t');
         // Skip returns
         if (element === ''){return;}
-        if(rowElements.length !== 3){
+        if(rowElements.length < 3){
             rowErrors.push('Row ' + index + ' requires all fields!');
             return;
         }
@@ -86,6 +86,12 @@ $('#partForm').submit(function(e) {
         let leftPartOverhang;
         let rightPartOverhang;
         let partSequence = rowElements[2].trim().toUpperCase();
+
+        let partAlias;
+        // Get part alias if it exists
+        if (rowElements.length === 4){
+            partAlias = rowElements[3].trim();
+        }
 
         if (partTypeRaw.includes('-')){
             // Parts defined as spans
@@ -142,7 +148,7 @@ $('#partForm').submit(function(e) {
         }
 
         // Add data to POST dict
-        partPostData[index] = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription]
+        partPostData[index] = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription, partAlias]
     });
 
     // Submit parts to database if all rows pass validation
