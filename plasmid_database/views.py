@@ -354,6 +354,19 @@ class PlasmidFilterDatatable(FilterDatatableTemplate):
         return json_data
 
 
+def circularly_permute_plasmid(cp_plasmid):
+    """Generate circular permutation of plasmid so that it starts with BsaI/BsmBI site"""
+    # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+    type2_match = re.search('GGTCTC|CGTCTC|GAGACG|GAGACC', cp_plasmid.sequence.upper())
+    if type2_match:
+        cp_first_occurrence = cp_plasmid.sequence[type2_match.start():] + cp_plasmid.sequence[:type2_match.start()]
+        type2_forward = re.search('GGTCTC|CGTCTC', cp_first_occurrence)
+        if type2_forward:
+            cp_type2_start = cp_first_occurrence[type2_forward.start():] + cp_first_occurrence[:type2_forward.start()]
+            cp_plasmid.sequence = cp_type2_start
+    return cp_plasmid
+
+
 @login_required
 def add_plasmid_by_file(request):
     """
@@ -376,13 +389,7 @@ def add_plasmid_by_file(request):
 
         try:
             # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
-            type2_match = re.search('GGTCTC|CGTCTC|GAGACG|GAGACC', dnassembly_plasmid.sequence.upper())
-            if type2_match:
-                cp_first_occurrence = dnassembly_plasmid.sequence[type2_match.start():] + dnassembly_plasmid.sequence[:type2_match.start()]
-                type2_forward = re.search('GGTCTC|CGTCTC', cp_first_occurrence)
-                if type2_forward:
-                    cp_type2_start = cp_first_occurrence[type2_forward.start():] + cp_first_occurrence[:type2_forward.start()]
-                    dnassembly_plasmid.sequence = cp_type2_start
+            dnassembly_plasmid = circularly_permute_plasmid(dnassembly_plasmid)
 
             # Add plasmid to database
             new_plasmid = Plasmid(sequence=dnassembly_plasmid.sequence,
@@ -506,7 +513,10 @@ def standard_assembly(request):
                                   creator=request.user,
                                   description=assembly_product.description)
 
-            plasmid_attributes= [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
+            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            new_plasmid = circularly_permute_plasmid(new_plasmid)
+
+            plasmid_attributes = [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
             seen_description_list = list()
             new_description_list = list()
 
@@ -530,7 +540,15 @@ def standard_assembly(request):
             new_plasmid.save()
 
             # Pull features from assembly_product and associate with new_plasmid
-            new_plasmid_features = [Feature.objects.get(sequence=feature.sequence) for feature in assembly_product.features]
+            # new_plasmid_features = [Feature.objects.get(sequence=feature.sequence) for feature in assembly_product.features]
+
+            new_plasmid_features = []
+            for feature in assembly_product.features:
+                new_features = Feature.objects.filter(sequence=feature.sequence)
+                if new_features.count() > 0:
+                    for new_feature in new_features:
+                        new_plasmid_features.append(new_feature)
+
             new_plasmid.feature.add(*new_plasmid_features)
 
             # Keep track of plasmids that went into assembly (Plasmid.assembly)
@@ -639,6 +657,9 @@ def part_assembly(request):
                                   sequence=assembly_product.sequence,
                                   creator=request.user,
                                   description=userDescription)
+
+            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            new_plasmid = circularly_permute_plasmid(new_plasmid)
             new_plasmid.save()
 
             # Pull features from assembly_product and associate with new_plasmid
