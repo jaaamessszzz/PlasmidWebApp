@@ -25,7 +25,7 @@ from dnassembly.utils.annotation import annotate_moclo
 PROJECT_ROOT = os.path.abspath(os.path.join(__file__, '..', '..'))  # lmao
 sys.path.append(str(PROJECT_ROOT))
 
-os.environ["DJANGO_SETTINGS_MODULE"] = 'django_plasmid_database.settings'
+os.environ["DJANGO_SETTINGS_MODULE"] = 'plasmiddb.settings'
 django.setup()
 
 from plasmid_database.models import User, Plasmid, PlasmidAlias, Project, Attribute
