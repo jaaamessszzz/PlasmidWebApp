@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    {# CSS #}
+    <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css' %}">
+    {% block css %}{% endblock %}
+</head>
+
+<body>
+    {% block header %}
+    {% endblock %}
+    <div class="topnav" id="topnav">
+        <ul class="nav">
+            <li><a href="{% url 'wiki:root' %}">Home</a></li>
+            <li><a href="{% url 'plasmid_database:database' %}">Database</a></li>
+            <li><a href="{% url 'plasmid_database:add-plasmids' %}">Add</a></li>
+            <li><a href="{% url 'plasmid_database:plasmid-management' %}">Manage</a></li>
+            {% if user.is_authenticated %}
+                <li>User: {{ user.get_username }}</li>
+                <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+            {% else %}
+                <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
+            {% endif %}
+        </ul>
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+</body>
+
+</html>
+
+{# Javascript #}
+<script src="{% static 'plasmid_database/javascript/libraries/jquery-3.3.1.min.js' %}"></script>
+<script src="{% static 'plasmid_database/javascript/libraries/underscore-min.js' %}"></script>
+<script src="{% static 'plasmid_database/javascript/general.js' %}"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.7.2/js/solid.js" integrity="sha384-6FXzJ8R8IC4v/SKPI8oOcRrUkJU8uvFK6YJ4eDY11bJQz4lRw5/wGthflEOX8hjL" crossorigin="anonymous"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.7.2/js/fontawesome.js" integrity="sha384-xl26xwG2NVtJDw2/96Lmg09++ZjrXPc89j0j7JHjLOdSwHDHPHiucUjfllW0Ywrq" crossorigin="anonymous"></script>
+
+{#Page-specific Javascript and CSS#}
+{% block javascript %}
+{% endblock %}
+
+{% block run_scripts %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <div class="header">
+        {% if user.is_authenticated %}
+            <h1>Welcome {{ user.username.capitalize }}</h1>
+        {% else %}
+            <h1>Welcome</h1>
+        {% endif %}
+        {% block nav %}
+        {% endblock %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="container", style="text-align: center">
+        <p>Landing page for the plasmid database. Not entirely sure what is going to live here...</p>
+    </div>
+{% endblock %}

@@ -1,0 +1,116 @@
+<div id="assembly">
+    <div class="container">
+
+        {# Reaction Definition #}
+        <div class="flex-container" style="height: 250px">
+            <div class="assemblyDefinition MasterMix">
+                <button class="tableHeader" type="button" id="addMasterMix">Add to Master Mix</button>
+                <div class="assemblyDefinitions button-flex">
+
+                </div>
+            </div>
+
+            <div class="assemblyDefinition DropIn">
+                <button class="tableHeader" type="button" id="addDropIn">Add an Insert</button>
+                <div class="assemblyDefinitions button-flex">
+
+                </div>
+            </div>
+
+            <div class="assemblyDefinition UserDefinedParts">
+                <button class="tableHeader" type="button" id="addDefinedPart">Define a Drop-In Part</button>
+                <div class="assemblyDefinitions button-flex">
+
+                </div>
+            </div>
+        </div>
+
+        {# Perform Reaction #}
+        <div class="ReactionDefinition-flex">
+            <div class="ReactionDefinition performReactionContainer">
+                <button type="button" id="performReaction">Assemble!</button>
+            </div>
+
+            <div class="ReactionDefinition ReactionProjectContainer">
+                <label for="AssemblyProject">Select Project:</label>
+                <select name="AssemblyProject" id="AssemblyProjectSelector" required>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ReactionDefinition ReactionTypeContainer">
+                <label for="reactionType">Select Reaction:</label>
+                <select name="reactionType" id="reactionTypeSelector" required>
+                    <option value="goldengate">Golden Gate</option>
+                    <option value="gibson">Gibson</option>
+                </select>
+            </div>
+
+            {# Only show enzymes if reaction requires them #}
+            <div class="ReactionDefinition ReactionEnzymeContainer" id="enzymeTypeSelectorContainer">
+                <label for="enzymeType">Select Enzyme:</label>
+                <select name="enzymeType" id="enzymeTypeSelector" required>
+                    <option value="BsaI">BsaI</option>
+                    <option value="BsmBI">BsmbI</option>
+                </select>
+            </div>
+
+        </div>
+
+        {# Plasmid DataTable #}
+        <table id="filteredPlasmidsTable">
+            <thead>
+                <tr>
+                    <th>ProjectIndex</th>
+                    <th>Project</th>
+                    <th>ID</th>
+                    <th>Features</th>
+                    <th>Attributes</th>
+                    <th>Description</th>
+                </tr>
+                <tr class="filterInputsRow">
+                    <th></th>
+                    <th>
+                        <select name="project" id="id_project" form="plasmidFilterInputs" class="filterInputs" required>
+                        <option value="" selected></option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.project }}</option>
+                        {% endfor %}
+                        </select>
+                    </th>
+                    <th><input type="number" name="projectindex" value=0 min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
+                    <th><input type="text" name="features" id="id_features" class="filterInputs" placeholder="Filter"></th>
+                    <th><input type="text" name="attributes" id="id_attributes" class="filterInputs" placeholder="Filter"></th>
+                    <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
+                </tr>
+            </thead>
+        </table>
+
+    </div>
+
+    <div id="AssemblyReport" class="container" style="display:none">
+        <ul class="reportUploadStatusList">
+        </ul>
+    </div>
+
+    <div id="NewPartDefinition" class="container" style="display:none">
+        <div class="labeldiv">
+            <label for="NewPartID" class="DialogLabel">Part ID:</label>
+            <input type="text" id="NewPartID" class="DialogInput" placeholder="Part ID">
+        </div>
+        <div class="labeldiv">
+            <label for="NewPartSequence" class="DialogLabel">Part Sequence:</label>
+        </div>
+        <div align="center">
+            <textarea id="NewPartSequence" class="DialogInput" placeholder="Part Sequence" rows="5" cols="50"></textarea>
+        </div>
+        <div id="DNAWarningMessage" style="display: none">
+            <p style="color: darkred">Parts can only be composed of ATCG!</p>
+        </div>
+    </div>
+
+    <div id="AssemblyDefinitionError">
+    </div>
+</div>

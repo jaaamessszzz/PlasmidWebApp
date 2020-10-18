@@ -1,0 +1,362 @@
+
+/* General Formatting */
+
+.container-header{
+    display: block;
+    width:100%;
+}
+
+.flex-container {
+    display: flex;
+}
+
+/***************/
+/* Drag-n-Drop */
+/***************/
+
+.dropZoneZone{
+    margin: 0 10px 0 10px;
+    flex: 1 1 400px;
+    height: 300px;
+}
+
+.reportUploadStatus {
+    margin: 0 10px 0 10px;
+    flex: 1 1 400px;
+    height: 300px;
+}
+
+.UploadOptions{
+    margin: 0 10px 0 10px;
+    flex: 1 1 1000px;
+    height: 400px;
+}
+
+.DragnDropUploadOptions{
+    flex: 1 1 1000px;
+}
+
+.DragnDropUploadOption{
+    margin: 0.5em;
+    flex: 1 1 33%;
+    height: 400px;
+}
+
+#drop-zone {
+    border: 5px solid #052049;
+    width: 95%;
+    height: 95%;
+    text-align: center;
+    margin: 0 auto;
+    justify-content: center;
+    align-items: center;
+}
+
+.reportUploadStatusList {
+    overflow: scroll;
+    height: 300px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.reportUploadStatusList li {
+    display:inline-block;
+    color: #FFFFFF;
+    font-size: 10pt;
+    width:95%;
+    margin:1px;
+    padding:2px 0 2px 1em;
+    border: 2px solid #052049;
+    border-radius: 5px;
+}
+
+.DropdownTreeMenu {
+    margin: 0.5em 0;
+    height: 100%;
+    overflow: scroll;
+}
+
+.DropdownTreeMenu li {
+    padding: 0 0.5em;
+}
+.DragnDropUploadOption li .selected{
+    background-color: #6EA400;
+}
+
+#dragndrop-attributes{
+    margin: 0;
+    padding: 0.5em 0.5em;
+}
+
+/********************/
+/* Plasmid Assembly */
+/********************/
+
+/* General */
+
+button{
+    text-decoration: none;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    color: white;
+}
+
+.button-flex{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+/* Assembly Definition Buttons */
+
+.tableHeader{
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border: black;
+    border-width: 2px;
+    font-size: 12pt;
+}
+
+.MasterMix {
+    margin: 0;
+    order: 1;
+    flex: 1 1 25%;
+    height: 250px;
+}
+
+.DropIn {
+    margin: 0;
+    order: 2;
+    flex: 1 1 25%;
+    height: 250px;
+}
+
+.UserDefinedParts {
+    margin: 0;
+    order: 3;
+    flex: 2 2 50%;
+    height: 250px;
+}
+
+.assemblyPlasmid, .definedPart{
+    display:inline-block;
+    color: black;
+    background-color: whitesmoke;
+    width: 50%;
+    flex-basis: 50%;
+    flex-wrap: wrap;
+    border-radius: 3px;
+}
+
+.assemblyDefinitions {
+    padding: 2px 1px 2px 1px;
+    overflow: scroll;
+    height: 210px; /* Janky fix for button overflow...*/
+}
+
+.MasterMix table tbody tr{
+    background-color: #B4B9BF;
+    width: 95%;
+    height: 2em;
+    table-layout:fixed;
+    padding: 0.25em;
+}
+
+.MasterMix table tbody tr:nth-child(even){
+    background-color: #D1D3D3;
+}
+
+#addDropIn{
+    width: 100%;
+    background-color: #058488;
+}
+
+#addMasterMix{
+    width: 100%;
+    background-color: #007CBE;
+}
+
+#addDefinedPart{
+    width: 100%;
+    background-color: #716FB2;
+}
+
+#performReaction:hover, #addDropIn:hover, #addMasterMix:hover, #addDefinedPart:hover {
+    background-color: #D1D3D3;
+    color: black;
+}
+
+/* Reaction Definition */
+
+#ReactionDefinition {
+    margin: 0;
+    padding: 1em;
+}
+
+.ReactionDefinition-flex{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-content: center;
+    flex-wrap: wrap;
+}
+
+.ReactionDefinition{
+    display:inline-block;
+    align-content: center;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+.ReactionProjectContainer{
+    order: 1;
+    flex: 0 1 33%;
+}
+
+.ReactionTypeContainer{
+    order: 2;
+    flex: 0 1 33%;
+}
+
+.ReactionEnzymeContainer{
+    order: 3;
+    flex: 0 1 33%;
+}
+
+.performReactionContainer{
+    order: 0;
+    flex: 1 1 100%;
+}
+
+#performReaction{
+    text-align: center;
+    font-size: 16px;
+    color: white;
+    width: 100%;
+    background: #052049;
+    text-decoration: none;
+    padding: 0.4em 0.4em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+    border: none;
+}
+
+/*************************/
+/* Standardized Assembly */
+/*************************/
+
+/* General */
+
+.deleteRow{
+    background-color: #eb093c;
+    border-radius: 4px;
+}
+
+.cloneRow{
+    background-color: #007CBE;
+    border-radius: 4px;
+}
+
+.assemblyAlias{
+    display: inline;
+    box-sizing: border-box;
+    border: none;
+}
+
+.Index{
+    display: none;
+}
+
+#AssemblyTable{
+    width: 100%;
+    table-layout: fixed;
+}
+
+#AssemblyTable tr{
+    text-align: center;
+}
+
+#AssemblyTable th{
+    text-align: center;
+}
+
+/* Table Overlay */
+
+.overlayContainer {
+    margin: auto;
+    width: 80%;
+    background-color: white;
+}
+
+/* todo: generalize table overlay CSS */
+#tableOverlay {
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
+}
+
+#closeOverlayButton {
+    width: 100%;
+}
+
+td {
+    font-size: 8pt;
+}
+
+#MoCloPlasmidsTable tr:hover{
+ background:rgba(20,20,20,0.2);
+}
+
+.dark{
+    color: black;
+}
+
+/*************/
+/* Add Parts */
+/*************/
+
+/* General */
+
+form{
+    font-size: 8pt;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+#partInstructionsButton{
+    width: 100%;
+    margin-top: 1em;
+}
+
+#partInstructionsDiv{
+    display: block;
+    overflow: hidden;
+    transition: max-height 2s ease-in-out;
+}
+
+#partErrors{
+    display: none;
+}
+
+textarea{
+    width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+label{
+    font-size: 8pt;
+}

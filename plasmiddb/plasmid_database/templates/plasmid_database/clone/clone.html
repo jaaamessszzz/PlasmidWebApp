@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <div class="header">
+        <h1>Add Plasmids</h1>
+    </div>
+{% endblock %}
+
+{% block css %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{# Tab Navigation #}
+<nav class="SubNavigationBar">
+    <ul class="pageTabs">
+        <li><a href="#parts">Part Plasmids</a>
+        <li><a href="#standardized">MoClo Assembly</a>
+        <li><a href="#drag-n-drop">Drag-n-Drop</a>
+        {# <li><a href="#assembly">Plasmid Assembly</a> #}
+        {# <li><a href="#csv_upload">Upload CSV</a>  #}
+    </ul>
+</nav>
+
+{# Page Content #}
+<div class="pageContent">
+    {# MoClo Part Plasmids #}
+    {% include 'plasmid_database/clone/clone-parts.html' %}
+    {# MoClo Cassette Assembly #}
+    {% include 'plasmid_database/clone/clone-standardized.html' %}
+    {# Drag-n-Drop #}
+    {% include 'plasmid_database/clone/clone-dragndrop.html' %}
+
+    {# Assembly #}
+    {# {% include 'clone/clone-assembly.html' %} #}
+    {# CSV Upload #}
+    {#  {% include 'clone/clone-csvupload.html' %} #}
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+{% load static %}
+<script type="text/javascript">
+    const csrftoken = getCookie('csrftoken');
+    let user_index = 0;
+    {% for project in projects %}
+        {% if project.project == user.username %}
+            user_index = {{ project.id }};
+        {% endif %}
+    {% endfor %}
+    console.log(user_index);
+</script>
+{# Javascript #}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/add_plasmids.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/clone-parts.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/clone-standardized.js' %}"></script>
+{% endblock %}
+
+{% block run_scripts %}
+{# Set default values for plasmid filters #}
+<script type="text/javascript">
+    $('#id_creator option:contains("{{ user.username }}")').prop('selected',true);
+    $('#id_creator_index').val('');
+</script>
+{% endblock %}

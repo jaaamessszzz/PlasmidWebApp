@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <div class="header">
+        <h1>Assembly Instructions</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+{# Create table for assembly Instructions #}
+<div class="container">
+
+    {% if part_list %}
+    <h3>Part Plasmids</h3>
+    <table id="assemblyPartTable" style="width:100%">
+        <tr>
+            <th style="width:10%; text-align: left;">Assembly ID</th>
+            <th style="width:20%; text-align: left;">Primers</th>
+            <th style="width:50%; text-align: left;">Insert</th>
+        </tr>
+
+        {% for result_dict in part_list %}
+            <tr>
+                <td>{{ result_dict.plasmid.get_standard_id }}</td>
+                <td>F: {{ result_dict.primer_F }}<br>R: {{ result_dict.primer_R }}</td>
+                <td>{{ result_dict.insert }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    {% if cassette_list %}
+    <h3>Cassette Plasmids</h3>
+    <table id="assemblyCassetteTable" style="width:100%">
+        <tr>
+            <th style="width:20%; text-align: left;">Assembly ID</th>
+            <th style="width:80%; text-align: left;">Reaction Plasmids</th>
+        </tr>
+
+        {% for cassette_plasmid in cassette_list %}
+            <tr>
+                <td>{{ cassette_plasmid.get_standard_id }}</td>
+                <td>{{ cassette_plasmid.get_assembly_plasmids_as_string }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    {% if unique_plasmids %}
+    <ul class="PlasmidDataDump">
+        <li class="PlasmidKey">Unique Plasmids</li>
+        <li class="PlasmidValue">
+            <ul class="InnerDataDump">
+                {% for plasmid in unique_plasmids %}
+                    <li class="PlasmidValue">{{ plasmid.get_standard_id }}</li>
+                {% endfor %}
+            </ul>
+        </li>
+    </ul>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+{% load static %}
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+</script>
+
+{# Javascript #}
+
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/../../../static/plasmid_database/css/clone-assemblyresult.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/../../../static/plasmid_database/css/add_plasmids.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/../../../static/plasmid_database/css/plasmid_page.css' %}">
+
+{% endblock %}

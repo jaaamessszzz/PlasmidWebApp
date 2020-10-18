@@ -1,0 +1,106 @@
+<div class="container">
+    <div id="standardized">
+
+        {# Collapsable menus for settings/designs/commit #}
+        <div id="ReactionDefinition" class="collapsable">
+            {#Assembly type (YTK/MTK/Anything)#}
+            <div class="ReactionTypeContainer">
+                <label for="reactionType">Assembly Type:</label>
+                <select name="reactionType" id="reactionTypeSelector" required>
+                    <option value="Cassette">Cassette</option>
+                    <option value="MultiCassette">MultiCassette</option>
+                </select>
+            </div>
+            {#Project#}
+            <div class="AssemblyProject">
+                <label for="reactionType">Project:</label>
+                <select name="assemblyProject" id="AssemblyProjectSelector" required>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {# Pop-up table for selecting plasmids #}
+        <div id="AssemblyDefinition" class="collapsable">
+            <table id="AssemblyTable" style="width:100%">
+                <tr>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3a</th>
+                    <th>3b</th>
+                    <th>4a</th>
+                    <th>4b</th>
+                    <th>5</th>
+                    <th>6</th>
+                    <th>7</th>
+                    <th>8a</th>
+                    <th>8b</th>
+                    <th>Alias</th>
+                    <th>Options</th>
+                </tr>
+                <tr id="defaultRow" class="assemblyRow">
+                    <td class="Part_1 Part">Add Part</td>
+                    <td class="Part_2 Part">Add Part</td>
+                    <td class="Part_3a Part">Add Part</td>
+                    <td class="Part_3b Part">Add Part</td>
+                    <td class="Part_4a Part">Add Part</td>
+                    <td class="Part_4b Part">Add Part</td>
+                    <td class="Part_5 Part">Add Part</td>
+                    <td class="Part_6 Part">Add Part</td>
+                    <td class="Part_7 Part">Add Part</td>
+                    <td class="Part_8a Part">Add Part</td>
+                    <td class="Part_8b Part">Add Part</td>
+                    <td class="Alias"><input class="assemblyAlias" type="text"/></td>
+                    <td class="Options">
+                        <button class="cloneRow" type="button"><i class="fas fa-clone"></i></button>
+                        <button class="deleteRow" type="button"><i class="fas fa-minus-circle"></i></button>
+                    </td>
+                </tr>
+                {# One row per assembly #}
+            </table>
+            <form id="assemblyForm">
+                <button class="assemblyButton dark" type="button" id="addNewRow">Add New Row</button>
+                <button class="assemblyButton dark" type="submit" id="submitAssembly">Assemble!</button>
+            </form>
+        </div>
+
+        {# Plasmid DataTable #}
+        <div id="tableOverlay">
+            <div class="overlayContainer">
+                <table id="MoCloPlasmidsTable">
+                    <thead>
+                        <tr>
+                            <th>ProjectIndex</th>
+                            <th>Project</th>
+                            <th>ID</th>
+                            <th>Alias</th>
+                            <th>Description</th>
+                            <th>Features</th>
+                            <th>Attributes</th>
+                        </tr>
+                        <tr class="filterInputsRow">
+                            <th></th>
+                            <th>
+                                <select name="project" id="id_project" form="plasmidFilterInputs" class="filterInputs" required>
+                                <option value="" selected></option>
+                                {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.project }}</option>
+                                {% endfor %}
+                                </select>
+                            </th>
+                            <th><input type="number" name="projectindex" value=0 min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
+                            <th><input type="text" name="alias" id="id_alias" class="filterInputs" placeholder="Filter"></th>
+                            <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
+                            <th><input type="text" name="features" id="id_features" class="filterInputs" placeholder="Filter"></th>
+                            <th></th> {# <input type="text" name="attributes" id="id_attributes" class="filterInputs" placeholder="Filter"> #}
+                        </tr>
+                    </thead>
+                </table>
+            <button type="button" id="closeOverlayButton" class="dark">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>

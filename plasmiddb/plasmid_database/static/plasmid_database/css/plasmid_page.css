@@ -1,0 +1,85 @@
+/************************/
+/* Data Dump Formatting */
+/************************/
+
+.PlasmidDataDump{
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+    list-style-type: none;
+}
+
+.InnerDataDump{
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.PlasmidKey {
+    flex: 1 0 200px;
+    display: inline-block;
+}
+
+.PlasmidValue {
+    flex: 1 1 60%;
+    display: inline-block;
+}
+
+.Settings-Flexbox-Container {
+    display: inline-block;
+    flex: 1 1 45%;
+    padding: 10px;
+}
+
+.deleteAlias {
+    color: #FFFFFF;
+    border-radius: 4px;
+    margin-right: 1em;
+}
+
+/* Files */
+
+#plasmidFileTable {
+    width: 100%;
+    text-align: left;
+    table-layout: auto;
+}
+
+#id_submit, #id_uploadfile {
+    color: white;
+    background-color: #052049;
+    text-align: center;
+    font-size: 12px;
+    padding: 1em;
+    border: none;
+}
+
+/* Comments */
+
+#id_comment {
+    width: 60%;
+}
+
+p {
+    word-wrap: break-word;
+}
+
+/********************************/
+/* Sequence-Specific Formatting */
+/********************************/
+
+.DisplaySequence {
+    word-wrap: break-word;
+}
+
+.sequence_scroll_container {
+    width: 900px;
+    height: 600px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}

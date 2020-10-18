@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block css %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/../../static/plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/../../static/plasmid_database/css/libraries/loading.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/../../static/plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/../../static/plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/../../static/plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/../../static/plasmid_database/css/plasmid_page.css' %}">
+<style id="snapgene_seqCSS"></style>
+{% endblock %}
+
+{% block header %}
+    <div class="header">
+        <h1>{{ plasmid.project.project }} {{ plasmid.projectindex }}</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+{% load comments %}
+
+<div class="container">
+    <div class="DataDumpContainer">
+        <h2>General</h2>
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Project</li>
+            <li class="PlasmidValue">{{ plasmid.project.project }}</li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Project ID</li>
+            <li class="PlasmidValue">{{ plasmid.projectindex }}</li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Creator</li>
+            <li class="PlasmidValue">{{ plasmid.creator }}</li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Aliases</li>
+            <li class="PlasmidValue">
+                <ul id="innerAliasDump" class="InnerDataDump">
+                {% for altname in plasmid.aliases.all %}
+                    <li class="PlasmidValue PlasmidAlias">{{ altname.alias }}</li>
+                {% endfor %}
+                    <li class="PlasmidValue" id="addAliasInput" style="display: none;">
+                        <input id="newAliasInput" name="newAliasInput" style="margin: 1em 1em 1em 0">
+                        <button id="newAliasAdd" class="newAliasAdd BlockButton" type="button" style="background-color: #6ea400;">
+                            <i class="fas fa-plus-square"></i> Add New Alias
+                        </button>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Features</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump">
+                {% for feat in plasmid.feature.all %}
+                    <li class="PlasmidValue">{{ feat.name }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Attributes</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump" id="ulAttributes">
+                {% for attr in plasmid.attribute.all %}
+                    <li class="PlasmidValue">{{ attr.name }}</li>
+                {% endfor %}
+                </ul>
+                <div class="Settings-Flexbox-Container">
+                    <div id="DragnDropAttr-TreeJS" class="DropdownTreeMenu" style="display: none;"></div>
+                </div>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Locations</li>
+            <li class="PlasmidValue">
+                <ul class="InnerDataDump" id="ulLocations">
+                {% for loc in plasmid.location.all %}
+                    <li class="PlasmidValue">{{ loc.get_full_location }}</li>
+                {% endfor %}
+                </ul>
+                <div class="Settings-Flexbox-Container">
+                    <div id="DragnDropLoc-TreeJS" class="DropdownTreeMenu" style="display: none;"></div>
+                </div>
+            </li>
+
+        </ul>
+
+        {% if plasmid.plasmidproduct.count > 0 %}
+            <ul class="PlasmidDataDump">
+                <li class="PlasmidKey">Assembled From</li>
+                <li class="PlasmidValue">
+                    <ul class="InnerDataDump">
+                    {% for assembly in plasmid.plasmidproduct.all %}
+                        <li class="PlasmidValue">
+                            <a href="{% url 'plasmid_database:plasmid-view' plasmid_id=assembly.input.projectindex project_id=assembly.input.project.project %}">{{ assembly.input.get_standard_id }}</a>
+
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </li>
+            </ul>
+        {% endif %}
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Description</li>
+            <li class="PlasmidValue">
+                <div id="PlasmidDescription">{{ plasmid.description }}</div>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Status</li>
+            <li class="PlasmidValue">
+                <div id="PlasmidDescription">{{ plasmid.status }}</div>
+            </li>
+        </ul>
+
+        <ul class="PlasmidDataDump">
+            <li class="PlasmidKey">Created</li>
+            <li class="PlasmidValue">{{ plasmid.created }}</li>
+        </ul>
+
+        <div style="padding: 1em 0.5em">
+            <button class="BlockButton" id="EditPlasmid" style="display: none">Edit Plasmid</button>
+            <button class="BlockButton" id="SavePlasmid" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-edit"></i>Save Plasmid</button>
+            <button class="BlockButton" id="CancelEdits" style="background-color: #eb093c; display: none;"><i class="fas fa-fw fa-ban"></i>Cancel</button>
+        </div>
+
+        <div style="display: none">
+            <p>There were errors associated with your edits:</p>
+            <ul id="PlasmidEditErrors" >
+            </ul>
+        </div>
+    </div>
+
+    <div id="sgPlasmidMap" style="display: none">
+        <h2>Plasmid Map</h2>
+        <div id="snapgene"></div>
+    </div>
+
+    <div id="sgPlasmidSequence" style="display: none">
+        <script id="snapgene_seqJSstatic"></script>
+        <script id="snapgene_seqJSdynamic"></script>
+        <h2>Plasmid Sequence</h2>
+        <div id="snapgene_seq"></div>
+    </div>
+
+    <div class="plasmidFiles">
+        <h2>Files</h2>
+        {% if plasmid_files %}
+        <table id="plasmidFileTable">
+            <tr>
+                <th>Filename</th>
+                <th>Description</th>
+                <th>Creator</th>
+                <th>Options</th>
+            </tr>
+            {% for file in plasmid_files %}
+                <tr>
+                    <td>{{ file.filename }}</td>
+                    <td>{{ file.description }}</td>
+                    <td>{{ file.creator }}</td>
+                    <td>
+                        <form action="{% url 'plasmid_database:download-file' %}" method="post" style="display: inline-block">
+                            {% csrf_token %}
+                            <input type="hidden" name="file_id" value="{{ file.id }}">
+                            <button type="submit" name="submit" style="width:100px; color: white; background-color: #007CBE; border-radius: 4px;">
+                                <i class="fas fa-cloud-download-alt" data-fa-transform="grow-2"></i>
+                            </button>
+                        </form>
+                        <form action="{% url 'plasmid_database:update-file' %}" method="post" style="display: inline-block">
+                            {% csrf_token %}
+                            <input type="hidden" name="file_id" value="{{ file.id }}">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="next" value="/database/{{ plasmid.project.project }}/{{ plasmid.projectindex }}/" />
+                            <button type="submit" name="submit" style="color: white; background-color: #eb093c; border-radius: 4px;">
+                                <i class="fas fa-trash" data-fa-transform="grow-2"></i>
+                            </button>
+                        </form>
+                    </td>
+                <tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+
+        <h3>Add New Files</h3>
+        <form action="{% url 'plasmid_database:update-file' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <ul class="PlasmidDataDump">
+                <li class="PlasmidKey">File</li>
+                <li class="PlasmidValue">
+                    <input type="file" name="file" required="" id="id_file">
+                </li>
+            </ul>
+            <ul class="PlasmidDataDump">
+                <li class="PlasmidKey">Description</li>
+                <li class="PlasmidValue">
+                    <textarea name="description" cols="60" rows="5" required="" id="id_description"></textarea>
+                </li>
+            </ul>
+            <input type="hidden" name="action" value="create" />
+            <input type="hidden" name="next" value="/database/{{ plasmid.project.project }}/{{ plasmid.projectindex }}/" />
+            <input type="hidden" name="plasmidpk" value="{{ plasmid.id }}">
+            <button type="submit" id="id_uploadfile">Upload</button>
+        </form>
+    </div>
+
+    <div class="plasmidComments">
+        <h2>Comments</h2>
+        {% render_comment_list for plasmid %}
+        {% if user.is_authenticated %}
+            {% get_comment_form for plasmid as form %}
+            <form action="{% comment_form_target %}" method="POST">
+                {% csrf_token %}
+                <h3>New Comment</h3>
+                {{ form.comment }}
+                {{ form.content_type }}
+                {{ form.object_pk }}
+                {{ form.timestamp }}
+                {{ form.security_hash }}
+                <input type="hidden" name="next" value="/database/{{ plasmid.project.project }}/{{ plasmid.projectindex }}/" />
+                <br>
+                <div style="padding: 1em 0.5em">
+                    <input type="submit" value="Add comment" id="id_submit" />
+                </div>
+            </form>
+        {% else %}
+            <p>Please <a href="{% url 'login' %}">log in</a> to leave a comment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{% load static %}
+
+<script type="text/javascript">
+    var csrftoken = getCookie('csrftoken');
+
+    const CurrentUserID = "{{ current_user.id }}";
+    console.log(CurrentUserID);
+
+    {#  Pass plasmid information to JS  #}
+    const plasmidCreator = "{{ plasmid.creator.id }}";
+    const plasmidPK = "{{ plasmid.id }}";
+    const plasmidLocations = JSON.parse("{{ locString|escapejs }}");
+    const plasmidAttributes = JSON.parse("{{ attrString|escapejs }}");
+    const plasmidDescription = "{{ plasmid.description }}";
+</script>
+
+{# Javascript #}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/../../static/plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/../../static/plasmid_database/javascript/general.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/../../static/plasmid_database/javascript/plasmid_page.js' %}"></script>
+{# Snapgene stuff #}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/../../static/plasmid_database/javascript/map-seq-interactivity.js' %}"></script>
+{% endblock %}
+
+{% block run_scripts %}
+{% endblock %}
