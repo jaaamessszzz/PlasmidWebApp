@@ -141,7 +141,7 @@ Preparing the Web Application Source Code
 -----------------------------------------
 
 To upload the web application source code to AWS, we will require a zip file containing the source code. Unfortunately,
-we will need to slightly modify the source from Github so that it is package correctly for Elastic Beanstalk.
+we will need to slightly modify the source from Github so that it is packaged correctly for Elastic Beanstalk.
 
 Navigate to the unzipped web application source code directory in the command line. You should see the following when
 using the `ls -lha` command:
@@ -171,7 +171,7 @@ After logging in for the first time, you should arrive at this landing page:
   :width: 600
   :alt: Landing page after logging into AWS
 
-Click on the `Services` tab in the top right and select `Elastic Beanstalk` under the Compute service menu. You will
+Click on the `Services` tab in the top left and select `Elastic Beanstalk` under the Compute service menu. You will
 arrive at the Elastic Beanstalk landing page:
 
 .. image:: screenshots/02-ElasticBeanstalk-FirstTime.png
@@ -180,12 +180,12 @@ arrive at the Elastic Beanstalk landing page:
 
 .. warning::
     AWS services are divided by regions (upper right dropdown). For instance, the region where I am developing this
-    tutorial is `N. California (us-west-1)`. Remember which region you start you server! Applications will only be
+    tutorial is `N. California (us-west-1)`. Remember which region you start your server in! Applications will only be
     visible in the Elastic Beanstalk management page from the region where the environments are started.
 
 First, we will need to create a new environment to host the web application. Click on `Create a new environment` at the
 top right of the Elastic Beanstalk management page.
-
+w to do this for the first time using this guide by Real Python. The AWS command line tool is highly recommended and makes deployment very simple. Howev
 We want to start a web server environment:
 
 .. image:: screenshots/03-ElasticBeanstalk-EnvironmentTier.png
@@ -237,11 +237,11 @@ Click `Edit`.
 
 We will be using the AWS RDS service to host our PostgreSQL database. Select the following options:
 
-    * Engine: Postgres. Select the latest PostgreSQL 9 version available (9.6.19)
-    * Instance class: Keep the default (db.t2.micro)
-    * Storage: This value can be anything, but keep in mind that the database will only be holding text information
+    * **Engine**: Postgres. Select the latest PostgreSQL 9 version available (9.6.19)
+    * **Instance class**: Keep the default (db.t2.micro)
+    * **Storage**: This value can be anything, but keep in mind that the database will only be holding text information
       (files are stored elsewhere). 5GB is enough space for hundreds of thousands of plasmids!
-    * Username and Password: Enter any username and password. The values here do not have to match the values set in
+    * **Username and Password**: Enter any username and password. The values here do not have to match the values set in
       `plasmiddb/plasmiddb/settings.py`
 
 .. image:: screenshots/09-EBDatabaseValues.png
@@ -275,8 +275,9 @@ correctly on AWS, there are several settings we need to modify in `settings.py`.
 
 We will be modifying the following values:
 
-    * **SECRET_KEY** (line 23): obviously, this value needs to be secret! It is very important for your site's `security
-    <https://docs.djangoproject.com/en/3.1/topics/signing/>`_. Change this to a unique value (>50 random characters).
+    * **SECRET_KEY** (line 23): obviously, this value needs to be secret! It is very important for your site's
+      `security <https://docs.djangoproject.com/en/3.1/topics/signing/>`_. Change this to a unique value (>50 random
+      characters).
     * **DEBUG** (line 26): Set this to `False`. Leaving debug on will will generate the long error messages like the one
       when first visiting the unconfigured website and provide a lot of revealing information about how your application
       is configured.
