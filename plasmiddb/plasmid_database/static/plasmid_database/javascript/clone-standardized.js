@@ -125,7 +125,7 @@ function initializeTable(assemblyType){
     // New default row
     let newDefault = document.createElement('tr');
     for (let part of tableTypes[assemblyType]){
-        let newCell = document.createElement('th');
+        let newCell = document.createElement('td');
         if (assemblyType === 'Cassette') {
             newCell.className = 'Part_' + part + ' Part';
         } else{
@@ -135,15 +135,15 @@ function initializeTable(assemblyType){
         newDefault.appendChild(newCell);
     }
 
-    let optionsCell = document.createElement('tr');
+    let aliasCell = document.createElement('td');
+    aliasCell.innerHTML = '<input class="aliasInput" type="text">';
+    aliasCell.className = 'Alias';
+    newDefault.appendChild(aliasCell);
+
+    let optionsCell = document.createElement('td');
     optionsCell.innerHTML = '<button class="cloneRow" type="button"><i class="fas fa-clone"></i></button>\n' +
         '<button class="deleteRow" type="button"><i class="fas fa-minus-circle"></i></button>';
     optionsCell.className = 'Options';
-    newDefault.appendChild(optionsCell);
-
-    let aliasCell = document.createElement('tr');
-    aliasCell.innerHTML = '<input class="aliasInput" type="text">';
-    aliasCell.className = 'Alias';
     newDefault.appendChild(optionsCell);
 
     newDefault.className = 'assemblyRow';
