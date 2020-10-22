@@ -168,11 +168,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "plasmid_database", "media")
 WIKI_ACCOUNT_HANDLING = False
 WIKI_ACCOUNT_SIGNUP_ALLOWED = False
 
+# --- Email --- #
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = os.environ['EMAIL_USER']
+# EMAIL_HOST_PASSWORD = os.environ['EMAIL_PASS']
+# EMAIL_USE_TLS = True
+
 # --- Mozilla Developer Things --- #
 
 # Redirect to home URL after login
 LOGIN_REDIRECT_URL = '/'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Pickle instead of JSON
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
