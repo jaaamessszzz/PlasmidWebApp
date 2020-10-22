@@ -493,9 +493,13 @@ def standard_assembly(request):
     assembly_results = dict()
     assembly_index_dict = post_data.get('AssemblyRows')
 
-    for index, index_list in assembly_index_dict.items():
+    for index, assembly_dict in assembly_index_dict.items():
         # Keep track of current reaction status
         assembly_results[index] = dict()
+
+        # Unpack dictionary
+        index_list = assembly_dict['parts']
+        assembly_alias = assembly_dict['alias']
 
         # Get plasmids for each assembly (row)
         assembly_db_plasmids = [Plasmid.objects.get(id=plasmid_id) for plasmid_id in set(index_list)]
@@ -577,6 +581,11 @@ def standard_assembly(request):
                     for attr in current_attribute:
                         attribute_list.append(attr)
                 new_plasmid.attribute.add(*attribute_list)
+
+            # Associate alias if applicable
+            if assembly_alias and assembly_alias.strip() != "":
+                plasmid_alias = PlasmidAlias(alias=assembly_alias.strip(), plasmid=new_plasmid)
+                plasmid_alias.save()
 
             assembly_results[index]['success'] = True
             assembly_results[index]['new_plasmid'] = new_plasmid
@@ -698,8 +707,8 @@ def part_assembly(request):
                     new_plasmid.feature.add(part_feature)
 
             # Associate alias if applicable
-            if partAlias and partAlias != "":
-                plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+            if partAlias and partAlias.strip() != "":
+                plasmid_alias = PlasmidAlias(alias=partAlias.strip(), plasmid=new_plasmid)
                 plasmid_alias.save()
 
             assembly_results[index]['success'] = True

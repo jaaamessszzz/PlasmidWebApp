@@ -113,9 +113,14 @@ function initializeTable(assemblyType){
         newCell.innerText = part;
         newHeader.appendChild(newCell);
     }
-    let optionCell = document.createElement('th');
-    optionCell.innerText = 'Options';
-    newHeader.appendChild(optionCell);
+
+    let aliasCellHeader = document.createElement('th');
+    aliasCellHeader.innerText = 'Alias';
+    newHeader.appendChild(aliasCellHeader);
+
+    let optionCellHeader = document.createElement('th');
+    optionCellHeader.innerText = 'Options';
+    newHeader.appendChild(optionCellHeader);
 
     // New default row
     let newDefault = document.createElement('tr');
@@ -129,11 +134,18 @@ function initializeTable(assemblyType){
         newCell.innerText = 'Add Part';
         newDefault.appendChild(newCell);
     }
+
     let optionsCell = document.createElement('tr');
     optionsCell.innerHTML = '<button class="cloneRow" type="button"><i class="fas fa-clone"></i></button>\n' +
         '<button class="deleteRow" type="button"><i class="fas fa-minus-circle"></i></button>';
     optionsCell.className = 'Options';
     newDefault.appendChild(optionsCell);
+
+    let aliasCell = document.createElement('tr');
+    aliasCell.innerHTML = '<input class="aliasInput" type="text">';
+    aliasCell.className = 'Alias';
+    newDefault.appendChild(optionsCell);
+
     newDefault.className = 'assemblyRow';
 
     // Add header and default row to new table
@@ -264,9 +276,11 @@ function performPlasmidAssembly(assemblyForm){
             console.log(row.rowIndex);
             let rowComplete = true;
             let partPKs = [];
+            let rowAlias;
 
             for (let cell of row.cells){
-                if(!cell.className.startsWith('Options')){
+                if(!cell.className.startsWith('Options') && !cell.className.startsWith('Alias') ){
+                    console.log(cell);
                     // Skip rows where
                     if(!cell.classList.contains('Filled')){
                         rowComplete = false;
@@ -275,10 +289,16 @@ function performPlasmidAssembly(assemblyForm){
                     let cellPartPK = $(cell).data('partPK');
                     partPKs.push(cellPartPK);
                 }
+
+                if(cell.className.startsWith('Alias')){
+                    rowAlias = cell.getElementsByClassName('aliasInput')[0].value;
+                }
             }
 
             if(rowComplete){
-                plasmidPostData['AssemblyRows'][row.rowIndex] = partPKs;
+                plasmidPostData['AssemblyRows'][row.rowIndex] = {};
+                plasmidPostData['AssemblyRows'][row.rowIndex]['parts'] = partPKs;
+                plasmidPostData['AssemblyRows'][row.rowIndex]['alias'] = rowAlias;
             } else{
                 incompleteRows.push(row.rowIndex);
             }

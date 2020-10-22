@@ -2,7 +2,7 @@
     <div id="standardized">
 
         {# Collapsable menus for settings/designs/commit #}
-        <div id="ReactionDefinition" class="collapsable">
+        <div id="ReactionDefinition" class="standardizedCollapsable">
             {#Assembly type (YTK/MTK/Anything)#}
             <div class="ReactionTypeContainer">
                 <label for="reactionType">Assembly Type:</label>
@@ -23,7 +23,7 @@
         </div>
 
         {# Pop-up table for selecting plasmids #}
-        <div id="AssemblyDefinition" class="collapsable">
+        <div id="AssemblyDefinition" class="standardizedCollapsable">
             <table id="AssemblyTable" style="width:100%">
                 <tr>
                     <th>1</th>
@@ -37,6 +37,7 @@
                     <th>7</th>
                     <th>8a</th>
                     <th>8b</th>
+                    <th>Alias</th>
                     <th>Options</th>
                 </tr>
                 <tr id="defaultRow" class="assemblyRow">
@@ -51,6 +52,9 @@
                     <td class="Part_7 Part">Add Part</td>
                     <td class="Part_8a Part">Add Part</td>
                     <td class="Part_8b Part">Add Part</td>
+                    <td class="Alias">
+                        <input class="aliasInput" type="text">
+                    </td>
                     <td class="Options">
                         <button class="cloneRow" type="button"><i class="fas fa-clone"></i></button>
                         <button class="deleteRow" type="button"><i class="fas fa-minus-circle"></i></button>
