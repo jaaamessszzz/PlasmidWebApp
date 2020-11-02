@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'plasmid_database.apps.PlasmiddbConfig',
     'home.apps.HomeConfig',
+    'locations.apps.LocationsConfig',
 ]
 
 INSTALLED_APPS += [# 'django.contrib.sites.apps.SitesConfig',
