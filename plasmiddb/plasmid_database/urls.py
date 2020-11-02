@@ -36,13 +36,6 @@ urlpatterns += [path(r'get_attribute_tree/', views.get_attribute_tree, name='att
                 path(r'get_attribute_children/', views.get_attribute_children, name='attr-children'),
                 ]
 
-# --- Populate Location Dropdowns --- #
-urlpatterns += [path(r'get_location_tree/', views.get_location_tree, name='loc-tree'),
-                path(r'get_location_info/', views.get_location_info, name='loc-info'),
-                path(r'add_location_to_db/', views.add_location_to_database, name='loc-add-to-db'),
-                path(r'modify_location/', views.modify_location, name='loc-modify'),
-                ]
-
 # --- View Plasmids --- #
 urlpatterns += [path(r'<project_id>/<int:plasmid_id>/', views.plasmid, name='plasmid-view'),
                 path(r'update_plasmid/', views.update_plasmid, name='update-plasmid'),

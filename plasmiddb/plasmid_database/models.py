@@ -3,6 +3,9 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy
 
+from django.contrib.contenttypes.fields import GenericRelation
+from django.apps import apps
+
 from dnassembly.dna import Plasmid as dnaPlasmid
 from dnassembly.dna import Feature as dnaFeature
 
@@ -72,51 +75,6 @@ class Attribute(models.Model):
         return attribute_list
 
 
-class Location(models.Model):
-    creator = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.TextField()
-    description = models.TextField(null=True)
-    subcategory = models.ForeignKey('Location', on_delete=models.CASCADE, null=True)
-    
-    @staticmethod
-    def populate_dropdown():
-        """Nested JSON of location hierarchy"""
-
-        def populate_node(current_node):
-            # Create dict for each root node
-            node_dict = dict()
-            node_dict['text'] = str(current_node.name)
-            node_dict['data'] = {'id': int(current_node.id)}
-            node_dict['id'] = f'Location-{current_node.id}'
-
-            location_children = current_node.location_set.all()
-            if location_children:
-                location_children_list = list()
-                for location_child in location_children:
-                    location_children_list.append(populate_node(location_child))
-                node_dict['children'] = location_children_list
-                node_dict['icon'] = 'fas fa-layer-group fa-fw'
-            else:
-                node_dict['icon'] = 'fas fa-tag fa-fw'
-            return node_dict
-
-        location_list = list()
-        root_nodes = Location.objects.filter(subcategory__isnull=True)
-        for node in root_nodes:
-            location_list.append(populate_node(node))
-        return location_list
-
-    def get_full_location(self):
-        """Traverse tree up to root node to report full location"""
-        location_list = []
-        current_location = self
-        while current_location.subcategory is not None:
-            location_list.append(current_location.name)
-            current_location = current_location.subcategory
-        location_list.append(current_location.name)
-        return '|'.join(reversed(location_list))
-
-
 class Plasmid(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -126,7 +84,7 @@ class Plasmid(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     feature = models.ManyToManyField(Feature)
     attribute = models.ManyToManyField(Attribute)
-    location = models.ManyToManyField(Location)
+    location = GenericRelation('locations.ContainerContent', related_query_name='container_plasmid')
 
     DESIGNED = 'Designed'
     VERIFIED = 'Verified'
@@ -151,7 +109,7 @@ class Plasmid(models.Model):
         return ', '.join(sorted([feat.name for feat in self.feature.all()]))
 
     def get_locations_as_string(self):
-        return ', '.join([loc.name for loc in self.location.all()])
+        return ', '.join([loc.container.name for loc in self.location.all()])
 
     def get_resistance_as_string(self):
         """Return subset of features that are FeatureType resistance"""

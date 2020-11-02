@@ -7,6 +7,7 @@ from datetime import datetime
 from pprint import pprint
 from itertools import chain
 
+from django.apps import apps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
@@ -21,8 +22,10 @@ import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
-from .models import Plasmid, User, Project, Feature, Attribute, Location, FeatureType, PlasmidAssembly, PlasmidAlias, PlasmidFile
+from .models import Plasmid, User, Project, Feature, Attribute, FeatureType, PlasmidAssembly, PlasmidAlias, PlasmidFile
 from .forms import SignUpForm, PlasmidFileForm
+
+Locations = apps.get_model('locations', 'Location')
 
 # todo: separate views into separate files based on page/function
 
@@ -912,70 +915,6 @@ def get_attribute_children(request):
                          'nodes_with_children': nodes_with_children,
                          })
 
-# --- Location Dropdown Views --- #
-
-@login_required
-def get_location_tree(request):
-    """Build tree JSON for JSTree"""
-    atrtibute_tree = Location.populate_dropdown()
-    return JsonResponse({'data': atrtibute_tree})
-
-
-@login_required
-def get_location_info(request):
-    """Return location information"""
-    location_id = request.POST['loc_id']
-    requested_location = Location.objects.get(id=int(location_id))
-    location_dict = dict()
-    location_dict['Creator'] = str(requested_location.creator.username)
-    location_dict['CreatorID'] = int(requested_location.creator.id)
-    location_dict['Description'] = str(requested_location.description) if requested_location.description != '' else 'None.'
-    location_dict['Name'] = str(requested_location.name)
-    child_list = ', '.join([child.name for child in Location.objects.filter(subcategory__id=location_id)])
-    location_dict['Children'] = child_list if child_list != '' else 'None.'
-    location_dict['Parent'] = int(requested_location.subcategory.id) if requested_location.subcategory else None
-    return JsonResponse(location_dict)
-
-
-def add_location_to_database(request):
-    """Add an location to the database"""
-    new_location_name = request.POST['location_name']
-    new_location_description = request.POST['location_description']
-
-    exisiting_root_node_names = [str(loc.name).lower() for loc in Location.objects.all()]
-    if new_location_name.lower() not in exisiting_root_node_names:
-        current_subcategory = Location.objects.get(id=int(request.POST['parent_node'])) if request.POST['parent_node'] else None
-        new_location = Location(name=new_location_name, description=new_location_description, creator=request.user, subcategory=current_subcategory)
-        new_location.save()
-        return JsonResponse({'success': True, 'Error': None})
-    else:
-        return JsonResponse({'success': False, 'Error': 'Root Location with that name already exists!'})
-
-
-@login_required
-def modify_location(request):
-    user_id = int(request.user.id)
-    requested_location = request.POST['location_id']
-    location_to_modify = Location.objects.get(id=int(requested_location))
-    modification = request.POST['modification']
-    response_dict = dict()
-
-    if location_to_modify.creator.id != user_id:
-        response_dict['Success'] = False
-        response_dict['Error'] = f'You can only {modification} your own locations!'
-    else:
-        try:
-            if modification == 'edit':
-                location_to_modify.name = request.POST['new_name']
-                location_to_modify.description = request.POST['new_description']
-                location_to_modify.save()
-            elif modification == 'delete':
-                location_to_modify.delete()
-            response_dict['Success'] = True
-        except Exception as e:
-            response_dict['Success'] = False
-            response_dict['Error'] = str(e)
-    return JsonResponse(response_dict)
 
 # --- Feature Table Views --- #
 
