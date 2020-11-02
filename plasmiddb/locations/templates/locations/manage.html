@@ -1,0 +1,161 @@
+{% extends "locations/base.html" %}
+
+{% block header %}
+<div class="header">
+    <h1>Manage Locations</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="pageContent">
+    <div id="containers">
+        <div class="container">
+            <div class="Settings-Flexbox">
+                <div class="containers-manage-flex">
+                    {# Locations JSTree #}
+                    <div class="jstree-column">
+                        <div id="Locations-TreeJS" class="DropdownTreeMenu"></div>
+                        <button class="BlockButton" id="AddNewLocation"><i class="fas fa-fw fa-plus-circle"></i>Add Root Location</button>
+                    </div>
+                    {# Containers JSTree #}
+                    <div class="jstree-column">
+                        <div id="Containers-TreeJS" class="DropdownTreeMenu"></div>
+                        <button class="BlockButton" id="AddNewContainer"><i class="fas fa-fw fa-plus-circle"></i>Add New Container</button>
+                    </div>
+                    {# Locations settings panel #}
+                    <div id="Location-Info-Panel" class="Settings-Flexbox-Container" style="visibility: hidden">
+                        <h3 id="CurrentLocationHeader"></h3>
+                        <ul id="DisplayLocationInformation" class="DisplayItemDetails">
+                            <li>
+                                <div class="ItemLabel DisplayItem">Creator:</div>
+                                <div class="ItemData DisplayItem" id="CurrentLocationCreator"></div>
+                            </li>
+                            <li>
+                                <div class="ItemLabel DisplayItem">Description:</div>
+                                <div class="ItemData DisplayItem" id="CurrentLocationDescription"></div>
+                            </li>
+                            <li>
+                                <div class="ItemLabel DisplayItem">Children:</div>
+                                <div class="ItemData DisplayItem" id="CurrentLocationChildren"></div>
+                            </li>
+                        </ul>
+                        <p id="LocationEditErrors" style="color: #eb093c; display: none;"></p>
+                        <div style="padding: 1em 0.5em">
+                            <button class="BlockButton" id="AddNewChildLocation"><i class="fas fa-fw fa-plus-circle"></i>Add New Child Node</button>
+                            <button class="BlockButton" id="EditLocation" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-edit"></i>Edit Location</button>
+                            <button class="BlockButton" id="EditLocationSave" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-bookmark"></i></i>Save Edits</button>
+                            <button class="BlockButton" id="EditLocationCancel" style="background-color: #ffdd00; display: none;"><i class="fas fa-fw fa-ban"></i></i>Cancel</button>
+                            <button class="BlockButton" id="DeleteLocation" style="background-color: #eb093c; display: none;"><i class="fas fa-fw fa-trash"></i></i>Delete Node</button>
+                        </div>
+                    </div>
+                    {# Container settings panel #}
+                    <div id="Container-Info-Panel" class="Settings-Flexbox-Container" style="display: none">
+                        <h3 id="CurrentContainerHeader"></h3>
+                        <ul id="DisplayContainerInformation" class="DisplayItemDetails">
+                            <li>
+                                <div class="ItemLabel DisplayItem">Owner:</div>
+                                <div class="ItemData DisplayItem" id="CurrentContainerOwner"></div>
+                            </li>
+                            <li>
+                                <div class="ItemLabel DisplayItem">Description:</div>
+                                <div class="ItemData DisplayItem" id="CurrentContainerDescription"></div>
+                            </li>
+                        </ul>
+                        <p id="ContainerEditErrors" style="color: #eb093c; display: none;"></p>
+                        <div style="padding: 1em 0.5em">
+                            <button class="BlockButton" id="EditContainer" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-edit"></i>Edit Container</button>
+                            <button class="BlockButton" id="EditContainerSave" style="background-color: #6EA400; display: none;"><i class="fas fa-fw fa-bookmark"></i></i>Save Edits</button>
+                            <button class="BlockButton" id="EditContainerCancel" style="background-color: #ffdd00; display: none;"><i class="fas fa-fw fa-ban"></i></i>Cancel</button>
+                            <button class="BlockButton" id="DeleteContainer" style="background-color: #eb093c; display: none;"><i class="fas fa-fw fa-trash"></i></i>Delete Container</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Add New Location Form #}
+        <div id="AddLocationForm" class="container" style="display:none">
+            <div class="labeldiv">
+                <label for="NewLocationName" class="DialogLabel">Location Name:</label>
+                <input type="text" id="NewLocationName" class="DialogInput" placeholder="Location Name">
+            </div>
+            <div class="labeldiv">
+                <label for="NewLocationDescription" class="DialogLabel">Description:</label>
+            </div>
+            <div align="center">
+                <textarea id="NewLocationDescription" class="DialogInput" placeholder="Location Description" rows="3" cols="50"></textarea>
+            </div>
+        </div>
+
+        {# Delete Location Form #}
+        <div id="DeleteLocationForm" class="container" style="display:none">
+            <div class="labeldiv">
+                <div id="LocationDeletionWarning"></div>
+                <strong style="color: #eb093c;">This location and all child locations will be deleted!!!</strong>
+            </div>
+        </div>
+
+        {# Add New Container Form #}
+        <div id="AddContainerForm" class="container" style="display:none">
+            <div class="labeldiv">
+                <label for="NewContainerName" class="ItemLabel">Container Name:</label>
+                <input type="text" id="NewContainerName" class="ItemData" placeholder="Container Name">
+            </div>
+            <div class="labeldiv">
+                <label for="NewContainerDescription" class="ItemLabel">Description:</label>
+            </div>
+            <div align="center">
+                <textarea id="NewContainerDescription" class="ItemData" placeholder="Container Description" rows="3" cols="50"></textarea>
+            </div>
+            <div class="labeldiv">
+                <label for="NewContainerRows" class="ItemLabel">Container Rows:</label>
+                <input type="number" id="NewContainerRows" class="ItemData" min="1" placeholder="Container Rows">
+            </div>
+            <div class="labeldiv">
+                <label for="NewContainerColumns" class="ItemLabel">Container Columns:</label>
+                <input type="number" id="NewContainerColumns" class="ItemData" min="1" placeholder="Container Columns">
+            </div>
+        </div>
+
+        {# Delete Location Form #}
+        <div id="DeleteContainerForm" class="container" style="display:none">
+            <div class="labeldiv">
+                <div id="ContainerDeletionWarning"></div>
+                <strong style="color: #eb093c;">This container and content records will be deleted!!!</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+    const csrftoken = getCookie('csrftoken');
+    const CurrentUserID = {{ current_user.id }};
+    const CurrentUsername = '{{ current_user.username }}';
+</script>
+{# javascript #}
+{% load static %}
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.7.2/js/solid.js" integrity="sha384-6FXzJ8R8IC4v/SKPI8oOcRrUkJU8uvFK6YJ4eDY11bJQz4lRw5/wGthflEOX8hjL" crossorigin="anonymous"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.7.2/js/fontawesome.js" integrity="sha384-xl26xwG2NVtJDw2/96Lmg09++ZjrXPc89j0j7JHjLOdSwHDHPHiucUjfllW0Ywrq" crossorigin="anonymous"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
+<script type="text/javascript" src="{% static 'locations/javascript/manage.js' %}"></script>
+
+{# CSS #}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'locations/css/main.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'locations/css/manage.css' %}">
+{% endblock %}
+
+{% block run_scripts %}
+{% endblock %}

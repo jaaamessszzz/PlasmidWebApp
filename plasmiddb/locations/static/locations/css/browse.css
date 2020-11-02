@@ -1,0 +1,67 @@
+/******************************/
+/* General FlexBox Formatting */
+/******************************/
+
+.locations-manage-flex {
+    display: flex;
+    flex-flow: row wrap;
+    flex-basis: auto;
+    justify-content: center;
+}
+
+.jstree-column {
+    display: inline-block;
+    height: 30%;
+    flex: 1 1 15%;
+    padding: 10px;
+}
+
+.container-content-panel{
+    display: inline-block;
+    flex: 1 1 70%;
+    padding: 10px;
+}
+
+.infoPanel {
+    margin: 10px;
+}
+/*************************************/
+/* jQuery Selectable Table Rendering */
+/*************************************/
+
+#containerTable {
+    table-layout: fixed;
+    text-align: center;
+    width: 100%;
+    border: 2px solid #B4B9BF;
+    overflow-x: auto;
+}
+
+#containerTable tr {
+    font-size: 9pt;
+}
+
+.content{
+    border: 4px solid #B4B9BF;
+    height: 80px;
+    width: 80px;
+}
+
+.ui-selecting {
+    border-color: #FFF199;
+}
+
+.ui-selected {
+    border: 4px solid #FFDD00;
+    color: black;
+}
+
+/*************************************/
+/* jQuery Dialog Settings
+/*************************************/
+
+#RemoveReagentWarning {
+    background-color: #eb093c;
+    color: #ffffff;
+    font-weight: bold;
+}

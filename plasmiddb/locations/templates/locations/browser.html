@@ -1,0 +1,97 @@
+{% extends "locations/base.html" %}
+
+{% block css %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'locations/css/browse.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.css"/>
+{% endblock %}
+
+{% block header %}
+<div class="header">
+    <h1>Location Browser</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="locations-manage-flex">
+        {# Locations JSTree #}
+        <div id="Locations-TreeJS" class="jstree-column">
+
+        </div>
+        {# Containers JSTree #}
+        <div id="Containers-TreeJS" class="jstree-column">
+
+        </div>
+        {# Container contents Panel #}
+        <div id="Container-Contents" class="container-content-panel">
+            <div class="infoPanel">
+                <h4 id="currentlyViewing"></h4>
+                <button id="addContents" class="BlockButton">Add Contents</button>
+                <button id="removeContents" class="BlockButton">Remove Contents</button>
+            </div>
+            <table id="containerTable">
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="tableOverlay">
+    <div id="overlayContainer" style="display: none">
+        <table id="MoCloPlasmidsTable">
+            <thead>
+                <tr>
+                    <th>ProjectIndex</th>
+                    <th>Project</th>
+                    <th>ID</th>
+                    <th>Alias</th>
+                    <th>Description</th>
+                    <th>Features</th>
+                    <th>Attributes</th>
+                </tr>
+                <tr class="filterInputsRow">
+                    <th></th>
+                    <th>
+                        <select name="project" id="id_project" form="plasmidFilterInputs" class="filterInputs" required>
+                        <option value="" selected></option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.project }}</option>
+                        {% endfor %}
+                        </select>
+                    </th>
+                    <th><input type="number" name="projectindex" value=0 min="1" step="any" id="id_projectindex" class="filterInputs" oninput="validity.valid||(value='');" placeholder="Filter"></th>
+                    <th><input type="text" name="alias" id="id_alias" class="filterInputs" placeholder="Filter"></th>
+                    <th><input type="text" name="description" id="id_description" class="filterInputs" placeholder="Filter"></th>
+                    <th><input type="text" name="features" id="id_features" class="filterInputs" placeholder="Filter"></th>
+                    <th></th> {# <input type="text" name="attributes" id="id_attributes" class="filterInputs" placeholder="Filter"> #}
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+{# Remove Reagent Form #}
+<div id="RemoveReagentForm" class="container" style="display:none">
+    <div class="labeldiv">
+        <div id="RemoveReagentWarning"></div>
+        <strong style="color: #eb093c;">Are you sure you want to remove these reagents from this container?</strong>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+    const csrftoken = getCookie('csrftoken');
+</script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/proton/style.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/loading.css' %}"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.js"></script>
+<script src="{% static 'locations/javascript/location-browser.js' %}"></script>
+{% endblock %}
