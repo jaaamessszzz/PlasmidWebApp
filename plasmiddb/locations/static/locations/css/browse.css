@@ -42,6 +42,7 @@
 }
 
 .content{
+    word-break: break-word;
     border: 4px solid #B4B9BF;
     height: 80px;
     width: 80px;
