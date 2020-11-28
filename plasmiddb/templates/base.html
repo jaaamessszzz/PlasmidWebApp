@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     {# CSS #}
     <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css' %}">
-    {% block css %}{% endblock %}
+    {% block css %}
+    {% endblock %}
 </head>
 
 <body>
@@ -17,6 +18,7 @@
             <li><a href="{% url 'wiki:root' %}">Home</a></li>
             <li><a href="{% url 'plasmid_database:database' %}">Database</a></li>
             <li><a href="{% url 'plasmid_database:add-plasmids' %}">Add</a></li>
+            <li><a href="{% url 'locations:location-browse' %}">Locations</a></li>
             <li><a href="{% url 'plasmid_database:plasmid-management' %}">Manage</a></li>
             {% if user.is_authenticated %}
                 <li>User: {{ user.get_username }}</li>
@@ -36,6 +38,7 @@
 
 {# Javascript #}
 <script src="{% static 'plasmid_database/javascript/libraries/jquery-3.3.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'plasmid_database/javascript/libraries/jquery-ui.min.js' %}"></script>
 <script src="{% static 'plasmid_database/javascript/libraries/underscore-min.js' %}"></script>
 <script src="{% static 'plasmid_database/javascript/general.js' %}"></script>
 <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/solid.js" integrity="sha384-6FXzJ8R8IC4v/SKPI8oOcRrUkJU8uvFK6YJ4eDY11bJQz4lRw5/wGthflEOX8hjL" crossorigin="anonymous"></script>

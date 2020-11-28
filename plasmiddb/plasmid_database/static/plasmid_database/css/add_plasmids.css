@@ -326,6 +326,10 @@ td {
     padding-bottom: 10px;
 }
 
+.Part {
+    border: 2px solid black;
+}
+
 /*************/
 /* Add Parts */
 /*************/

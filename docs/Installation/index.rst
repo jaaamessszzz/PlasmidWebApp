@@ -61,9 +61,15 @@ Change directories into the PlasmidWebApp directory.
 2. Setup the PostgreSQL database
 ++++++++++++++++++++++++++++++++
 
-From the command line, start postgreSQL as the postgreSQL superuser::
+From the command line, start postgreSQL as the postgreSQL superuser.
+
+For Ubuntu users::
 
     sudo -u postgres psql postgres
+
+For Mac users::
+
+    psql postgres
 
 As the postgreSQL superuser, we will be creating a default user and database for the plasmid web application to populate.
 The values that the plasmid web application expects can be found in `plasmiddb/plasmiddb/settings.py`::
@@ -99,6 +105,11 @@ Finally, let's make sure that our new user has full permissions to modify data i
 
 3. Running the Web Application Locally
 ++++++++++++++++++++++++++++++++++++++
+
+First, we need to install the requisite Python3 packages for the web application. This is accomplished by running the
+following command in the root directory containing the ``requirements.txt`` file::
+
+    pip install -r requirements.txt
 
 Before we run the application for the first time, we need to create the models in the PostgreSQL database that the web
 application will use to store and retrieve plasmid data::

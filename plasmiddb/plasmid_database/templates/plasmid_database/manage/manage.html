@@ -10,7 +10,6 @@
 {# Tab Navigation #}
 <nav class="SubNavigationBar">
     <ul class="pageTabs">
-        <li><a href="#locations">Locations</a>
         <li><a href="#attributes">Attributes</a>
         <li><a href="#features">Features</a>
         <li><a href="#projects">Projects</a>
@@ -21,8 +20,6 @@
 <div class="pageContent">
     {# Attributes #}
     {% include 'plasmid_database/manage/manage-attributes.html' %}
-    {# Locations #}
-    {% include 'plasmid_database/manage/manage-locations.html' %}
     {# Features #}
     {% include 'plasmid_database/manage/manage-features.html' %}
     {# Projects #}
@@ -45,7 +42,6 @@
 <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/fontawesome.js" integrity="sha384-xl26xwG2NVtJDw2/96Lmg09++ZjrXPc89j0j7JHjLOdSwHDHPHiucUjfllW0Ywrq" crossorigin="anonymous"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/general.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/manage/manage-attributes.js' %}"></script>
-<script type="text/javascript" src="{% static 'plasmid_database/javascript/manage/manage-locations.js' %}"></script>
 <script type="text/javascript" src="{% static 'plasmid_database/javascript/manage/manage-features.js' %}"></script>
 
 {# CSS #}

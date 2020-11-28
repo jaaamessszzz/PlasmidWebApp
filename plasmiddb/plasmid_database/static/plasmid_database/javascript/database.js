@@ -66,7 +66,11 @@ const datatable = $('#plasmid_datatable').DataTable({
                     },
         },
         { name: 'location', targets: 8,
-            orderable: false},
+            orderable: false,
+            render : function (data, type, row, meta) {
+                    return "<div style='overflow:scroll;height:3.5em;word-break: normal;'>" + data + "</div>";
+                    },
+        },
         { name: 'status', targets: 9,
             render : function (data, type, row, meta) {
                         if (row[11] === currentUser){
@@ -268,33 +272,73 @@ deleteButton.on('click', function(){
             document.getElementById('errorPlasmidInfoContainer').style.display = "block";
         }
     }
-    document.getElementById("deletePlasmidsOverlay").style.display = "block";
+
+    // document.getElementById("deletePlasmidsOverlay").style.display = "block";
+
+    $('#deletePlasmidsOverlay').dialog({
+        autoOpen: false,
+        dialogClass: "no-close",
+        buttons: [{
+            text: "Delete Plasmids",
+            id: "confirmDeletePlasmidsButton",
+            click: function(){
+                let deletedPKs = [];
+                const SelectedPlasmids = datatable.rows('.selected').data();
+                for(let i=0;i<SelectedPlasmids.length;i++) {
+                    if(SelectedPlasmids[i][11] === currentUser){
+                        deletedPKs.push(SelectedPlasmids[i][0]);
+                    }
+                }
+                let postData =  {'deletedPKs': deletedPKs};
+
+                // NOTE: Logged-in User is validated server-side as well!
+                $.post('/database/delete_user_plasmids/', postData, function () {
+                    datatable.draw();
+                    document.getElementById('deletePlasmidInfo').innerHTML = '';
+                    document.getElementById('errorPlasmidInfo').innerHTML = '';
+                    document.getElementById("deletePlasmidsOverlay").style.display = "none";
+                });
+               $(".ui-dialog-content").dialog("close");
+            },
+        },
+        {
+           text: "Oops, Nevermind...",
+           click: function(){
+               $(".ui-dialog-content").dialog("close");
+           }
+        }],
+        title: "Delete Plasmids",
+        minWidth: 800,
+        modal: true,
+        beforeClose: function (event, ui) {},
+   }).dialog("open");
+
 });
 
 // Hide confirmation prompt
-$('#cancelDeleteButton').on('click', function(){
-    document.getElementById("deletePlasmidsOverlay").style.display = "none";
-});
+// $('#cancelDeleteButton').on('click', function(){
+//     document.getElementById("deletePlasmidsOverlay").style.display = "none";
+// });
 
 // Delete Plasmids and rerender table
-$('#confirmDeletePlasmidsButton').on('click', function () {
-    let deletedPKs = [];
-    const SelectedPlasmids = datatable.rows('.selected').data();
-    for(let i=0;i<SelectedPlasmids.length;i++) {
-        if(SelectedPlasmids[i][11] === currentUser){
-            deletedPKs.push(SelectedPlasmids[i][0]);
-        }
-    }
-    let postData =  {'deletedPKs': deletedPKs};
-
-    // NOTE: Logged-in User is validated server-side as well!
-    $.post('/database/delete_user_plasmids/', postData, function () {
-        datatable.draw();
-        document.getElementById('deletePlasmidInfo').innerHTML = '';
-        document.getElementById('errorPlasmidInfo').innerHTML = '';
-        document.getElementById("deletePlasmidsOverlay").style.display = "none";
-    });
-});
+// $('#confirmDeletePlasmidsButton').on('click', function () {
+//     let deletedPKs = [];
+//     const SelectedPlasmids = datatable.rows('.selected').data();
+//     for(let i=0;i<SelectedPlasmids.length;i++) {
+//         if(SelectedPlasmids[i][11] === currentUser){
+//             deletedPKs.push(SelectedPlasmids[i][0]);
+//         }
+//     }
+//     let postData =  {'deletedPKs': deletedPKs};
+//
+//     // NOTE: Logged-in User is validated server-side as well!
+//     $.post('/database/delete_user_plasmids/', postData, function () {
+//         datatable.draw();
+//         document.getElementById('deletePlasmidInfo').innerHTML = '';
+//         document.getElementById('errorPlasmidInfo').innerHTML = '';
+//         document.getElementById("deletePlasmidsOverlay").style.display = "none";
+//     });
+// });
 
 // Datatable instructions collapsible
 $('#databaseInstructionsButton').on('click', function(){
@@ -306,6 +350,10 @@ $('#databaseInstructionsButton').on('click', function(){
     }
 });
 
+// Generate a picklist
+$('#PickDatabasePlasmids').on('click', function(){
+
+});
 
 //=============================//
 // Show/hide Datatable columns //

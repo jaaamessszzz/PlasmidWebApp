@@ -93,6 +93,14 @@
         {# Delete selected plasmids #}
         <button id="DeleteSelectedDatabasePlasmids" class="BlockButton"><i class="fas fa-trash fa-fw" data-fa-transform="grow-8"></i>  Delete Selected Plasmids</button>
 
+        {# Generate Picklist #}
+        {#<form method="post" action="get_picklist/" style="display: inline-block">#}
+        {#    {% csrf_token %}#}
+        {#    <input type="hidden" name="PlasmidPicklist" id="PlasmidPicklist">#}
+        {#    <button type="submit" id="PickDatabasePlasmids" class="BlockButton"><i class="fas fa-hand-point-down" data-fa-transform="grow-8"></i>  Generate Picklist</button>#}
+        {#</form>#}
+
+
         {# Toggle table columns #}
         <div class="ToggleColumnButtonHolder">
             <button id="HideDatatableColumnsButton" class="BlockButton">Toggle Columns</button>
@@ -106,10 +114,10 @@
 
 {# Delete Plasmids Confirmation Overlay #}
 <div id="deletePlasmidsOverlay" style="display: none">
-    <div class="overlayContainer">
+    <div>
         <div>
-            <h2>Plasmids to be deleted:</h2>
-            <table>
+            <h4>Plasmids to be deleted:</h4>
+            <table style="width: 100%; text-align: left;">
                 <thead>
                     <tr>
                         <th>Project</th>
@@ -123,7 +131,7 @@
 
             <div id="errorPlasmidInfoContainer" style="display: none">
                 <h4>You do not have permission to delete the following plasmids:</h4>
-                <table>
+                <table style="width: 100%; text-align: left;">
                     <thead>
                         <tr>
                             <th>Project</th>
@@ -136,10 +144,10 @@
                 </table>
             </div>
         </div>
-        <p>Are you sure you want to delete these plasmids from the database?</p>
+        <h4 style="color: #EC1848">Are you sure you want to delete these plasmids from the database?</h4>
 
-        <button type="button" id="confirmDeletePlasmidsButton" class="dark BlockButton">YES I'M SURE</button>
-        <button type="button" id="cancelDeleteButton" class="dark BlockButton">NO GET ME OUT OF HERE</button>
+{#        <button type="button" id="confirmDeletePlasmidsButton" class="dark BlockButton">YES I'M SURE</button>#}
+{#        <button type="button" id="cancelDeleteButton" class="dark BlockButton">NO GET ME OUT OF HERE</button>#}
     </div>
 </div>
 {% endblock %}
@@ -157,6 +165,9 @@ const currentUser = '{{ user }}';
 
 {# CSS #}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/af-2.3.4/b-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/kt-2.5.1/r-2.2.3/rg-1.1.1/rr-1.2.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/database.css' %}">
 {% endblock %}
 

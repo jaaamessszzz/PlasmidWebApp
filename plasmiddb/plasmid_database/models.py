@@ -109,7 +109,7 @@ class Plasmid(models.Model):
         return ', '.join(sorted([feat.name for feat in self.feature.all()]))
 
     def get_locations_as_string(self):
-        return ', '.join([loc.container.name for loc in self.location.all()])
+        return ', '.join(set([f"{loc.container.location.get_full_location()} - {loc.container.name}" for loc in self.location.all()]))
 
     def get_resistance_as_string(self):
         """Return subset of features that are FeatureType resistance"""

@@ -237,7 +237,7 @@ function ReagentDatatableDialogInit(source) {
             id: 'SubmitNewReagentLocations',
         }],
         title: "Select Reagent to Add",
-        minWidth: 800,
+        minWidth: 1000,
         modal: true,
         beforeClose: function (event, ui) {
             currentPart = null;

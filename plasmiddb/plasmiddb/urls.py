@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     # path('', include('home.urls')),
     path('database/', include('plasmid_database.urls')),
+    path('locations/', include('locations.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

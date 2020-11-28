@@ -3,7 +3,6 @@
 {% block css %}
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'locations/css/browse.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/main.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.structure.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/libraries/jquery-ui.theme.min.css' %}">
@@ -20,13 +19,17 @@
 <div class="container">
     <div class="locations-manage-flex">
         {# Locations JSTree #}
-        <div id="Locations-TreeJS" class="jstree-column">
-
+        <div class="jstree-column">
+            <h3>Locations</h3>
+            <div id="Locations-TreeJS"></div>
         </div>
+
         {# Containers JSTree #}
-        <div id="Containers-TreeJS" class="jstree-column">
-
+        <div class="jstree-column">
+            <h3>Containers</h3>
+            <div id="Containers-TreeJS"></div>
         </div>
+
         {# Container contents Panel #}
         <div id="Container-Contents" class="container-content-panel">
             <div class="infoPanel">

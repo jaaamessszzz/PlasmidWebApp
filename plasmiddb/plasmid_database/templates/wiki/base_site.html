@@ -9,9 +9,10 @@
 
 {% block wiki_header_navlinks %}
 <ul class="navbar-nav mr-auto">
-    <li class="nav-item"><a class="nav-link" class="nav-link" href="{% url 'wiki:root' %}">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'wiki:root' %}">Home</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'plasmid_database:database' %}">Database</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'plasmid_database:add-plasmids' %}">Add</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'locations:location-browse' %}">Locations</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'plasmid_database:plasmid-management' %}">Manage</a></li>
 </ul>
 {% endblock %}
