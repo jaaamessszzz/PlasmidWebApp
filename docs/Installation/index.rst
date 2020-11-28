@@ -196,7 +196,7 @@ arrive at the Elastic Beanstalk landing page:
 
 First, we will need to create a new environment to host the web application. Click on `Create a new environment` at the
 top right of the Elastic Beanstalk management page.
-w to do this for the first time using this guide by Real Python. The AWS command line tool is highly recommended and makes deployment very simple. Howev
+w to do this for the first time using this guide by Real Python. The AWS command line tool is highly recommended and makes deployment very simple.
 We want to start a web server environment:
 
 .. image:: screenshots/03-ElasticBeanstalk-EnvironmentTier.png
