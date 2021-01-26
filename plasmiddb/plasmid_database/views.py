@@ -318,7 +318,7 @@ import dnassembly
 from dnassembly.io import read_genbank, ReadAs
 from dnassembly.reactions import StickyEndAssembly, AssemblyException, ReactionDefinitionException
 from dnassembly.dna import SequenceException
-from Bio.Restriction import BsaI, BsmBI
+from Bio.Restriction import BbsI, BsmBI
 
 
 @login_required
@@ -358,12 +358,12 @@ class PlasmidFilterDatatable(FilterDatatableTemplate):
 
 
 def circularly_permute_plasmid(cp_plasmid):
-    """Generate circular permutation of plasmid so that it starts with BsaI/BsmBI site"""
-    # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
-    type2_match = re.search('GGTCTC|CGTCTC|GAGACG|GAGACC', cp_plasmid.sequence.upper())
+    """Generate circular permutation of plasmid so that it starts with BsmBI/BbsI site"""
+    # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
+    type2_match = re.search('GAAGAC|CGTCTC|GAGACG|GTCTTC', cp_plasmid.sequence.upper())
     if type2_match:
         cp_first_occurrence = cp_plasmid.sequence[type2_match.start():] + cp_plasmid.sequence[:type2_match.start()]
-        type2_forward = re.search('GGTCTC|CGTCTC', cp_first_occurrence)
+        type2_forward = re.search('GAAGAC|CGTCTC', cp_first_occurrence)
         if type2_forward:
             cp_type2_start = cp_first_occurrence[type2_forward.start():] + cp_first_occurrence[:type2_forward.start()]
             cp_plasmid.sequence = cp_type2_start
@@ -391,7 +391,7 @@ def add_plasmid_by_file(request):
         dnassembly_plasmid = read_genbank(upload_stringio, ReadAs.Plasmid)
 
         try:
-            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             dnassembly_plasmid = circularly_permute_plasmid(dnassembly_plasmid)
 
             # Add plasmid to database
@@ -490,7 +490,7 @@ def standard_assembly(request):
     # Get Reaction Definitions
     reaction_type = post_data.get('ReactionType')
     if reaction_type == 'goldengate':
-        enzyme_dict = {'BsaI': BsaI, 'BsmBI': BsmBI}
+        enzyme_dict = {'BbsI': BbsI, 'BsmBI': BsmBI}
         reaction_enzyme = enzyme_dict[post_data.get('ReactionEnzyme')]
 
     assembly_results = dict()
@@ -520,7 +520,7 @@ def standard_assembly(request):
                                   creator=request.user,
                                   description=assembly_product.description)
 
-            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
 
             plasmid_attributes = [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
@@ -528,8 +528,8 @@ def standard_assembly(request):
             new_description_list = list()
 
             # Use Part 2-4 for cassette assembly description
-            if post_data.get('ReactionEnzyme') == 'BsaI':
-                for part in ['Part 2', 'Part 3a', 'Part 3b', 'Part 4a', 'Part 4b']:
+            if post_data.get('ReactionEnzyme') == 'BbsI':
+                for part in ['Part 2a','Part 2b', 'Part 3a', 'Part 3b','Part 3c','Part 3d','Part 3e', 'Part 4a', 'Part 4b']:
                     for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
                         if part in attribute and part_plasmid not in seen_description_list:
                             new_description_list.append(part_plasmid.description)
@@ -670,7 +670,7 @@ def part_assembly(request):
                                   creator=request.user,
                                   description=userDescription)
 
-            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
             new_plasmid.save()
 
