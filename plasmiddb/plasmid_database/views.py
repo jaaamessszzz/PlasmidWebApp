@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from pprint import pprint
 from itertools import chain
+import pandas as pd
 
 from django.apps import apps
 from django.shortcuts import render, redirect, get_object_or_404
@@ -260,6 +261,114 @@ def get_assembly_instructions(request):
     context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
     return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
 
+@login_required
+def download_assembly_instructions(request):
+    plasmid_indicies_str = json.loads(request.POST['DownloadAssemblyInstructions'])
+    plasmid_indicies = [int(index) for index in plasmid_indicies_str]
+    plasmid_records = Plasmid.objects.filter(id__in=plasmid_indicies)
+
+    zip_subdir = 'AssemblyInstructions'
+    zip_filename = 'AssemblyInstructions.zip'
+
+    response = HttpResponse(content_type='application/zip')
+    zip_file = zipfile.ZipFile(response, 'w')
+
+    part_object = Attribute.objects.get(name='Part')
+    part_children_qs = Attribute.objects.filter(subcategory=part_object.id)
+
+    cassette_object = Attribute.objects.get(name='Cassette')
+    cassette_children_qs = Attribute.objects.filter(subcategory=cassette_object.id)
+
+    # Separate into Part plasmids and others
+    cassette_list = []
+    part_list = []
+
+    for plasmid in plasmid_records:
+        if any([attr in part_children_qs for attr in plasmid.attribute.all()]):
+            if any([attr in cassette_children_qs for attr in plasmid.attribute.all()]):
+                cassette_list.append(plasmid)
+            else:
+                part_list.append(plasmid)
+        else:
+            cassette_list.append(plasmid)
+
+    # Get part inserts and primers
+    part_dict_list = []
+    for plasmid in part_list:
+        part_dict = {'plasmid': plasmid}
+        part_match = re.search('(?:GGTCTC)(.*)(?:GAGACC)', plasmid.sequence)
+        if part_match is not None:
+            match_sequence = part_match.group(0)
+            moclo_parts = annotate_moclo(plasmid.sequence)
+            leftPartOverhang = moclo_parts[0].split()[-1]
+            rightPartOverhang = moclo_parts[-1].split()[-1]
+            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartOverhang, rightPartOverhang,
+                                                               standardize=False, create_instructions=True)
+            part_dict['insert'] = user_defined_part.sequence
+            part_dict['primer_F'] = primers[0]
+            part_dict['primer_R'] = primers[1]
+        part_dict_list.append(part_dict)
+
+    # Get unique plasmids for cassette assembly
+    all_cassette_assembly_plasmids = []
+    for plasmid in cassette_list:
+        assembly_plasmids = [a.input.id for a in plasmid.plasmidproduct.all()]
+        all_cassette_assembly_plasmids += assembly_plasmids
+
+    unique_plasmid_ids = set(all_cassette_assembly_plasmids)
+    unique_plasmids = Plasmid.objects.filter(id__in=unique_plasmid_ids)
+
+    #import pdb; pdb.set_trace()
+
+    #context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
+    #return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
+
+    # fill this in to zip up the context then download
+
+    #Create a DataFrame containing unique_plasmids
+    AssemblyParts = pd.DataFrame(columns = ['Part','Location','Description'])
+
+    for plasmid in unique_plasmids:
+        unique_plasmid_info = pd.Series(index = ['Part','Location','Description'])
+        unique_plasmid_info['Part'] = (plasmid.get_aliases_as_string())
+        unique_plasmid_info['Location'] = (plasmid.get_locations_as_string())
+        unique_plasmid_info['Description'] = (plasmid.description)
+        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index = True)
+        #TO-DO: look into how locations are stored
+
+    #Create a DataFrame containing the assembly plasmids and their components
+    Components = pd.DataFrame(columns = ['Assembly','Components','Resistance'])
+
+    for plasmid in cassette_list:
+        cassette_info = pd.Series(index = ['Assembly','Components','Resistance'])
+        cassette_info['Assembly'] = (plasmid.get_aliases_as_string())
+        cassette_info['Components'] = (plasmid.get_assembly_plasmids_as_string())
+        Components = Components.append(cassette_info, ignore_index = True)
+
+    '''
+    for plasmid in plasmid_records:
+        # Write plasmid genbank to StringIO
+        plasmid_name = f'{plasmid.get_standard_id()}.gb'
+        plasmid_genbank = plasmid.as_dnassembly()
+        plasmid_io = io.StringIO()
+        dnassembly.io.write_genbank(plasmid_genbank, output=plasmid_io, to_stream=True)
+        plasmid_io.seek(0)
+        '''
+
+    # Add to ZIP
+
+    #zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
+    AssemblyParts.to_csv('AssemblyParts.csv')
+    zip_file.write('AssemblyParts.csv')
+    #import pdb; pdb.set_trace()
+    #zip_path = os.path.join(zip_subdir, 'Components.csv')
+    Components.to_csv('Components.csv')
+    zip_file.write('Components.csv')
+
+    zip_file.close()
+    response['Content-Disposition'] = f'attachment;filename={zip_filename}'
+    response['Content-Type'] = 'application/zip'
+    return response
 
 @login_required
 def update_status(request):
@@ -394,6 +503,11 @@ def add_plasmid_by_file(request):
             # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             dnassembly_plasmid = circularly_permute_plasmid(dnassembly_plasmid)
 
+            plasmid_filename, _ = os.path.splitext(response_dict['filename'])
+
+            if dnassembly_plasmid.description == "":
+                dnassembly_plasmid.description = plasmid_filename
+
             # Add plasmid to database
             new_plasmid = Plasmid(sequence=dnassembly_plasmid.sequence,
                                   creator=request.user,
@@ -404,7 +518,6 @@ def add_plasmid_by_file(request):
             new_plasmid.save()
 
             # Add plasmid alias from filename
-            plasmid_filename, _ = os.path.splitext(response_dict['filename'])
             plasmid_alias = PlasmidAlias(alias=plasmid_filename, plasmid=new_plasmid)
             plasmid_alias.save()
 
@@ -529,7 +642,7 @@ def standard_assembly(request):
 
             # Use Part 2-4 for cassette assembly description
             if post_data.get('ReactionEnzyme') == 'BbsI':
-                for part in ['Part 2a','Part 2b', 'Part 3a', 'Part 3b','Part 3c','Part 3d','Part 3e', 'Part 4a', 'Part 4b']:
+                for part in ['Part 2a', 'Part 2b', 'Part 3a', 'Part 3b','Part 3c','Part 3d','Part 3e', 'Part 4a', 'Part 4b']:
                     for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
                         if part in attribute and part_plasmid not in seen_description_list:
                             new_description_list.append(part_plasmid.description)
