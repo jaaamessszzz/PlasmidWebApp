@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from pprint import pprint
 from itertools import chain
+import pandas as pd
 
 from django.apps import apps
 from django.shortcuts import render, redirect, get_object_or_404
@@ -260,6 +261,114 @@ def get_assembly_instructions(request):
     context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
     return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
 
+@login_required
+def download_assembly_instructions(request):
+    plasmid_indicies_str = json.loads(request.POST['DownloadAssemblyInstructions'])
+    plasmid_indicies = [int(index) for index in plasmid_indicies_str]
+    plasmid_records = Plasmid.objects.filter(id__in=plasmid_indicies)
+
+    zip_subdir = 'AssemblyInstructions'
+    zip_filename = 'AssemblyInstructions.zip'
+
+    response = HttpResponse(content_type='application/zip')
+    zip_file = zipfile.ZipFile(response, 'w')
+
+    part_object = Attribute.objects.get(name='Part')
+    part_children_qs = Attribute.objects.filter(subcategory=part_object.id)
+
+    cassette_object = Attribute.objects.get(name='Cassette')
+    cassette_children_qs = Attribute.objects.filter(subcategory=cassette_object.id)
+
+    # Separate into Part plasmids and others
+    cassette_list = []
+    part_list = []
+
+    for plasmid in plasmid_records:
+        if any([attr in part_children_qs for attr in plasmid.attribute.all()]):
+            if any([attr in cassette_children_qs for attr in plasmid.attribute.all()]):
+                cassette_list.append(plasmid)
+            else:
+                part_list.append(plasmid)
+        else:
+            cassette_list.append(plasmid)
+
+    # Get part inserts and primers
+    part_dict_list = []
+    for plasmid in part_list:
+        part_dict = {'plasmid': plasmid}
+        part_match = re.search('(?:GGTCTC)(.*)(?:GAGACC)', plasmid.sequence)
+        if part_match is not None:
+            match_sequence = part_match.group(0)
+            moclo_parts = annotate_moclo(plasmid.sequence)
+            leftPartOverhang = moclo_parts[0].split()[-1]
+            rightPartOverhang = moclo_parts[-1].split()[-1]
+            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartOverhang, rightPartOverhang,
+                                                               standardize=False, create_instructions=True)
+            part_dict['insert'] = user_defined_part.sequence
+            part_dict['primer_F'] = primers[0]
+            part_dict['primer_R'] = primers[1]
+        part_dict_list.append(part_dict)
+
+    # Get unique plasmids for cassette assembly
+    all_cassette_assembly_plasmids = []
+    for plasmid in cassette_list:
+        assembly_plasmids = [a.input.id for a in plasmid.plasmidproduct.all()]
+        all_cassette_assembly_plasmids += assembly_plasmids
+
+    unique_plasmid_ids = set(all_cassette_assembly_plasmids)
+    unique_plasmids = Plasmid.objects.filter(id__in=unique_plasmid_ids)
+
+    #import pdb; pdb.set_trace()
+
+    #context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
+    #return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
+
+    # fill this in to zip up the context then download
+
+    #Create a DataFrame containing unique_plasmids
+    AssemblyParts = pd.DataFrame(columns = ['Part','Location','Description'])
+
+    for plasmid in unique_plasmids:
+        unique_plasmid_info = pd.Series(index = ['Part','Location','Description'])
+        unique_plasmid_info['Part'] = (plasmid.get_aliases_as_string())
+        unique_plasmid_info['Location'] = (plasmid.get_locations_as_string())
+        unique_plasmid_info['Description'] = (plasmid.description)
+        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index = True)
+        #TO-DO: look into how locations are stored
+
+    #Create a DataFrame containing the assembly plasmids and their components
+    Components = pd.DataFrame(columns = ['Assembly','Components','Resistance'])
+
+    for plasmid in cassette_list:
+        cassette_info = pd.Series(index = ['Assembly','Components','Resistance'])
+        cassette_info['Assembly'] = (plasmid.get_aliases_as_string())
+        cassette_info['Components'] = (plasmid.get_assembly_plasmids_as_string())
+        Components = Components.append(cassette_info, ignore_index = True)
+
+    '''
+    for plasmid in plasmid_records:
+        # Write plasmid genbank to StringIO
+        plasmid_name = f'{plasmid.get_standard_id()}.gb'
+        plasmid_genbank = plasmid.as_dnassembly()
+        plasmid_io = io.StringIO()
+        dnassembly.io.write_genbank(plasmid_genbank, output=plasmid_io, to_stream=True)
+        plasmid_io.seek(0)
+        '''
+
+    # Add to ZIP
+
+    #zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
+    AssemblyParts.to_csv('AssemblyParts.csv')
+    zip_file.write('AssemblyParts.csv')
+    #import pdb; pdb.set_trace()
+    #zip_path = os.path.join(zip_subdir, 'Components.csv')
+    Components.to_csv('Components.csv')
+    zip_file.write('Components.csv')
+
+    zip_file.close()
+    response['Content-Disposition'] = f'attachment;filename={zip_filename}'
+    response['Content-Type'] = 'application/zip'
+    return response
 
 @login_required
 def update_status(request):
@@ -318,7 +427,7 @@ import dnassembly
 from dnassembly.io import read_genbank, ReadAs
 from dnassembly.reactions import StickyEndAssembly, AssemblyException, ReactionDefinitionException
 from dnassembly.dna import SequenceException
-from Bio.Restriction import BsaI, BsmBI
+from Bio.Restriction import BbsI, BsmBI
 
 
 @login_required
@@ -358,12 +467,12 @@ class PlasmidFilterDatatable(FilterDatatableTemplate):
 
 
 def circularly_permute_plasmid(cp_plasmid):
-    """Generate circular permutation of plasmid so that it starts with BsaI/BsmBI site"""
-    # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
-    type2_match = re.search('GGTCTC|CGTCTC|GAGACG|GAGACC', cp_plasmid.sequence.upper())
+    """Generate circular permutation of plasmid so that it starts with BsmBI/BbsI site"""
+    # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
+    type2_match = re.search('GAAGAC|CGTCTC|GAGACG|GTCTTC', cp_plasmid.sequence.upper())
     if type2_match:
         cp_first_occurrence = cp_plasmid.sequence[type2_match.start():] + cp_plasmid.sequence[:type2_match.start()]
-        type2_forward = re.search('GGTCTC|CGTCTC', cp_first_occurrence)
+        type2_forward = re.search('GAAGAC|CGTCTC', cp_first_occurrence)
         if type2_forward:
             cp_type2_start = cp_first_occurrence[type2_forward.start():] + cp_first_occurrence[:type2_forward.start()]
             cp_plasmid.sequence = cp_type2_start
@@ -391,8 +500,13 @@ def add_plasmid_by_file(request):
         dnassembly_plasmid = read_genbank(upload_stringio, ReadAs.Plasmid)
 
         try:
-            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             dnassembly_plasmid = circularly_permute_plasmid(dnassembly_plasmid)
+
+            plasmid_filename, _ = os.path.splitext(response_dict['filename'])
+
+            if dnassembly_plasmid.description == "":
+                dnassembly_plasmid.description = plasmid_filename
 
             # Add plasmid to database
             new_plasmid = Plasmid(sequence=dnassembly_plasmid.sequence,
@@ -404,7 +518,6 @@ def add_plasmid_by_file(request):
             new_plasmid.save()
 
             # Add plasmid alias from filename
-            plasmid_filename, _ = os.path.splitext(response_dict['filename'])
             plasmid_alias = PlasmidAlias(alias=plasmid_filename, plasmid=new_plasmid)
             plasmid_alias.save()
 
@@ -490,7 +603,7 @@ def standard_assembly(request):
     # Get Reaction Definitions
     reaction_type = post_data.get('ReactionType')
     if reaction_type == 'goldengate':
-        enzyme_dict = {'BsaI': BsaI, 'BsmBI': BsmBI}
+        enzyme_dict = {'BbsI': BbsI, 'BsmBI': BsmBI}
         reaction_enzyme = enzyme_dict[post_data.get('ReactionEnzyme')]
 
     assembly_results = dict()
@@ -520,7 +633,7 @@ def standard_assembly(request):
                                   creator=request.user,
                                   description=assembly_product.description)
 
-            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
 
             plasmid_attributes = [plasmid.get_attributes_as_string() for plasmid in assembly_db_plasmids]
@@ -528,8 +641,8 @@ def standard_assembly(request):
             new_description_list = list()
 
             # Use Part 2-4 for cassette assembly description
-            if post_data.get('ReactionEnzyme') == 'BsaI':
-                for part in ['Part 2', 'Part 3a', 'Part 3b', 'Part 4a', 'Part 4b']:
+            if post_data.get('ReactionEnzyme') == 'BbsI':
+                for part in ['Part 2a', 'Part 2b', 'Part 3a', 'Part 3b','Part 3c','Part 3d','Part 3e', 'Part 4a', 'Part 4b']:
                     for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
                         if part in attribute and part_plasmid not in seen_description_list:
                             new_description_list.append(part_plasmid.description)
@@ -670,7 +783,7 @@ def part_assembly(request):
                                   creator=request.user,
                                   description=userDescription)
 
-            # Circularly permute plasmid so sequence always starts with BsaI/BsmBI site if they exist
+            # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
             new_plasmid.save()
 

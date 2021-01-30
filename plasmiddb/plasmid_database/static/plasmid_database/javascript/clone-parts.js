@@ -58,7 +58,7 @@ $('#partForm').submit(function(e) {
     const DNARegex = new RegExp('^[ATCGatcg]+$');
     // todo: split up restriction site recognition based on user inputs
     // todo: check for restriction sites at beginning/end of sequence (assumes part 3)
-    const RxnSiteRegex = new RegExp('CGTCTC|GAGACG|GGTCTC|GAGACC|GCGGCCGC|CGCCGGCG');
+    const RxnSiteRegex = new RegExp('CGTCTC|GAGACG|GAAGAC|GTCTTC');
 
     // Empty form check
     if (partEntryField.val().length === 0){
@@ -81,7 +81,7 @@ $('#partForm').submit(function(e) {
 
         // Part type syntax: 3 | 2-4 | 5-1
         // Use plasmid map to automatically determine multi-component parts
-        let tk_parts = ['1', '2', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'];
+        let tk_parts = ['1', '2a', '2b', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7'];
         let partTypeRaw = rowElements[1].trim();
         let leftPartOverhang;
         let rightPartOverhang;
@@ -138,7 +138,7 @@ $('#partForm').submit(function(e) {
         }
         // Check for restriction sites
         if (RxnSiteRegex.test(partSequence)){
-            rowErrors.push('Row ' + index + ' contains one or more BsaI/BsmBI/NotI restriction sites!');
+            rowErrors.push('Row ' + index + ' contains one or more BbsI/BsmBI restriction sites!');
         }
         // Check codons for coding sequences
         if (leftPartOverhang.includes('3') && rightPartOverhang.includes('3')){

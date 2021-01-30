@@ -97,10 +97,14 @@ class Plasmid(models.Model):
         unique_together = ('project', 'projectindex',)
 
     def get_standard_id(self):
-        return f'p{self.project.project.capitalize()}_{self.projectindex:0>5}'
+        return f'{self.get_aliases_as_string()}'
+        #return f'p{self.project.project.capitalize()}_{self.projectindex:0>5}'
 
     def get_aliases_as_string(self):
         return ', '.join(sorted([altname.alias for altname in self.aliases.all()]))
+
+    def get_descriptions_as_string(self):
+        return ', '.join(sorted([des for des in self.description]))
 
     def get_attributes_as_string(self):
         return ', '.join(sorted([attr.name for attr in self.attribute.all()]))

@@ -90,6 +90,12 @@
             <button type="submit" id="PlasmidAssemblyInstructionsButton" class="BlockButton"><i class="fas fa-wrench" data-fa-transform="grow-8"></i>  Get Assembly Instructions</button>
         </form>
 
+        <form method="post" action="download_assembly_instructions/" style="display: inline-block">
+            {% csrf_token %}
+            <input type="hidden" name="DownloadAssemblyInstructions" id="DownloadAssemblyInstructions">
+            <button type="submit" id="DownloadAssemblyInstructionsButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Assembly Instructions</button>
+        </form>
+
         {# Delete selected plasmids #}
         <button id="DeleteSelectedDatabasePlasmids" class="BlockButton"><i class="fas fa-trash fa-fw" data-fa-transform="grow-8"></i>  Delete Selected Plasmids</button>
 
