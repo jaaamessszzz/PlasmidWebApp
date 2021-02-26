@@ -1,4 +1,4 @@
-biopython==1.77
+biopython==1.78
 Django==3.0.7
 django-filter==2.2.0
 django-datatables-view==1.19.1
