@@ -7,6 +7,12 @@ from datetime import datetime
 from pprint import pprint
 from itertools import chain
 import pandas as pd
+import csv
+import sys
+import pdb
+
+import click
+import requests
 
 from django.apps import apps
 from django.shortcuts import render, redirect, get_object_or_404
@@ -21,6 +27,7 @@ from django_comments.models import Comment
 
 import dnassembly
 from dnassembly.utils.annotation import annotate_moclo
+from dnassembly.reactions.PartDesigner.partDesigner import GGpart
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
 from .models import Plasmid, User, Project, Feature, Attribute, FeatureType, PlasmidAssembly, PlasmidAlias, PlasmidFile
@@ -240,9 +247,9 @@ def get_assembly_instructions(request):
         if part_match is not None:
             match_sequence = part_match.group(0)
             moclo_parts = annotate_moclo(plasmid.sequence)
-            leftPartOverhang = moclo_parts[0].split()[-1]
-            rightPartOverhang = moclo_parts[-1].split()[-1]
-            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartOverhang, rightPartOverhang,
+            leftPartType = moclo_parts[0].split()[-1]
+            rightPartType = moclo_parts[-1].split()[-1]
+            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartType, rightPartType,
                                                                standardize=False, create_instructions=True)
             part_dict['insert'] = user_defined_part.sequence
             part_dict['primer_F'] = primers[0]
@@ -300,9 +307,9 @@ def download_assembly_instructions(request):
         if part_match is not None:
             match_sequence = part_match.group(0)
             moclo_parts = annotate_moclo(plasmid.sequence)
-            leftPartOverhang = moclo_parts[0].split()[-1]
-            rightPartOverhang = moclo_parts[-1].split()[-1]
-            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartOverhang, rightPartOverhang,
+            leftPartType = moclo_parts[0].split()[-1]
+            rightPartType = moclo_parts[-1].split()[-1]
+            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartType, rightPartType,
                                                                standardize=False, create_instructions=True)
             part_dict['insert'] = user_defined_part.sequence
             part_dict['primer_F'] = primers[0]
@@ -755,15 +762,16 @@ def part_assembly(request):
         # Create new dict for part
         assembly_results[index] = {}
 
-        # part_definition = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription]
-        leftPartOverhang = part_definition[0][0]
-        rightPartOverhang = part_definition[0][1]
+        # part_definition = [[leftPartType, rightPartType], partSequence, userDescription]
+        leftPartType = part_definition[0][0]
+        rightPartType = part_definition[0][1]
         partSequence = part_definition[1]
         userDescription = part_definition[2]
         partAlias = part_definition[3]
 
         # Create dnassembly Part from sequence
-        user_defined_part, primers = MoCloPartFromSequence(partSequence, leftPartOverhang, rightPartOverhang, description=userDescription, standardize=addStandard)
+        assemIns = GGpart(userDescription, leftPartType, rightPartType, partSequence)
+        pdb.set_trace()
 
         # Get plasmids for each assembly (row)
         assembly_plasmid_pool = [dropin_vector.as_dnassembly(), user_defined_part]
@@ -815,7 +823,7 @@ def part_assembly(request):
                 new_plasmid.attribute.add(*attribute_list)
 
             # Add partSequence as Feature for part 2/3/4
-            if all([leftPartOverhang[0] in ('2', '3', '4'), rightPartOverhang[0] in ('2', '3', '4'), leftPartOverhang[0] == rightPartOverhang[0]]):
+            if all([leftPartType[0] in ('2', '3', '4'), rightPartType[0] in ('2', '3', '4'), leftPartType[0] == rightPartType[0]]):
                 if len(Feature.objects.filter(sequence=partSequence)) == 0:
                     part_featuretype = FeatureType.objects.get(name='Part')
                     part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)

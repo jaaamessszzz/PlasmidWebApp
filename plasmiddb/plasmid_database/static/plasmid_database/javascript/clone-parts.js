@@ -53,19 +53,23 @@ $('#partForm').submit(function(e) {
     let entryVectorID = document.getElementById('partEntryVectors').value;
     let projectID = document.getElementById('partProject').value;
 
-    // Validate Rows
+    // Upload a .zip file of PCR templates
+
+    // Code for upload goes here - reference the dragndrop section
+
+    // Validate Rows - todo: No longer throw an error - try to remove RS instead
     let rowErrors = [];
     const DNARegex = new RegExp('^[ATCGatcg]+$');
     // todo: split up restriction site recognition based on user inputs
     // todo: check for restriction sites at beginning/end of sequence (assumes part 3)
-    const RxnSiteRegex = new RegExp('CGTCTC|GAGACG|GAAGAC|GTCTTC');
+    //const RxnSiteRegex = new RegExp('CGTCTC|GAGACG|GAAGAC|GTCTTC');
 
     // Empty form check
     if (partEntryField.val().length === 0){
         rowErrors.push('Form is empty!');
     }
 
-    // Part entry format (tab-delimited): Description  Part Type  Sequence
+    // Part entry format (tab-delimited): Description,  Part Type,  Sequence, method="Any" fiveprime="", threeprime=""
     partTextAreaLines.forEach(function(element, idx){
         let index = idx + 1;
         let rowElements = element.split('\t');
@@ -80,13 +84,12 @@ $('#partForm').submit(function(e) {
         let userDescription = rowElements[0].trim();
 
         // Part type syntax: 3 | 2-4 | 5-1
-        // Use plasmid map to automatically determine multi-component parts
-        let tk_parts = ['1', '2a', '2b', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7'];
+        // Use plasmid map to automatically determine multi-component parts - todo: won't accept spanning parts right now
+        let tk_parts = ['1','2', '2a', '2b', '3', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7','Custom'];
         let partTypeRaw = rowElements[1].trim();
-        let leftPartOverhang;
-        let rightPartOverhang;
         let partSequence = rowElements[2].trim().toUpperCase();
-
+        let leftPartType;
+        let rightPartType;
         let partAlias;
         // Get part alias if it exists
         if (rowElements.length === 4){
@@ -96,15 +99,24 @@ $('#partForm').submit(function(e) {
         if (partTypeRaw.includes('-')){
             // Parts defined as spans
             let partTypes = partTypeRaw.split('-');
-            let leftPartOverhang = partTypes[0];
-            let rightPartOverhang = partTypes[partTypes.length-1];
+            leftPartType = partTypes[0];
+            rightPartType = partTypes[1];
 
             // Verify that parts are in part list
-            if (!tk_parts.includes(leftPartOverhang) || !PlasmidMap.tk_parts.includes(rightPartOverhang)){
+            if (!tk_parts.includes(leftPartType) || !tk_parts.includes(rightPartType)){
                 rowErrors.push('Row ' + index + ' has a problem with the part definition!');
             }
 
-        } else {
+        } // else no logic needed, just make sure entry is in part list
+        else {
+            if (!tk_parts.includes(partTypeRaw)) {
+                rowErrors.push('Row ' + index + ' has a problem with the part definition!');
+            }
+            leftPartType = partTypeRaw;
+            rightPartType = partTypeRaw;
+
+          }
+        /* else {
             // if length == 1, get all parts in part list, sort, select start and end accordingly
             if (partTypeRaw.length === 1 ){
                 // todo: figure out why Chrome doesn't recognize this array comprehension
@@ -119,36 +131,31 @@ $('#partForm').submit(function(e) {
                 if (partSubset.length === 0 ){
                     rowErrors.push('Row ' + index + ' has a problem with the part definition!');
                 } else{
-                    leftPartOverhang = partSubset[0];
-                    rightPartOverhang = partSubset[partSubset.length-1];
+                    leftPartType = partSubset[0];
+                    rightPartType = partSubset[partSubset.length-1];
                 }
             }
-            // else no logic needed, just make sure entry is in part list
-            else{
-                if (!tk_parts.includes(partTypeRaw)) {
-                    rowErrors.push('Row ' + index + ' has a problem with the part definition!');
-                }
-                leftPartOverhang = partTypeRaw;
-                rightPartOverhang = partTypeRaw;
-            }
-        }
+            */
+
         // Ensure sequence is ATCG
         if(!DNARegex.test(partSequence)){
             rowErrors.push('Row ' + index + ' contains invalid DNA symbols!');
         }
+
+        // --> Pass from here into GGpart designer
         // Check for restriction sites
-        if (RxnSiteRegex.test(partSequence)){
-            rowErrors.push('Row ' + index + ' contains one or more BbsI/BsmBI restriction sites!');
-        }
-        // Check codons for coding sequences
-        if (leftPartOverhang.includes('3') && rightPartOverhang.includes('3')){
-            if(partSequence.length % 3 !== 0){
-                rowErrors.push('Row ' + index + ' sequence needs to be in frame with complete codons!');
-            }
-        }
+        //if (RxnSiteRegex.test(partSequence)){
+        //   rowErrors.push('Row ' + index + ' contains one or more BbsI/BsmBI restriction sites!');
+        //}
+        // Check codons for coding sequences - the new part design code will do this
+        //if (leftPartType.includes('3') && rightPartType.includes('3')){
+        //    if(partSequence.length % 3 !== 0){
+        //        rowErrors.push('Row ' + index + ' sequence needs to be in frame with complete codons!');
+        //    }
+        //}
 
         // Add data to POST dict
-        partPostData[index] = [[leftPartOverhang, rightPartOverhang], partSequence, userDescription, partAlias]
+        partPostData[index] = [[leftPartType, rightPartType], partSequence, userDescription, partAlias]
     });
 
     // Submit parts to database if all rows pass validation
