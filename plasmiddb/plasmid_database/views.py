@@ -745,6 +745,7 @@ def part_assembly(request):
     addStandard = post_data.get('addStandard')
     reaction_enzyme = BsmBI
     reaction_project = Project.objects.get(id=int(post_data.get('projectID')))
+    possibleTemplates = post_data.get('possibleTemplates')
 
     # Prepare return data
     assembly_results = dict()
@@ -763,14 +764,23 @@ def part_assembly(request):
         assembly_results[index] = {}
 
         # part_definition = [[leftPartType, rightPartType], partSequence, userDescription]
-        leftPartType = part_definition[0][0]
-        rightPartType = part_definition[0][1]
-        partSequence = part_definition[1]
-        userDescription = part_definition[2]
-        partAlias = part_definition[3]
+        userDescription = part_definition[0]
+        leftPartType = part_definition[1][0]
+        rightPartType = part_definition[1][1]
+        partSequence = part_definition[2]
+
+        method = 'None'
+        fiveprime = ''
+        threeprime = ''
+
+        method = part_definition[3]
+
+        if method == 'Custom':
+            fiveprime = part_definition[4]
+            threeprime = part_definition[5]
 
         # Create dnassembly Part from sequence
-        assemIns = GGpart(userDescription, leftPartType, rightPartType, partSequence)
+        assemIns = GGpart(userDescription, leftPartType, rightPartType, partSequence, method = method, fiveprime = fiveprime, threeprime = threeprime, possibleTemplates = possibleTemplates)
         pdb.set_trace()
 
         # Get plasmids for each assembly (row)

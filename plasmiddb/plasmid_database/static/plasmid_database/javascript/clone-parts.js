@@ -48,6 +48,10 @@ $('#partForm').submit(function(e) {
     let partPostData = {};
     const partEntryField = $('#partEntry');
     let partTextAreaLines = partEntryField.val().split('\n');
+
+    const templateEntryField = $('#templateEntry');
+    let templateTextAreaLines = templateEntryField.val().split('\n');
+
     let addStandardized = document.getElementById("addStandard").checked;
     // Get entry vector
     let entryVectorID = document.getElementById('partEntryVectors').value;
@@ -69,7 +73,7 @@ $('#partForm').submit(function(e) {
         rowErrors.push('Form is empty!');
     }
 
-    // Part entry format (tab-delimited): Description,  Part Type,  Sequence, method="Any" fiveprime="", threeprime=""
+    // Part entry format (tab-delimited): Description,  Part Type,  Sequence, method="None" fiveprime="", threeprime=""
     partTextAreaLines.forEach(function(element, idx){
         let index = idx + 1;
         let rowElements = element.split('\t');
@@ -84,19 +88,26 @@ $('#partForm').submit(function(e) {
         let userDescription = rowElements[0].trim();
 
         // Part type syntax: 3 | 2-4 | 5-1
-        // Use plasmid map to automatically determine multi-component parts - todo: won't accept spanning parts right now
-        let tk_parts = ['1','2', '2a', '2b', '3', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7','Custom'];
+        // Use plasmid map to automatically determine multi-component parts
+        let tk_parts = ['1', '2a', '2b', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7','Custom'];
         let partTypeRaw = rowElements[1].trim();
-        let partSequence = rowElements[2].trim().toUpperCase();
+
         let leftPartType;
         let rightPartType;
-        let partAlias;
-        // Get part alias if it exists
-        if (rowElements.length === 4){
-            partAlias = rowElements[3].trim();
-        }
+        let fiveprime;
+        let threeprime;
 
-        if (partTypeRaw.includes('-')){
+        if (partTypeRaw == 'Custom'){
+            leftPartType = 'Custom';
+            rightPartType = 'Custom';
+            // Check to make sure the custom overhangs are included
+            if (rowElements.length === 6){
+              fiveprime = rowElements[4].trim();
+              threeprime = rowElements[5].trim();
+            } else {
+              rowErrors.push('Row ' + index + ' is a Custom assembly and is missing overhang definitions!');
+            }
+        } else if (partTypeRaw.includes('-')){
             // Parts defined as spans
             let partTypes = partTypeRaw.split('-');
             leftPartType = partTypes[0];
@@ -114,8 +125,26 @@ $('#partForm').submit(function(e) {
             }
             leftPartType = partTypeRaw;
             rightPartType = partTypeRaw;
-
           }
+
+        let partSequence = rowElements[2].trim().toUpperCase();
+
+        // Ensure sequence is ATCG
+        if(!DNARegex.test(partSequence)){
+            rowErrors.push('Row ' + index + ' contains invalid DNA symbols!');
+        }
+
+        let method;
+        if (rowElements.length > 3){
+          method = rowElements[3].trim();
+
+          // Ensure the selected Method is compatible with the downstream partAssembly script
+          let available_methods = ['None','gBlocks','Oligo Assembly','PCR','PCA']
+          if (!available_methods.includes(method)){
+              rowErrors.push('Row ' + index + ' has a problem with the Method!');
+          }
+        }
+
         /* else {
             // if length == 1, get all parts in part list, sort, select start and end accordingly
             if (partTypeRaw.length === 1 ){
@@ -136,33 +165,31 @@ $('#partForm').submit(function(e) {
                 }
             }
             */
-
-        // Ensure sequence is ATCG
-        if(!DNARegex.test(partSequence)){
-            rowErrors.push('Row ' + index + ' contains invalid DNA symbols!');
-        }
-
-        // --> Pass from here into GGpart designer
-        // Check for restriction sites
-        //if (RxnSiteRegex.test(partSequence)){
-        //   rowErrors.push('Row ' + index + ' contains one or more BbsI/BsmBI restriction sites!');
-        //}
-        // Check codons for coding sequences - the new part design code will do this
-        //if (leftPartType.includes('3') && rightPartType.includes('3')){
-        //    if(partSequence.length % 3 !== 0){
-        //        rowErrors.push('Row ' + index + ' sequence needs to be in frame with complete codons!');
-        //    }
-        //}
-
         // Add data to POST dict
-        partPostData[index] = [[leftPartType, rightPartType], partSequence, userDescription, partAlias]
-    });
+        partPostData[index] = [userDescription, [leftPartType, rightPartType], partSequence, method, fiveprime, threeprime]
+      });
+
+      let possibleTemplates = {};
+
+      templateTextAreaLines.forEach(function(element, idx){
+          let index = idx + 1;
+          let rowElements = element.split('\t');
+          // Skip returns
+          if (element === ''){return;}
+          if(rowElements.length < 2){
+              rowErrors.push('Row ' + index + ' requires all fields!');
+              return;
+          }
+          // Add data to the possibleTemplates dict
+          possibleTemplates[rowElements[0]] = rowElements[1]
+        });
+
 
     // Submit parts to database if all rows pass validation
     if (rowErrors.length === 0){
         // Send form, report assembly results
         console.log(partPostData);
-        let postData = {'parts': partPostData, 'addStandard': addStandardized, 'entryVectorID': entryVectorID, 'projectID': projectID};
+        let postData = {'parts': partPostData, 'addStandard': addStandardized, 'entryVectorID': entryVectorID, 'projectID': projectID, 'possibleTemplates': possibleTemplates};
         console.log(postData);
 
         $.ajax({
