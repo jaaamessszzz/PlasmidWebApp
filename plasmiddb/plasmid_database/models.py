@@ -21,7 +21,22 @@ class Project(models.Model):
     description = models.TextField()
     members = models.ManyToManyField(User)
 
+class Primer(models.Model):
+    primerName = models.TextField(unique=True)
+    sequence = models.TextField()
 
+class GGfrag(models.Model):
+    fragName = models.TextField()
+    sequence = models.TextField()
+    method = models.TextField()
+    primers = models.ManyToManyField(Primer)
+    template = models.TextField()
+
+class GGpart(models.Model):
+    partName = models.TextField()
+    sequence = models.TextField()
+    fragments = models.ManyToManyField(GGfrag)
+    
 class Feature(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sequence = models.TextField()

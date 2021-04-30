@@ -41,6 +41,16 @@
         {% endfor %}
 
     </table>
+
+    <div class="PartInstructions">
+      <form method="post" action="download_part_instructions/" style="display: inline-block">
+          {% csrf_token %}
+          <input type="hidden" name="DownloadPartInstructions" id="DownloadPartInstructions">
+          <button type="submit" id="DownloadPartInstructionsButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Part Instructions</button>
+      </form>
+    </div>
+
+
 </div>
 {% endblock %}
 

@@ -25,8 +25,9 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 import boto3
 from django_comments.models import Comment
 
-import dnassembly
+import dnassembly as dna
 from dnassembly.utils.annotation import annotate_moclo
+from dnassembly.utils.benchlingAPI import *
 from dnassembly.reactions.PartDesigner.partDesigner import GGpart
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
@@ -740,9 +741,9 @@ def part_assembly(request):
     # Unpack POST data
     post_data = json.loads(request.POST.get('data'))
     entry_vector_id = int(post_data.get('entryVectorID'))
-    dropin_vector = Plasmid.objects.get(id=entry_vector_id)
+    dropin_vector = Plasmid.objects.get(id=entry_vector_id) #add this as an optional column in the POST?
     part_dict = post_data.get('parts')
-    addStandard = post_data.get('addStandard')
+    #addStandard = post_data.get('addStandard') #remove this button
     reaction_enzyme = BsmBI
     reaction_project = Project.objects.get(id=int(post_data.get('projectID')))
     possibleTemplates = post_data.get('possibleTemplates')
@@ -775,41 +776,57 @@ def part_assembly(request):
 
         method = part_definition[3]
 
-        if method == 'Custom':
+        if leftPartType == 'Custom':
             fiveprime = part_definition[4]
+
+        if rightPartType == 'Custom':
             threeprime = part_definition[5]
 
         # Create dnassembly Part from sequence
         assemIns = GGpart(userDescription, leftPartType, rightPartType, partSequence, method = method, fiveprime = fiveprime, threeprime = threeprime, possibleTemplates = possibleTemplates)
-        pdb.set_trace()
+        #pdb.set_trace()
 
+        # Old user_defined_part is similar to GGfrag - DNA sequence that contains the required overhangs
+        # GGpart used to be MoCloPartFromSequence
+
+        #user_defined_part needs to be an array of GGfrags
         # Get plasmids for each assembly (row)
-        assembly_plasmid_pool = [dropin_vector.as_dnassembly(), user_defined_part]
+
+        assembly_plasmid_pool = [dropin_vector.as_dnassembly()]
+
+        #Redefine GGfrags as class
+        for i in range(len(assemIns.GGfrags)):
+            part = dna.dna.Part(assemIns.GGfrags[i].seq)
+            assembly_plasmid_pool.append(part)
+
         assembly_ids = [f'{dropin_vector.get_standard_id()}']
         assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
-        assembly_results[index]['primer_F'] = primers[0]
-        assembly_results[index]['primer_R'] = primers[1]
-        assembly_results[index]['insert'] = user_defined_part.sequence
+        assembly_results[index]['GGfrags'] = assemIns.GGfrags
+        assembly_results[index]['fragments'] = assemIns.fragments
+        assembly_results[index]['insert'] = assemIns.partSeq
 
         try:
-            gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
-            gg_rxn.digest()
-            assembly_product = gg_rxn.perform_assembly()
+            #Skip the DNAssembly construction in favor of the output of PartDesigner
+            #gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
+            #gg_rxn.digest()
+            #assembly_product = gg_rxn.perform_assembly()
 
+            #pdb.set_trace()
             new_plasmid = Plasmid(project=reaction_project,
-                                  sequence=assembly_product.sequence,
+                                  sequence=assemIns.plasmidSeq, #pull in the plasmid sequence from the GGpart output
                                   creator=request.user,
                                   description=userDescription)
 
             # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
-            new_plasmid.save()
+            new_plasmid.save() #Save other aspects of the output?
 
             # Pull features from assembly_product and associate with new_plasmid
-            new_plasmid_features = []
-            for feature in assembly_product.features:
-                new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
-            new_plasmid.feature.add(*new_plasmid_features)
+            # Bypass feature annotation for now
+            #new_plasmid_features = []
+            #for feature in assembly_product.features:
+                #new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
+            #new_plasmid.feature.add(*new_plasmid_features)
 
             # Annotate part plasmid, if applicable
             print('Annotating Parts...')
@@ -840,7 +857,12 @@ def part_assembly(request):
                     part_feature.save()
                     new_plasmid.feature.add(part_feature)
 
-            # Associate alias if applicable
+
+            # Export the plasmid to Benchling via API
+            r = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
+
+            partAlias = r['entityRegistryId']
+
             if partAlias and partAlias.strip() != "":
                 plasmid_alias = PlasmidAlias(alias=partAlias.strip(), plasmid=new_plasmid)
                 plasmid_alias.save()
@@ -873,7 +895,41 @@ def assembly_result(request):
     assembly_results = request.session['results']
     assembly_type = request.session['assembly_type']
     print(assembly_results)
-    return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results, 'assembly_type': assembly_type})
+
+    # Format data for download into a .zip file
+    zip_subdir = 'AssemblyInstructions'
+    zip_filename = 'AssemblyInstructions.zip'
+
+    response = HttpResponse(content_type='application/zip')
+    zip_file = zipfile.ZipFile(response, 'w')
+
+    # fill this in to zip up the context then download
+
+    # Fix this part to
+    #Create a DataFrame containing unique_plasmids
+    AssemblyParts = pd.DataFrame(columns = ['Part','Location','Description'])
+    #unique_primers =
+    #unique_fragments = #Start working from here
+
+    for plasmid in assembly_results:
+        unique_plasmid_info = pd.Series(index = ['Part','Location','Description'])
+        unique_plasmid_info['Part'] = (plasmid.get_aliases_as_string())
+        unique_plasmid_info['Location'] = (plasmid.get_locations_as_string())
+        unique_plasmid_info['Description'] = (plasmid.description)
+        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index = True)
+        #TO-DO: look into how locations are stored
+
+    # Add to ZIP
+
+    #zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
+    AssemblyParts.to_csv('AssemblyParts.csv')
+    zip_file.write('AssemblyParts.csv')
+
+    zip_file.close()
+    response['Content-Disposition'] = f'attachment;filename={zip_filename}'
+    response['Content-Type'] = 'application/zip'
+
+    return response, render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results, 'assembly_type': assembly_type})
 
 
 # --- Plasmid Features and Related Views --- #
