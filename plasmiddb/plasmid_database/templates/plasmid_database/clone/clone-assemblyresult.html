@@ -11,12 +11,15 @@
 <div class="container">
     <table id="assemblyResultsTable" style="width:100%; text-align: left">
         <tr>
-            <th style="width:10%">Index</th>
-            <th style="width:10%">Success</th>
-            <th style="width:10%">Assembly ID</th>
+            <th style="width:5%">Index</th>                     {# Column 1 #}
+            <th style="width:5%">Success</th>                  {# Column 2 #}
+            <th style="width:10%">Assembly ID</th>              {# Column 3 #}
             {% if assembly_type == 'part' %}
-                <th style="width:20%">Primers</th>
-                <th style="width:50%">Insert</th>
+                <th style="width:5%">Fragment</th>            {# Column 4 #}
+                <th style="width:5%">Method</th>      {# Column 5 #}
+                <th style="width:20%">Primers</th>              {# Column 6 #}
+                <th style="width:5%">Template</th>             {# Column 7 #}
+                <th style="width:45%">Product</th>              {# Column 8 #}
             {% endif %}
             {% if assembly_type == 'cassette' %}
                 <th style="width:35%">Reaction Plasmids</th>
@@ -25,19 +28,28 @@
         </tr>
 
         {% for result, result_dict in results.items %}
-            <tr>
+            <tr style="background-color:#A2D1EA;">
                 <td>{{ result }}</td>
                 <td>{{ result_dict.success }}</td>
-                <td>{{ result_dict.new_plasmid.get_standard_id }}</td>
+                <td>{{ result_dict.new_plasmid.get_aliases_as_string }}</td>
                 {% if assembly_type == 'part' %}
-                    <td>F: {{ result_dict.primer_F }}<br>R: {{ result_dict.primer_R }}</td>
-                    <td>{{ result_dict.insert }}</td>
+                    <td colspan="5">---</td>
                 {% endif %}
                 {% if assembly_type == 'cassette' %}
                     <td>{{ result_dict.reaction_plasmids }}</td>
                     <td></td> {# Do cassettes need notes? #}
                 {% endif %}
             </tr>
+            {% for fragment_dict in result_dict.fragments %}
+                <tr style="border-bottom: 1px solid black;">
+                    <td colspan="3"></td>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ fragment_dict.assembly_method }}</td>
+                    <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                    <td>{{ fragment_dict.template }}</td>
+                    <td>{{ fragment_dict.product }}</td>
+                </tr>
+            {%  endfor %}
         {% endfor %}
 
     </table>

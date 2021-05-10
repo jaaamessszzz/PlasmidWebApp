@@ -12,9 +12,10 @@
             </p>
         </div>
 
-        <textarea id="partEntry" wrap="off" rows="25" placeholder="Paste your part sequences here!"></textarea>
-        <br>
-        <textarea id="templateEntry" wrap="off" rows="25" placeholder="Paste your PCR templates here!"></textarea>
+        <h4>Part Input</h4>
+        <textarea id="partEntry" wrap="off" rows="20" placeholder="Paste your part sequences here!"></textarea>
+        <h4>Part PCR Templates (Optional)</h4>
+        <textarea id="templateEntry" wrap="off" rows="20" placeholder="Paste your PCR templates here!"></textarea>
 
         <form id="partForm">
             <label for="partProject">Select Project: </label>
@@ -27,7 +28,7 @@
             <label for="partEntryVectors">Select Part Entry Vector: </label>
             <select id="partEntryVectors" name="Entry Vectors">
                 {% for plasmid in partEntryVectors %}
-                    <option value="{{ plasmid.id }}">{{ plasmid.get_standard_id }}</option>
+                    <option value="{{ plasmid.id }}">{{ plasmid.get_aliases_as_string }}</option>
                 {% endfor %}
             </select>
             <br>
