@@ -244,7 +244,7 @@ def get_assembly_instructions(request):
     part_dict_list = []
     for plasmid in part_list:
         part_dict = {'plasmid': plasmid}
-        part_match = re.search('(?:GGTCTC)(.*)(?:GAGACC)', plasmid.sequence)
+        part_match = re.search('(?:GAAGAC)(.*)(?:GTCTTC)', plasmid.sequence)
         if part_match is not None:
             match_sequence = part_match.group(0)
             moclo_parts = annotate_moclo(plasmid.sequence)
@@ -304,7 +304,7 @@ def download_assembly_instructions(request):
     part_dict_list = []
     for plasmid in part_list:
         part_dict = {'plasmid': plasmid}
-        part_match = re.search('(?:GGTCTC)(.*)(?:GAGACC)', plasmid.sequence)
+        part_match = re.search('(?:GAAGAC)(.*)(?:GTCTTC)', plasmid.sequence)
         if part_match is not None:
             match_sequence = part_match.group(0)
             moclo_parts = annotate_moclo(plasmid.sequence)
@@ -764,7 +764,7 @@ def part_assembly(request):
         # Create new dict for part
         assembly_results[index] = {}
 
-        # part_definition = [[leftPartType, rightPartType], partSequence, userDescription]
+        # part_definition = [userDescription, [leftPartType, rightPartType], partSequence]
         userDescription = part_definition[0]
         leftPartType = part_definition[1][0]
         rightPartType = part_definition[1][1]
@@ -782,38 +782,15 @@ def part_assembly(request):
         if rightPartType == 'Custom':
             threeprime = part_definition[5]
 
-        # Create dnassembly Part from sequence
-        assemIns = GGpart(userDescription, leftPartType, rightPartType, partSequence, method = method, fiveprime = fiveprime, threeprime = threeprime, possibleTemplates = possibleTemplates)
-        #pdb.set_trace()
-
-        # Old user_defined_part is similar to GGfrag - DNA sequence that contains the required overhangs
-        # GGpart used to be MoCloPartFromSequence
-
-        #user_defined_part needs to be an array of GGfrags
-        # Get plasmids for each assembly (row)
-
-        assembly_plasmid_pool = [dropin_vector.as_dnassembly()]
-
-        #Redefine GGfrags as class
-        for i in range(len(assemIns.GGfrags)):
-            part = dna.dna.Part(assemIns.GGfrags[i].seq)
-            assembly_plasmid_pool.append(part)
-
-        assembly_ids = [f'{dropin_vector.get_standard_id()}']
-        assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
-        assembly_results[index]['GGfrags'] = assemIns.GGfrags
-        assembly_results[index]['fragments'] = assemIns.fragments
-        assembly_results[index]['insert'] = assemIns.partSeq
-
         try:
-            #Skip the DNAssembly construction in favor of the output of PartDesigner
-            #gg_rxn = StickyEndAssembly(assembly_plasmid_pool, reaction_enzyme)
-            #gg_rxn.digest()
-            #assembly_product = gg_rxn.perform_assembly()
+            # Create dnassembly Part from sequence
+            assembly_instructions = GGpart(userDescription, leftPartType, rightPartType, partSequence,
+                                           dropin_vector.as_dnassembly(), method=method,
+                                           fiveprime=fiveprime, threeprime=threeprime,
+                                           possibleTemplates=possibleTemplates)
 
-            #pdb.set_trace()
             new_plasmid = Plasmid(project=reaction_project,
-                                  sequence=assemIns.plasmidSeq, #pull in the plasmid sequence from the GGpart output
+                                  sequence=assembly_instructions.assembled_plasmid.sequence,
                                   creator=request.user,
                                   description=userDescription)
 
@@ -827,6 +804,22 @@ def part_assembly(request):
             #for feature in assembly_product.features:
                 #new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
             #new_plasmid.feature.add(*new_plasmid_features)
+
+            # Pull Assembly instructions from GGPart and push to database
+            # todo: push fragment and primer data to database
+            assembly_ids = [f'{dropin_vector.get_standard_id()}']
+            assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
+            assembly_results[index]['fragments'] = list()
+
+            for fragment in assembly_instructions.fragments:
+                fragment_dict = dict()
+                fragment_dict['assembly_method'] = fragment.method
+                print(fragment.primers[0])
+                fragment_dict['primer_F'] = fragment.primers[0][0] if len(fragment.primers[0]) > 0 else ''
+                fragment_dict['primer_R'] = fragment.primers[0][1] if len(fragment.primers[0]) > 0 else ''
+                fragment_dict['template'] = fragment.template
+                fragment_dict['product'] = fragment.product
+                assembly_results[index]['fragments'].append(fragment_dict)
 
             # Annotate part plasmid, if applicable
             print('Annotating Parts...')
@@ -857,15 +850,14 @@ def part_assembly(request):
                     part_feature.save()
                     new_plasmid.feature.add(part_feature)
 
-
             # Export the plasmid to Benchling via API
-            r = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
-
-            partAlias = r['entityRegistryId']
-
-            if partAlias and partAlias.strip() != "":
-                plasmid_alias = PlasmidAlias(alias=partAlias.strip(), plasmid=new_plasmid)
-                plasmid_alias.save()
+            # benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
+            #
+            # partAlias = benchling_request['entityRegistryId']
+            #
+            # if partAlias and partAlias.strip() != "":
+            #     plasmid_alias = PlasmidAlias(alias=partAlias.strip(), plasmid=new_plasmid)
+            #     plasmid_alias.save()
 
             assembly_results[index]['success'] = True
             assembly_results[index]['new_plasmid'] = new_plasmid
@@ -895,7 +887,11 @@ def assembly_result(request):
     assembly_results = request.session['results']
     assembly_type = request.session['assembly_type']
     print(assembly_results)
+    return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results, 'assembly_type': assembly_type})
 
+
+@login_required
+def get_assembly_zip(request):
     # Format data for download into a .zip file
     zip_subdir = 'AssemblyInstructions'
     zip_filename = 'AssemblyInstructions.zip'
@@ -906,31 +902,29 @@ def assembly_result(request):
     # fill this in to zip up the context then download
 
     # Fix this part to
-    #Create a DataFrame containing unique_plasmids
-    AssemblyParts = pd.DataFrame(columns = ['Part','Location','Description'])
-    #unique_primers =
-    #unique_fragments = #Start working from here
+    # Create a DataFrame containing unique_plasmids
+    AssemblyParts = pd.DataFrame(columns=['Part', 'Location', 'Description'])
+    # unique_primers =
+    # unique_fragments = #Start working from here
 
     for plasmid in assembly_results:
-        unique_plasmid_info = pd.Series(index = ['Part','Location','Description'])
+        unique_plasmid_info = pd.Series(index=['Part', 'Location', 'Description'])
         unique_plasmid_info['Part'] = (plasmid.get_aliases_as_string())
         unique_plasmid_info['Location'] = (plasmid.get_locations_as_string())
         unique_plasmid_info['Description'] = (plasmid.description)
-        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index = True)
-        #TO-DO: look into how locations are stored
+        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index=True)
+        # TO-DO: look into how locations are stored
 
     # Add to ZIP
 
-    #zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
+    # zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
     AssemblyParts.to_csv('AssemblyParts.csv')
     zip_file.write('AssemblyParts.csv')
 
     zip_file.close()
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
     response['Content-Type'] = 'application/zip'
-
-    return response, render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results, 'assembly_type': assembly_type})
-
+    return response
 
 # --- Plasmid Features and Related Views --- #
 
