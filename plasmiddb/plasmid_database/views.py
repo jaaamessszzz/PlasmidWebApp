@@ -796,14 +796,6 @@ def part_assembly(request):
 
             # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
-            new_plasmid.save() #Save other aspects of the output?
-
-            # Pull features from assembly_product and associate with new_plasmid
-            # Bypass feature annotation for now
-            #new_plasmid_features = []
-            #for feature in assembly_product.features:
-                #new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
-            #new_plasmid.feature.add(*new_plasmid_features)
 
             # Pull Assembly instructions from GGPart and push to database
             # todo: push fragment and primer data to database
@@ -821,47 +813,10 @@ def part_assembly(request):
                 fragment_dict['product'] = fragment.product
                 assembly_results[index]['fragments'].append(fragment_dict)
 
-            # Annotate part plasmid, if applicable
-            print('Annotating Parts...')
-            moclo_parts = annotate_moclo(new_plasmid.sequence)
-            if moclo_parts:
-                attribute_list = list()
-                for part in moclo_parts:
-                    current_attribute = Attribute.objects.filter(name=f'Part {part}')
-                    for attr in current_attribute:
-                        attribute_list.append(attr)
-                new_plasmid.attribute.add(*attribute_list)
-
-            # Annotate cassette plasmid, if applicable
-            moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
-            if moclo_cassette:
-                attribute_list = list()
-                for cassette in moclo_cassette:
-                    current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
-                    for attr in current_attribute:
-                        attribute_list.append(attr)
-                new_plasmid.attribute.add(*attribute_list)
-
-            # Add partSequence as Feature for part 2/3/4
-            if all([leftPartType[0] in ('2', '3', '4'), rightPartType[0] in ('2', '3', '4'), leftPartType[0] == rightPartType[0]]):
-                if len(Feature.objects.filter(sequence=partSequence)) == 0:
-                    part_featuretype = FeatureType.objects.get(name='Part')
-                    part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user, type=part_featuretype)
-                    part_feature.save()
-                    new_plasmid.feature.add(part_feature)
-
-            # Export the plasmid to Benchling via API
-            # benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
-            #
-            # partAlias = benchling_request['entityRegistryId']
-            #
-            # if partAlias and partAlias.strip() != "":
-            #     plasmid_alias = PlasmidAlias(alias=partAlias.strip(), plasmid=new_plasmid)
-            #     plasmid_alias.save()
-
             assembly_results[index]['success'] = True
+            assembly_results[index]['assembly_instructions'] = assembly_instructions
             assembly_results[index]['new_plasmid'] = new_plasmid
-            assembly_results[index]['assembly_id'] = f'{new_plasmid.project.project} {int(new_plasmid.projectindex)}'
+            assembly_results[index]['assembly_id'] = f''  # Populated with OPL if/when plasmid is commited to db
 
         except AssemblyException as assembly_error:
             print(assembly_error)
@@ -887,8 +842,78 @@ def assembly_result(request):
     assembly_results = request.session['results']
     assembly_type = request.session['assembly_type']
     print(assembly_results)
-    return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results, 'assembly_type': assembly_type})
 
+    commit_parts = request.POST.get('commitParts', False)
+    print(f'Commit parts: {commit_parts}')
+
+    if commit_parts:
+        for index, assembly_result in assembly_results.items():
+
+            # Pull new_plasmid from assembly_result
+            new_plasmid = assembly_result['new_plasmid']
+            new_plasmid.save()  # Save other aspects of the output?
+
+            # Pull GGPart attributes
+            assembly_instructions = assembly_result['assembly_instructions']
+            plasmid_dnassembly = assembly_instructions.assembled_plasmid
+            leftPartType = assembly_instructions.leftPartType
+            rightPartType = assembly_instructions.rightPartType
+            partSequence = assembly_instructions.partSeq
+            userDescription = assembly_instructions.partName  # lol.
+
+            # Pull features from assembly_product and associate with new_plasmid
+            new_plasmid_features = []
+            for feature in plasmid_dnassembly.features:
+                new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
+                new_plasmid.feature.add(*new_plasmid_features)
+
+            # Annotate part plasmid, if applicable
+            print('Annotating Parts...')
+            moclo_parts = annotate_moclo(new_plasmid.sequence)
+            if moclo_parts:
+                attribute_list = list()
+                for part in moclo_parts:
+                    current_attribute = Attribute.objects.filter(name=f'Part {part}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
+
+            # Annotate cassette plasmid, if applicable
+            moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
+            if moclo_cassette:
+                attribute_list = list()
+                for cassette in moclo_cassette:
+                    current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
+                    for attr in current_attribute:
+                        attribute_list.append(attr)
+                new_plasmid.attribute.add(*attribute_list)
+
+            # Add partSequence as Feature for part 2/3/4
+            if all([leftPartType[0] in ('2', '3', '4'), rightPartType[0] in ('2', '3', '4'),
+                    leftPartType[0] == rightPartType[0]]):
+                if len(Feature.objects.filter(sequence=partSequence)) == 0:
+                    part_featuretype = FeatureType.objects.get(name='Part')
+                    part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user,
+                                           type=part_featuretype)
+                    part_feature.save()
+                    new_plasmid.feature.add(part_feature)
+
+            # Export the plasmid to Benchling via API
+            # benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
+            #
+            # partAlias = benchling_request['entityRegistryId'].strip()
+            #
+            # if partAlias and partAlias.strip() != "":
+            #     plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+            #     plasmid_alias.save()
+
+            # todo: Update assembly results to reflect OPL Aliases
+            # assembly_results[index]['assembly_id'] = partAlias
+
+    return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results,
+                                                                                'assembly_type': assembly_type,
+                                                                                'committed': commit_parts
+                                                                                })
 
 @login_required
 def get_assembly_zip(request):
