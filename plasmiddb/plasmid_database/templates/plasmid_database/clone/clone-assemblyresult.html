@@ -55,11 +55,25 @@
     </table>
 
     <div class="PartInstructions">
-      <form method="post" action="download_part_instructions/" style="display: inline-block">
+        {# Download part instructions #}
+        <form method="post" action="download_part_instructions/" style="display: inline-block">
           {% csrf_token %}
           <input type="hidden" name="DownloadPartInstructions" id="DownloadPartInstructions">
           <button type="submit" id="DownloadPartInstructionsButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Part Instructions</button>
-      </form>
+        </form>
+
+        {# Commit part assemblies #}
+        {% if not committed %}
+        <form method="post" action="/database/assembly_results/" style="display: inline-block">
+            {% csrf_token %}
+            <input type="hidden" id="commitParts" name="commitParts" value="1">
+            <button class="partButton BlockButton" type="submit" id="commitPartsButton">Commit Parts to the Database!</button>
+        {% endif %}
+        </form>
+
+        {% if committed %}
+            <button class="partButton BlockButton" id="partsCommited" style="background-color: #6EA400">Parts have been committed to the Database!</button>
+        {% endif %}
     </div>
 
 
