@@ -45,7 +45,19 @@
                     <td colspan="3"></td>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ fragment_dict.assembly_method }}</td>
-                    <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                    {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
+                        <td>
+                            {% for primer in fragment_dict.oligos %}
+                            <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
+                            {%  endfor %}
+                        </td>
+                    {% else %}
+                        {% if fragment_dict.primer_F != "" %}
+                        <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                        {% else %}
+                        <td></td>
+                        {% endif %}
+                    {% endif %}
                     <td>{{ fragment_dict.template }}</td>
                     <td>{{ fragment_dict.product }}</td>
                 </tr>

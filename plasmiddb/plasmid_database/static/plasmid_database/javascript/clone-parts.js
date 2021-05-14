@@ -137,7 +137,9 @@ $('#partForm').submit(function(e) {
         let method;
         if (rowElements.length > 3){
           method = rowElements[3].trim();
-
+          if (method === ''){
+            method = 'None';
+          }
           // Ensure the selected Method is compatible with the downstream partAssembly script
           let available_methods = ['None','gBlocks','Oligo Assembly','PCR','PCA']
           if (!available_methods.includes(method)){

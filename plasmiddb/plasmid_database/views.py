@@ -769,12 +769,10 @@ def part_assembly(request):
         leftPartType = part_definition[1][0]
         rightPartType = part_definition[1][1]
         partSequence = part_definition[2]
+        method = part_definition[3]
 
-        method = 'None'
         fiveprime = ''
         threeprime = ''
-
-        method = part_definition[3]
 
         if leftPartType == 'Custom':
             fiveprime = part_definition[4]
@@ -806,9 +804,9 @@ def part_assembly(request):
             for fragment in assembly_instructions.fragments:
                 fragment_dict = dict()
                 fragment_dict['assembly_method'] = fragment.method
-                print(fragment.primers[0])
-                fragment_dict['primer_F'] = fragment.primers[0][0] if len(fragment.primers[0]) > 0 else ''
-                fragment_dict['primer_R'] = fragment.primers[0][1] if len(fragment.primers[0]) > 0 else ''
+                fragment_dict['primer_F'] = fragment.primers[0] if len(fragment.primers[0]) > 0 else ''
+                fragment_dict['primer_R'] = fragment.primers[1] if len(fragment.primers[0]) > 0 else ''
+                fragment_dict['oligos'] = fragment.primers
                 fragment_dict['template'] = fragment.template
                 fragment_dict['product'] = fragment.product
                 assembly_results[index]['fragments'].append(fragment_dict)
@@ -899,16 +897,14 @@ def assembly_result(request):
                     new_plasmid.feature.add(part_feature)
 
             # Export the plasmid to Benchling via API
-            # benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
-            #
-            # partAlias = benchling_request['entityRegistryId'].strip()
-            #
-            # if partAlias and partAlias.strip() != "":
-            #     plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
-            #     plasmid_alias.save()
+            benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
+            partAlias = benchling_request['entityRegistryId'].strip()
+            if partAlias and partAlias.strip() != "":
+                plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+                plasmid_alias.save()
 
             # todo: Update assembly results to reflect OPL Aliases
-            # assembly_results[index]['assembly_id'] = partAlias
+            assembly_results[index]['assembly_id'] = partAlias
 
     return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results,
                                                                                 'assembly_type': assembly_type,
