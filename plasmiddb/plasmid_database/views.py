@@ -899,13 +899,13 @@ def assembly_result(request):
                     new_plasmid.feature.add(part_feature)
 
             # Export the plasmid to Benchling via API
-            # benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
-            #
-            # partAlias = benchling_request['entityRegistryId'].strip()
-            #
-            # if partAlias and partAlias.strip() != "":
-            #     plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
-            #     plasmid_alias.save()
+            benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
+
+            partAlias = benchling_request['entityRegistryId'].strip()
+
+            if partAlias and partAlias.strip() != "":
+                 plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+                 plasmid_alias.save()
 
             # todo: Update assembly results to reflect OPL Aliases
             # assembly_results[index]['assembly_id'] = partAlias
