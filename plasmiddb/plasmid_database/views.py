@@ -292,6 +292,7 @@ def download_assembly_instructions(request):
                         enumerate(fragment.primers.all(), start=1)):
                     new_fragment_line = {'Index': index if is_first else '',
                                          'Assembly ID': current_plasmid.get_aliases_as_string() if is_first else '',
+                                         'Part Name': current_plasmid.description(),
                                          'Assembly Method': fragment.method if is_first else '',
                                          'Oligo Name': oligo.index,
                                          'Oligo': oligo.sequence,
@@ -307,6 +308,7 @@ def download_assembly_instructions(request):
                     for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligos'], start=1)):
                         new_fragment_line = {'Index': result_index if is_first else '',
                                              'Assembly ID': result['assembly_id'] if is_first else '',
+                                             'Part Name': result['assembly_instructions'].partName,
                                              'Assembly Method': fragment['assembly_method'] if is_first else '',
                                              'Oligo Name': oligo_index,
                                              'Oligo': oligo,
@@ -825,7 +827,7 @@ def assembly_result(request):
             if assembly_result['success']:
                 # Pull new_plasmid from assembly_result
                 new_plasmid = assembly_result['new_plasmid']
-                new_plasmid.save()  # Save other aspects of the output?
+                #pdb.set_trace()
 
                 # Pull GGPart attributes
                 assembly_instructions = assembly_result['assembly_instructions']
@@ -834,6 +836,23 @@ def assembly_result(request):
                 rightPartType = assembly_instructions.rightPartType
                 partSequence = assembly_instructions.partSeq
                 userDescription = assembly_instructions.partName  # lol.
+
+                # Export the plasmid to Benchling via API
+                benchling_request = postPartBenchling(new_plasmid.sequence, new_plasmid.description, leftPartType)
+                #TODO: catch a JSON400 error if the part already exists
+
+                #Save Benchling ID to plasmid
+                new_plasmid.benchlingID = benchling_request['id']
+                new_plasmid.save()
+
+                partAlias = benchling_request['entityRegistryId'].strip()
+                if partAlias and partAlias.strip() != "":
+                    plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+                    plasmid_alias.save()
+
+                # Update assembly results to reflect OPL Aliases
+                assembly_results[index]['assembly_id'] = partAlias
+                #new_plasmid.save()  # Save other aspects of the output?
 
                 # Pull features from assembly_product and associate with new_plasmid
                 new_plasmid_features = []
@@ -872,16 +891,6 @@ def assembly_result(request):
                                                type=part_featuretype)
                         part_feature.save()
                         new_plasmid.feature.add(part_feature)
-
-                # Export the plasmid to Benchling via API
-                benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
-                partAlias = benchling_request['entityRegistryId'].strip()
-                if partAlias and partAlias.strip() != "":
-                    plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
-                    plasmid_alias.save()
-
-                # Update assembly results to reflect OPL Aliases
-                assembly_results[index]['assembly_id'] = partAlias
 
                 # Push fragments and primers to the database
                 for fragment_index, fragment in enumerate(assembly_results[index]['fragments'], start=1):

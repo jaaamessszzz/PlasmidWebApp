@@ -85,7 +85,7 @@
         <form method="post" action="/database/assembly_results/" style="display: inline-block">
             {% csrf_token %}
             <input type="hidden" id="commitParts" name="commitParts" value="1">
-            <button class="partButton BlockButton" type="submit" id="commitPartsButton" onclick="this.disabled=true;this.innerText='Committing…';">
+            <button class="partButton BlockButton" type="submit" id="commitPartsButton">
                 Commit Parts to the Database!
             </button>
         {% endif %}
