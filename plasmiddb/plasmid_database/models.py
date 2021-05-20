@@ -20,7 +20,7 @@ class Project(models.Model):
     initials = models.CharField(max_length=10, unique=True)
     description = models.TextField()
     members = models.ManyToManyField(User)
-    
+
 class Feature(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sequence = models.TextField()
@@ -80,6 +80,7 @@ class Plasmid(models.Model):
     projectindex = models.IntegerField()
     sequence = models.TextField()
     description = models.TextField()
+    benchlingID = models.TextField(unique=True)
     created = models.DateTimeField(auto_now_add=True)
     feature = models.ManyToManyField(Feature)
     attribute = models.ManyToManyField(Attribute)
@@ -185,6 +186,3 @@ class PlasmidPartFragment(models.Model):
     method = models.TextField()
     primers = models.ManyToManyField(PlasmidPartPrimer)
     template = models.TextField()
-
-
-

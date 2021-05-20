@@ -898,7 +898,6 @@ def assembly_result(request):
                         fragment_primer.save()
                         part_fragment.primers.add(fragment_primer)
         request.session['committed'] = True
-
     request.session['results'] = assembly_results
     return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results,
                                                                                 'assembly_type': assembly_type,
