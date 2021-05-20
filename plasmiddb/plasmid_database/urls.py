@@ -26,7 +26,7 @@ urlpatterns += [path(r'add/', views.add_plasmids, name='add-plasmids'),
                 path(r'standard_assembly/', views.standard_assembly, name='standard-assembly'),
                 path(r'part_assembly/', views.part_assembly, name='part-assembly'),
                 path(r'assembly_results/', views.assembly_result, name='assembly-results'),
-                #path(r'download_part_instructions/', views.download_part_instructions, name='download-part-instructions'), #don't need this button due to autodownload?
+                # path(r'download_part_instructions/', views.download_part_instructions, name='download-part-instructions'),
                 # path(r'perform_assemblies/', views.perform_assemblies, name='perform-assemblies'),
                 ]
 

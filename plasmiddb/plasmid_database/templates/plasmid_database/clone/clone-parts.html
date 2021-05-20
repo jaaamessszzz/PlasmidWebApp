@@ -42,7 +42,9 @@
             {# <label for="BsmBI"> BsmBI</label>#}
             <br>
             <br>
-            <button class="partButton BlockButton" type="submit" id="submitParts">Create Parts!</button>
+            <button class="partButton BlockButton" type="submit" id="submitParts" onclick="this.disabled=true;this.innerText='Assembling…';">
+                Create Parts!
+            </button>
         </form>
 
         <div id="partErrors">

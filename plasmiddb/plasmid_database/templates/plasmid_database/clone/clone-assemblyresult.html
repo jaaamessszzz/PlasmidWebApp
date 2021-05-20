@@ -40,38 +40,44 @@
                     <td></td> {# Do cassettes need notes? #}
                 {% endif %}
             </tr>
-            {% for fragment_dict in result_dict.fragments %}
-                <tr style="border-bottom: 1px solid black;">
-                    <td colspan="3"></td>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ fragment_dict.assembly_method }}</td>
-                    {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
-                        <td>
-                            {% for primer in fragment_dict.oligos %}
-                            <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
-                            {%  endfor %}
-                        </td>
-                    {% else %}
-                        {% if fragment_dict.primer_F != "" %}
-                        <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+            {% if result_dict.success %}
+                {% for fragment_dict in result_dict.fragments %}
+                    <tr style="border-bottom: 1px solid black;">
+                        <td colspan="3"></td>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ fragment_dict.assembly_method }}</td>
+                        {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
+                            <td>
+                                {% for primer in fragment_dict.oligos %}
+                                <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
+                                {%  endfor %}
+                            </td>
                         {% else %}
-                        <td></td>
+                            {% if fragment_dict.primer_F != "" %}
+                            <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                    <td>{{ fragment_dict.template }}</td>
-                    <td>{{ fragment_dict.product }}</td>
-                </tr>
-            {%  endfor %}
+                        <td>{{ fragment_dict.template }}</td>
+                        <td>{{ fragment_dict.product }}</td>
+                    </tr>
+                {%  endfor %}
+            {% else %}
+                <td colspan="8">{{ result_dict.error }}</td>
+            {% endif %}
         {% endfor %}
 
     </table>
 
     <div class="PartInstructions">
         {# Download part instructions #}
-        <form method="post" action="download_part_instructions/" style="display: inline-block">
+        <form method="post" action="/database/download_assembly_instructions/" style="display: inline-block">
           {% csrf_token %}
-          <input type="hidden" name="DownloadPartInstructions" id="DownloadPartInstructions">
-          <button type="submit" id="DownloadPartInstructionsButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Part Instructions</button>
+          <input type="hidden" name="DownloadAssemblyInstructions" id="DownloadAssemblyInstructions">
+          <button type="submit" id="DownloadAssemblyInstructionsButton" class="BlockButton" download>
+              <i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Part Instructions
+          </button>
         </form>
 
         {# Commit part assemblies #}
@@ -79,7 +85,9 @@
         <form method="post" action="/database/assembly_results/" style="display: inline-block">
             {% csrf_token %}
             <input type="hidden" id="commitParts" name="commitParts" value="1">
-            <button class="partButton BlockButton" type="submit" id="commitPartsButton">Commit Parts to the Database!</button>
+            <button class="partButton BlockButton" type="submit" id="commitPartsButton" onclick="this.disabled=true;this.innerText='Committing…';">
+                Commit Parts to the Database!
+            </button>
         {% endif %}
         </form>
 

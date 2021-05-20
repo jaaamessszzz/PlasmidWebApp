@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from pprint import pprint
 from itertools import chain
+import more_itertools
 import pandas as pd
 import csv
 import sys
@@ -31,7 +32,8 @@ from dnassembly.utils.benchlingAPI import *
 from dnassembly.reactions.PartDesigner.partDesigner import GGpart
 from dnassembly.reactions.moclo import MoCloPartFromSequence
 
-from .models import Plasmid, User, Project, Feature, Attribute, FeatureType, PlasmidAssembly, PlasmidAlias, PlasmidFile
+from .models import Plasmid, User, Project, Feature, Attribute, FeatureType, PlasmidAssembly, PlasmidAlias, \
+    PlasmidFile, PlasmidPartPrimer, PlasmidPartFragment
 from .forms import SignUpForm, PlasmidFileForm
 
 Locations = apps.get_model('locations', 'Location')
@@ -271,112 +273,71 @@ def get_assembly_instructions(request):
 
 @login_required
 def download_assembly_instructions(request):
-    plasmid_indicies_str = json.loads(request.POST['DownloadAssemblyInstructions'])
-    plasmid_indicies = [int(index) for index in plasmid_indicies_str]
-    plasmid_records = Plasmid.objects.filter(id__in=plasmid_indicies)
+    plasmid_indicies_str = request.POST.get('DownloadAssemblyInstructions')
+    plasmid_results = request.session['results']
+    instructions_list = list()
 
-    zip_subdir = 'AssemblyInstructions'
+    print('DownloadAssemblyInstructions', plasmid_indicies_str)
+    print('results', plasmid_results)
+
+    # todo: generalize to cassette assemblies
+    # Generate assembly instructions from database
+    if plasmid_indicies_str:
+        plasmid_indicies = json.loads(plasmid_indicies_str)
+        for index, plasmid_pk in enumerate(plasmid_indicies, start=1):
+            plasmid_index = int(plasmid_pk)
+            current_plasmid = Plasmid.objects.get(id=plasmid_index)
+            for fragment_index, fragment in enumerate(current_plasmid.fragments.all(), start=1):
+                for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(
+                        enumerate(fragment.primers.all(), start=1)):
+                    new_fragment_line = {'Index': index if is_first else '',
+                                         'Assembly ID': current_plasmid.get_aliases_as_string() if is_first else '',
+                                         'Assembly Method': fragment.method if is_first else '',
+                                         'Oligo Name': oligo.index,
+                                         'Oligo': oligo.sequence,
+                                         'Template': fragment.template if is_first else '',
+                                         'Product': fragment.sequence if is_first else '',
+                                         }
+                    instructions_list.append(new_fragment_line)
+    # Generate assembly instructions from request contents
+    elif plasmid_results:
+        for result_index, result in plasmid_results.items():
+            if result['success']:
+                for fragment_index, fragment in enumerate(result['fragments'], start=1):
+                    for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligos'], start=1)):
+                        new_fragment_line = {'Index': result_index if is_first else '',
+                                             'Assembly ID': result['assembly_id'] if is_first else '',
+                                             'Assembly Method': fragment['assembly_method'] if is_first else '',
+                                             'Oligo Name': oligo_index,
+                                             'Oligo': oligo,
+                                             'Template': fragment['template'] if is_first else '',
+                                             'Product': fragment['product'] if is_first else '',
+                                             }
+                        instructions_list.append(new_fragment_line)
+
+    # Raise Error
+    else:
+        raise Exception("How did you get here?")
+
+    assembly_df = pd.DataFrame(instructions_list)
+    # assembly_df = assembly_df[['Index', 'Assembly ID', 'Assembly Method', 'Template', 'Oligo Name', 'Oligo', 'Product']]
+
+    # Write to ZIP
     zip_filename = 'AssemblyInstructions.zip'
-
     response = HttpResponse(content_type='application/zip')
     zip_file = zipfile.ZipFile(response, 'w')
+    zip_path = 'AssemblyInstructions.csv'
 
-    part_object = Attribute.objects.get(name='Part')
-    part_children_qs = Attribute.objects.filter(subcategory=part_object.id)
-
-    cassette_object = Attribute.objects.get(name='Cassette')
-    cassette_children_qs = Attribute.objects.filter(subcategory=cassette_object.id)
-
-    # Separate into Part plasmids and others
-    cassette_list = []
-    part_list = []
-
-    for plasmid in plasmid_records:
-        if any([attr in part_children_qs for attr in plasmid.attribute.all()]):
-            if any([attr in cassette_children_qs for attr in plasmid.attribute.all()]):
-                cassette_list.append(plasmid)
-            else:
-                part_list.append(plasmid)
-        else:
-            cassette_list.append(plasmid)
-
-    # Get part inserts and primers
-    part_dict_list = []
-    for plasmid in part_list:
-        part_dict = {'plasmid': plasmid}
-        part_match = re.search('(?:GAAGAC)(.*)(?:GTCTTC)', plasmid.sequence)
-        if part_match is not None:
-            match_sequence = part_match.group(0)
-            moclo_parts = annotate_moclo(plasmid.sequence)
-            leftPartType = moclo_parts[0].split()[-1]
-            rightPartType = moclo_parts[-1].split()[-1]
-            user_defined_part, primers = MoCloPartFromSequence(match_sequence[11:-11], leftPartType, rightPartType,
-                                                               standardize=False, create_instructions=True)
-            part_dict['insert'] = user_defined_part.sequence
-            part_dict['primer_F'] = primers[0]
-            part_dict['primer_R'] = primers[1]
-        part_dict_list.append(part_dict)
-
-    # Get unique plasmids for cassette assembly
-    all_cassette_assembly_plasmids = []
-    for plasmid in cassette_list:
-        assembly_plasmids = [a.input.id for a in plasmid.plasmidproduct.all()]
-        all_cassette_assembly_plasmids += assembly_plasmids
-
-    unique_plasmid_ids = set(all_cassette_assembly_plasmids)
-    unique_plasmids = Plasmid.objects.filter(id__in=unique_plasmid_ids)
-
-    #import pdb; pdb.set_trace()
-
-    #context = {'part_list': part_dict_list, 'cassette_list': cassette_list, 'unique_plasmids': unique_plasmids}
-    #return render(request, 'plasmid_database/clone/clone-assemblyinstructions.html', context)
-
-    # fill this in to zip up the context then download
-
-    #Create a DataFrame containing unique_plasmids
-    AssemblyParts = pd.DataFrame(columns = ['Part','Location','Description'])
-
-    for plasmid in unique_plasmids:
-        unique_plasmid_info = pd.Series(index = ['Part','Location','Description'])
-        unique_plasmid_info['Part'] = (plasmid.get_aliases_as_string())
-        unique_plasmid_info['Location'] = (plasmid.get_locations_as_string())
-        unique_plasmid_info['Description'] = (plasmid.description)
-        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index = True)
-        #TO-DO: look into how locations are stored
-
-    #Create a DataFrame containing the assembly plasmids and their components
-    Components = pd.DataFrame(columns = ['Assembly','Components','Resistance'])
-
-    for plasmid in cassette_list:
-        cassette_info = pd.Series(index = ['Assembly','Components','Resistance'])
-        cassette_info['Assembly'] = (plasmid.get_aliases_as_string())
-        cassette_info['Components'] = (plasmid.get_assembly_plasmids_as_string())
-        Components = Components.append(cassette_info, ignore_index = True)
-
-    '''
-    for plasmid in plasmid_records:
-        # Write plasmid genbank to StringIO
-        plasmid_name = f'{plasmid.get_standard_id()}.gb'
-        plasmid_genbank = plasmid.as_dnassembly()
-        plasmid_io = io.StringIO()
-        dnassembly.io.write_genbank(plasmid_genbank, output=plasmid_io, to_stream=True)
-        plasmid_io.seek(0)
-        '''
-
-    # Add to ZIP
-
-    #zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
-    AssemblyParts.to_csv('AssemblyParts.csv')
-    zip_file.write('AssemblyParts.csv')
-    #import pdb; pdb.set_trace()
-    #zip_path = os.path.join(zip_subdir, 'Components.csv')
-    Components.to_csv('Components.csv')
-    zip_file.write('Components.csv')
-
+    assembly_io = io.StringIO()
+    assembly_df.to_csv(assembly_io, index=False)
+    assembly_io.seek(0)
+    zip_file.writestr(zip_path, assembly_io.read())
     zip_file.close()
+
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
     response['Content-Type'] = 'application/zip'
     return response
+
 
 @login_required
 def update_status(request):
@@ -734,7 +695,7 @@ def standard_assembly(request):
 @login_required
 def part_assembly(request):
     """
-    Performs MoClo assembly specifically for parts and pushes to database
+    Performs MoClo assembly specifically for parts
     :return:
     """
 
@@ -743,8 +704,6 @@ def part_assembly(request):
     entry_vector_id = int(post_data.get('entryVectorID'))
     dropin_vector = Plasmid.objects.get(id=entry_vector_id) #add this as an optional column in the POST?
     part_dict = post_data.get('parts')
-    #addStandard = post_data.get('addStandard') #remove this button
-    reaction_enzyme = BsmBI
     reaction_project = Project.objects.get(id=int(post_data.get('projectID')))
     possibleTemplates = post_data.get('possibleTemplates')
 
@@ -795,26 +754,44 @@ def part_assembly(request):
             # Circularly permute plasmid so sequence always starts with BbsI/BsmBI site if they exist
             new_plasmid = circularly_permute_plasmid(new_plasmid)
 
-            # Pull Assembly instructions from GGPart and push to database
-            # todo: push fragment and primer data to database
-            assembly_ids = [f'{dropin_vector.get_standard_id()}']
-            assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
-            assembly_results[index]['fragments'] = list()
-
-            for fragment in assembly_instructions.fragments:
-                fragment_dict = dict()
-                fragment_dict['assembly_method'] = fragment.method
-                fragment_dict['primer_F'] = fragment.primers[0] if len(fragment.primers[0]) > 0 else ''
-                fragment_dict['primer_R'] = fragment.primers[1] if len(fragment.primers[0]) > 0 else ''
-                fragment_dict['oligos'] = fragment.primers
-                fragment_dict['template'] = fragment.template
-                fragment_dict['product'] = fragment.product
-                assembly_results[index]['fragments'].append(fragment_dict)
-
+            # Raise error when committing parts to benchling that already exist
+            OPL_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
+            pprint(OPL_exists)
+            name_exists = getBenchling('dna-sequences?name=', new_plasmid.description)
+            pprint(name_exists)
             assembly_results[index]['success'] = True
-            assembly_results[index]['assembly_instructions'] = assembly_instructions
-            assembly_results[index]['new_plasmid'] = new_plasmid
-            assembly_results[index]['assembly_id'] = f''  # Populated with OPL if/when plasmid is commited to db
+            assembly_results[index]['error'] = ''
+
+            if len(OPL_exists['dnaSequences']) > 0:
+                print('Assembled plasmid sequence already exists in database!')
+                assembly_results[index]['success'] = False
+                existing_plasmids = ','.join([entry.get('entityRegistryId', 'Unnamed') for entry in OPL_exists['dnaSequences']])
+                assembly_results[index]['error'] += f'This assembly sequence already exists in the database as {existing_plasmids}!\n'
+            if len(name_exists['dnaSequences']) > 0:
+                print('Assembled plasmid name already exists in database!')
+                assembly_results[index]['success'] = False
+                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in OPL_exists['dnaSequences']])
+                assembly_results[index]['error'] += f'This assembly name already exists in the database as {existing_plasmids}!\n'
+            if assembly_results[index]['success']:
+                # Pull Assembly instructions from GGPart
+                assembly_ids = [f'{dropin_vector.get_standard_id()}']
+                assembly_results[index]['reaction_plasmids'] = ', '.join(assembly_ids)
+                assembly_results[index]['fragments'] = list()
+
+                for fragment in assembly_instructions.fragments:
+                    fragment_dict = dict()
+                    fragment_dict['assembly_method'] = fragment.method
+                    fragment_dict['primer_F'] = fragment.primers[0] if len(fragment.primers[0]) > 0 else ''
+                    fragment_dict['primer_R'] = fragment.primers[1] if len(fragment.primers[0]) > 0 else ''
+                    fragment_dict['oligos'] = fragment.primers
+                    fragment_dict['template'] = fragment.template
+                    fragment_dict['product'] = fragment.product
+                    assembly_results[index]['fragments'].append(fragment_dict)
+
+                assembly_results[index]['success'] = True
+                assembly_results[index]['assembly_instructions'] = assembly_instructions
+                assembly_results[index]['new_plasmid'] = new_plasmid
+                assembly_results[index]['assembly_id'] = f''  # Populated with OPL if/when plasmid is commited to db
 
         except AssemblyException as assembly_error:
             print(assembly_error)
@@ -828,6 +805,7 @@ def part_assembly(request):
 
     request.session['assembly_type'] = 'part'
     request.session['results'] = assembly_results
+    request.session['committed'] = False
 
     return JsonResponse(response_dict, status=200)
 
@@ -835,117 +813,97 @@ def part_assembly(request):
 @login_required
 def assembly_result(request):
     """
-    Report the result of a set of assemblies
+    Report the result of a set of assemblies and commit to the database
     """
     assembly_results = request.session['results']
     assembly_type = request.session['assembly_type']
-    print(assembly_results)
-
     commit_parts = request.POST.get('commitParts', False)
-    print(f'Commit parts: {commit_parts}')
+    committed = request.session.get('committed', False)
 
-    if commit_parts:
+    if commit_parts and not committed:
         for index, assembly_result in assembly_results.items():
+            if assembly_result['success']:
+                # Pull new_plasmid from assembly_result
+                new_plasmid = assembly_result['new_plasmid']
+                new_plasmid.save()  # Save other aspects of the output?
 
-            # Pull new_plasmid from assembly_result
-            new_plasmid = assembly_result['new_plasmid']
-            new_plasmid.save()  # Save other aspects of the output?
+                # Pull GGPart attributes
+                assembly_instructions = assembly_result['assembly_instructions']
+                plasmid_dnassembly = assembly_instructions.assembled_plasmid
+                leftPartType = assembly_instructions.leftPartType
+                rightPartType = assembly_instructions.rightPartType
+                partSequence = assembly_instructions.partSeq
+                userDescription = assembly_instructions.partName  # lol.
 
-            # Pull GGPart attributes
-            assembly_instructions = assembly_result['assembly_instructions']
-            plasmid_dnassembly = assembly_instructions.assembled_plasmid
-            leftPartType = assembly_instructions.leftPartType
-            rightPartType = assembly_instructions.rightPartType
-            partSequence = assembly_instructions.partSeq
-            userDescription = assembly_instructions.partName  # lol.
+                # Pull features from assembly_product and associate with new_plasmid
+                new_plasmid_features = []
+                for feature in plasmid_dnassembly.features:
+                    new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
+                    new_plasmid.feature.add(*new_plasmid_features)
 
-            # Pull features from assembly_product and associate with new_plasmid
-            new_plasmid_features = []
-            for feature in plasmid_dnassembly.features:
-                new_plasmid_features.append(Feature.objects.get(sequence=feature.sequence))
-                new_plasmid.feature.add(*new_plasmid_features)
+                # Annotate part plasmid, if applicable
+                print('Annotating Parts...')
+                moclo_parts = annotate_moclo(new_plasmid.sequence)
+                if moclo_parts:
+                    attribute_list = list()
+                    for part in moclo_parts:
+                        current_attribute = Attribute.objects.filter(name=f'Part {part}')
+                        for attr in current_attribute:
+                            attribute_list.append(attr)
+                    new_plasmid.attribute.add(*attribute_list)
 
-            # Annotate part plasmid, if applicable
-            print('Annotating Parts...')
-            moclo_parts = annotate_moclo(new_plasmid.sequence)
-            if moclo_parts:
-                attribute_list = list()
-                for part in moclo_parts:
-                    current_attribute = Attribute.objects.filter(name=f'Part {part}')
-                    for attr in current_attribute:
-                        attribute_list.append(attr)
-                new_plasmid.attribute.add(*attribute_list)
+                # Annotate cassette plasmid, if applicable
+                moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
+                if moclo_cassette:
+                    attribute_list = list()
+                    for cassette in moclo_cassette:
+                        current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
+                        for attr in current_attribute:
+                            attribute_list.append(attr)
+                    new_plasmid.attribute.add(*attribute_list)
 
-            # Annotate cassette plasmid, if applicable
-            moclo_cassette = annotate_moclo(new_plasmid.sequence, annotate='cassette')
-            if moclo_cassette:
-                attribute_list = list()
-                for cassette in moclo_cassette:
-                    current_attribute = Attribute.objects.filter(name=f'Con {cassette}')
-                    for attr in current_attribute:
-                        attribute_list.append(attr)
-                new_plasmid.attribute.add(*attribute_list)
+                # Add partSequence as Feature for part 2/3/4
+                # todo: identify features/attributes on a part assembly and push to Benchling (reference benchling API)
+                if all([leftPartType[0] in ('2', '3', '4'), rightPartType[0] in ('2', '3', '4'),
+                        leftPartType[0] == rightPartType[0]]):
+                    if len(Feature.objects.filter(sequence=partSequence)) == 0:
+                        part_featuretype = FeatureType.objects.get(name='Part')
+                        part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user,
+                                               type=part_featuretype)
+                        part_feature.save()
+                        new_plasmid.feature.add(part_feature)
 
-            # Add partSequence as Feature for part 2/3/4
-            if all([leftPartType[0] in ('2', '3', '4'), rightPartType[0] in ('2', '3', '4'),
-                    leftPartType[0] == rightPartType[0]]):
-                if len(Feature.objects.filter(sequence=partSequence)) == 0:
-                    part_featuretype = FeatureType.objects.get(name='Part')
-                    part_feature = Feature(name=userDescription, sequence=partSequence, creator=request.user,
-                                           type=part_featuretype)
-                    part_feature.save()
-                    new_plasmid.feature.add(part_feature)
+                # Export the plasmid to Benchling via API
+                benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
+                partAlias = benchling_request['entityRegistryId'].strip()
+                if partAlias and partAlias.strip() != "":
+                    plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
+                    plasmid_alias.save()
 
-            # Export the plasmid to Benchling via API
-            benchling_request = postSeqBenchling(new_plasmid.sequence, new_plasmid.description, 'Kanamycin')
-            partAlias = benchling_request['entityRegistryId'].strip()
-            if partAlias and partAlias.strip() != "":
-                plasmid_alias = PlasmidAlias(alias=partAlias, plasmid=new_plasmid)
-                plasmid_alias.save()
+                # Update assembly results to reflect OPL Aliases
+                assembly_results[index]['assembly_id'] = partAlias
 
-            # todo: Update assembly results to reflect OPL Aliases
-            assembly_results[index]['assembly_id'] = partAlias
+                # Push fragments and primers to the database
+                for fragment_index, fragment in enumerate(assembly_results[index]['fragments'], start=1):
+                    part_fragment = PlasmidPartFragment(plasmid=new_plasmid,
+                                                        index=fragment_index,
+                                                        sequence=fragment['product'],
+                                                        method=fragment['assembly_method'],
+                                                        template=fragment['template'])
+                    part_fragment.save()
 
+                    for primer_index, primer in enumerate(fragment['oligos'], start=1):
+                        # todo: implement duplicate primer check, return pk if already exists
+                        fragment_primer = PlasmidPartPrimer(sequence=primer)
+                        fragment_primer.save()
+                        part_fragment.primers.add(fragment_primer)
+        request.session['committed'] = True
+
+    request.session['results'] = assembly_results
     return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results,
                                                                                 'assembly_type': assembly_type,
-                                                                                'committed': commit_parts
+                                                                                'committed': request.session.get('committed', False)
                                                                                 })
-
-@login_required
-def get_assembly_zip(request):
-    # Format data for download into a .zip file
-    zip_subdir = 'AssemblyInstructions'
-    zip_filename = 'AssemblyInstructions.zip'
-
-    response = HttpResponse(content_type='application/zip')
-    zip_file = zipfile.ZipFile(response, 'w')
-
-    # fill this in to zip up the context then download
-
-    # Fix this part to
-    # Create a DataFrame containing unique_plasmids
-    AssemblyParts = pd.DataFrame(columns=['Part', 'Location', 'Description'])
-    # unique_primers =
-    # unique_fragments = #Start working from here
-
-    for plasmid in assembly_results:
-        unique_plasmid_info = pd.Series(index=['Part', 'Location', 'Description'])
-        unique_plasmid_info['Part'] = (plasmid.get_aliases_as_string())
-        unique_plasmid_info['Location'] = (plasmid.get_locations_as_string())
-        unique_plasmid_info['Description'] = (plasmid.description)
-        AssemblyParts = AssemblyParts.append(unique_plasmid_info, ignore_index=True)
-        # TO-DO: look into how locations are stored
-
-    # Add to ZIP
-
-    # zip_path = os.path.join(zip_subdir, 'AssemblyParts.csv')
-    AssemblyParts.to_csv('AssemblyParts.csv')
-    zip_file.write('AssemblyParts.csv')
-
-    zip_file.close()
-    response['Content-Disposition'] = f'attachment;filename={zip_filename}'
-    response['Content-Type'] = 'application/zip'
-    return response
 
 # --- Plasmid Features and Related Views --- #
 
