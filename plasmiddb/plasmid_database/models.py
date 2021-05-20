@@ -174,9 +174,13 @@ class PlasmidFile(models.Model):
 class PlasmidPartPrimer(models.Model):
     sequence = models.TextField()
 
+    def get_name(self):
+        return f'o{self.pk:0>5}'
+
 
 class PlasmidPartFragment(models.Model):
-    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE)
+    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='fragments')
+    index = models.IntegerField()
     sequence = models.TextField()
     method = models.TextField()
     primers = models.ManyToManyField(PlasmidPartPrimer)
