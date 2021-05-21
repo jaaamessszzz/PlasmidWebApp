@@ -48,13 +48,27 @@
                         <td>{{ fragment_dict.assembly_method }}</td>
                         {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
                             <td>
-                                {% for primer in fragment_dict.oligos %}
-                                <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
-                                {%  endfor %}
+                                {% if fragment_dict.oligo_objects %}
+                                    {% for primer in fragment_dict.oligo_objects %}
+                                    <b>{{ primer.get_name }}: </b>{{primer.sequence}}<br>
+                                    {%  endfor %}
+                                {% else %}
+                                    {% for primer in fragment_dict.oligos %}
+                                    <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
+                                    {% endfor %}
+                                {% endif %}
                             </td>
                         {% else %}
                             {% if fragment_dict.primer_F != "" %}
-                            <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                                {% if fragment_dict.oligo_objects %}
+                                    <td>
+                                        <b>{{oligo_objects.0.get_name}}</b>{{oligo_objects.0.sequence}}
+                                        <br>
+                                        <b>{{oligo_objects.1.get_name}}</b>{{oligo_objects.1.sequence}}
+                                    </td>
+                                {% else %}
+                                    <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                                {% endif %}
                             {% else %}
                             <td></td>
                             {% endif %}
@@ -82,7 +96,7 @@
 
         {# Commit part assemblies #}
         {% if not committed %}
-        <form method="post" action="/database/assembly_results/" style="display: inline-block">
+        <form method="post" action="/database/assembly_results/" style="display: inline-block" id="commitForm">
             {% csrf_token %}
             <input type="hidden" id="commitParts" name="commitParts" value="1">
             <button class="partButton BlockButton" type="submit" id="commitPartsButton">
@@ -107,9 +121,12 @@
 </script>
 
 {# Javascript #}
-
+<script type="text/javascript">
+</script>
 {# CSS #}
+{% endblock %}
+
+{% block css %}
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/clone-assemblyresult.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
-
 {% endblock %}

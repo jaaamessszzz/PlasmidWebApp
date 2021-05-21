@@ -277,9 +277,6 @@ def download_assembly_instructions(request):
     plasmid_results = request.session['results']
     instructions_list = list()
 
-    print('DownloadAssemblyInstructions', plasmid_indicies_str)
-    print('results', plasmid_results)
-
     # todo: generalize to cassette assemblies
     # Generate assembly instructions from database
     if plasmid_indicies_str:
@@ -287,35 +284,54 @@ def download_assembly_instructions(request):
         for index, plasmid_pk in enumerate(plasmid_indicies, start=1):
             plasmid_index = int(plasmid_pk)
             current_plasmid = Plasmid.objects.get(id=plasmid_index)
+            first_line = True
             for fragment_index, fragment in enumerate(current_plasmid.fragments.all(), start=1):
                 for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(
                         enumerate(fragment.primers.all(), start=1)):
-                    new_fragment_line = {'Index': index if is_first else '',
-                                         'Assembly ID': current_plasmid.get_aliases_as_string() if is_first else '',
-                                         'Part Name': current_plasmid.description(),
+                    new_fragment_line = {'Index': index if first_line else '',
+                                         'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
+                                         'Part Name': current_plasmid.description if first_line else '',
                                          'Assembly Method': fragment.method if is_first else '',
-                                         'Oligo Name': oligo.index,
+                                         'Oligo Name': oligo.get_name(),
                                          'Oligo': oligo.sequence,
                                          'Template': fragment.template if is_first else '',
                                          'Product': fragment.sequence if is_first else '',
                                          }
                     instructions_list.append(new_fragment_line)
+                    first_line = False
     # Generate assembly instructions from request contents
     elif plasmid_results:
         for result_index, result in plasmid_results.items():
+            first_line = True
             if result['success']:
                 for fragment_index, fragment in enumerate(result['fragments'], start=1):
-                    for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligos'], start=1)):
-                        new_fragment_line = {'Index': result_index if is_first else '',
-                                             'Assembly ID': result['assembly_id'] if is_first else '',
-                                             'Part Name': result['assembly_instructions'].partName,
-                                             'Assembly Method': fragment['assembly_method'] if is_first else '',
-                                             'Oligo Name': oligo_index,
-                                             'Oligo': oligo,
-                                             'Template': fragment['template'] if is_first else '',
-                                             'Product': fragment['product'] if is_first else '',
-                                             }
-                        instructions_list.append(new_fragment_line)
+                    # todo: streamline this...
+                    if fragment.get('oligo_objects') is not None:
+                        for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligo_objects'], start=1)):
+                            new_fragment_line = {'Index': result_index if first_line else '',
+                                                 'Assembly ID': result['assembly_id'] if first_line else '',
+                                                 'Part Name': result['assembly_instructions'].partName if first_line else '',
+                                                 'Assembly Method': fragment['assembly_method'] if is_first else '',
+                                                 'Oligo Name': oligo.get_name(),
+                                                 'Oligo': oligo.sequence,
+                                                 'Template': fragment['template'] if is_first else '',
+                                                 'Product': fragment['product'] if is_first else '',
+                                                 }
+                            instructions_list.append(new_fragment_line)
+                            first_line = False
+                    else:
+                        for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligos'], start=1)):
+                            new_fragment_line = {'Index': result_index if first_line else '',
+                                                 'Assembly ID': result['assembly_id'] if first_line else '',
+                                                 'Part Name': result['assembly_instructions'].partName if first_line else '',
+                                                 'Assembly Method': fragment['assembly_method'] if is_first else '',
+                                                 'Oligo Name': oligo_index,
+                                                 'Oligo': oligo,
+                                                 'Template': fragment['template'] if is_first else '',
+                                                 'Product': fragment['product'] if is_first else '',
+                                                 }
+                            instructions_list.append(new_fragment_line)
+                            first_line = False
 
     # Raise Error
     else:
@@ -328,12 +344,28 @@ def download_assembly_instructions(request):
     zip_filename = 'AssemblyInstructions.zip'
     response = HttpResponse(content_type='application/zip')
     zip_file = zipfile.ZipFile(response, 'w')
-    zip_path = 'AssemblyInstructions.csv'
 
     assembly_io = io.StringIO()
     assembly_df.to_csv(assembly_io, index=False)
     assembly_io.seek(0)
-    zip_file.writestr(zip_path, assembly_io.read())
+    zip_file.writestr('AssemblyInstructions.csv', assembly_io.read())
+
+    # Get unique templates
+    unique_template_df = assembly_df.drop_duplicates('Template', keep='first')
+    unique_template_df = unique_template_df[['Template']]
+    template_io = io.StringIO()
+    unique_template_df.to_csv(template_io, index=False)
+    template_io.seek(0)
+    zip_file.writestr('UniqueTemplates.csv', template_io.read())
+    
+    # Get unique primers
+    unique_primer_df = assembly_df.drop_duplicates('Oligo', keep='first')
+    unique_primer_df = unique_primer_df[['Oligo Name', 'Oligo']]
+    primer_io = io.StringIO()
+    unique_primer_df.to_csv(primer_io, index=False)
+    primer_io.seek(0)
+    zip_file.writestr('UniquePrimers.csv', primer_io.read())
+    
     zip_file.close()
 
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
@@ -758,11 +790,11 @@ def part_assembly(request):
 
             # Raise error when committing parts to benchling that already exist
             OPL_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
-            pprint(OPL_exists)
             name_exists = getBenchling('dna-sequences?name=', new_plasmid.description)
-            pprint(name_exists)
             assembly_results[index]['success'] = True
             assembly_results[index]['error'] = ''
+
+            pprint(name_exists)
 
             if len(OPL_exists['dnaSequences']) > 0:
                 print('Assembled plasmid sequence already exists in database!')
@@ -822,12 +854,14 @@ def assembly_result(request):
     commit_parts = request.POST.get('commitParts', False)
     committed = request.session.get('committed', False)
 
+    print(commit_parts)
+    print(committed)
+
     if commit_parts and not committed:
         for index, assembly_result in assembly_results.items():
             if assembly_result['success']:
                 # Pull new_plasmid from assembly_result
                 new_plasmid = assembly_result['new_plasmid']
-                #pdb.set_trace()
 
                 # Pull GGPart attributes
                 assembly_instructions = assembly_result['assembly_instructions']
@@ -852,7 +886,6 @@ def assembly_result(request):
 
                 # Update assembly results to reflect OPL Aliases
                 assembly_results[index]['assembly_id'] = partAlias
-                #new_plasmid.save()  # Save other aspects of the output?
 
                 # Pull features from assembly_product and associate with new_plasmid
                 new_plasmid_features = []
@@ -893,7 +926,9 @@ def assembly_result(request):
                         new_plasmid.feature.add(part_feature)
 
                 # Push fragments and primers to the database
+                updated_fragments = []
                 for fragment_index, fragment in enumerate(assembly_results[index]['fragments'], start=1):
+                    oligo_objects = list()
                     part_fragment = PlasmidPartFragment(plasmid=new_plasmid,
                                                         index=fragment_index,
                                                         sequence=fragment['product'],
@@ -902,10 +937,20 @@ def assembly_result(request):
                     part_fragment.save()
 
                     for primer_index, primer in enumerate(fragment['oligos'], start=1):
-                        # todo: implement duplicate primer check, return pk if already exists
-                        fragment_primer = PlasmidPartPrimer(sequence=primer)
-                        fragment_primer.save()
+                        if primer.strip() == '':  # Skip gBlock "primers"
+                            continue
+                        existing_primer = PlasmidPartPrimer.objects.filter(sequence=primer)
+                        if existing_primer.count() > 0:
+                            fragment_primer = existing_primer[0]
+                        else:
+                            fragment_primer = PlasmidPartPrimer(sequence=primer)
+                            fragment_primer.save()
                         part_fragment.primers.add(fragment_primer)
+                        oligo_objects.append(fragment_primer)
+
+                    fragment['oligo_objects'] = oligo_objects
+                    updated_fragments.append(fragment)
+
         request.session['committed'] = True
     request.session['results'] = assembly_results
     return render(request, 'plasmid_database/clone/clone-assemblyresult.html', {'results': assembly_results,

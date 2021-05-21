@@ -45,6 +45,11 @@ $('#partInstructionsButton').on('click', function(){
 $('#partForm').submit(function(e) {
     e.preventDefault();
 
+    const submitButton = $("#submitParts");
+    submitButton.prop("disabled",true);
+    submitButton.css('background-color', '#F48024');
+    submitButton.html("<i class=\"fas fa-circle-notch fa-spin\"></i>  Assembling Parts...");
+
     let partPostData = {};
     const partEntryField = $('#partEntry');
     let partTextAreaLines = partEntryField.val().split('\n');
@@ -52,7 +57,6 @@ $('#partForm').submit(function(e) {
     const templateEntryField = $('#templateEntry');
     let templateTextAreaLines = templateEntryField.val().split('\n');
 
-    let addStandardized = document.getElementById("addStandard").checked;
     // Get entry vector
     let entryVectorID = document.getElementById('partEntryVectors').value;
     let projectID = document.getElementById('partProject').value;
@@ -191,7 +195,7 @@ $('#partForm').submit(function(e) {
     if (rowErrors.length === 0){
         // Send form, report assembly results
         console.log(partPostData);
-        let postData = {'parts': partPostData, 'addStandard': addStandardized, 'entryVectorID': entryVectorID, 'projectID': projectID, 'possibleTemplates': possibleTemplates};
+        let postData = {'parts': partPostData, 'entryVectorID': entryVectorID, 'projectID': projectID, 'possibleTemplates': possibleTemplates};
         console.log(postData);
 
         $.ajax({
