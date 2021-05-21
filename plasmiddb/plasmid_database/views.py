@@ -357,7 +357,7 @@ def download_assembly_instructions(request):
     unique_template_df.to_csv(template_io, index=False)
     template_io.seek(0)
     zip_file.writestr('UniqueTemplates.csv', template_io.read())
-    
+
     # Get unique primers
     unique_primer_df = assembly_df.drop_duplicates('Oligo', keep='first')
     unique_primer_df = unique_primer_df[['Oligo Name', 'Oligo']]
@@ -365,7 +365,7 @@ def download_assembly_instructions(request):
     unique_primer_df.to_csv(primer_io, index=False)
     primer_io.seek(0)
     zip_file.writestr('UniquePrimers.csv', primer_io.read())
-    
+
     zip_file.close()
 
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
@@ -517,11 +517,32 @@ def add_plasmid_by_file(request):
                                   description=dnassembly_plasmid.description,
                                   project=Project.objects.get(id=plasmid_project),
                                   )
+
+            #Check to see if this plasmid exists in benchling
+            OPL_exists = getBenchling('dna-sequences?bases=', dnassembly_plasmid.sequence)
+
+            if OPL_exists['dnaSequences']:
+                for plasmid in OPL_exists['dnaSequences']:
+                    if plasmid['entityRegistryId']:
+                        OPLAlias = plasmid['entityRegistryId']
+                        ID = plasmid['id']
+                        break #Exit out once a plasmid with a OPL number is located
+                    else:
+                        ID = plasmid['id']
+
+            else:
+                ID = 'null=True'
+
+            new_plasmid.benchlingID = ID #assign ID
+
             # Plasmid needs pk before assigning many-to-many attributes
             new_plasmid.save()
 
             # Add plasmid alias from filename
-            plasmid_alias = PlasmidAlias(alias=plasmid_filename, plasmid=new_plasmid)
+            if OPLAlias:
+                plasmid_alias = PlasmidAlias(alias=OPLAlias, plasmid=new_plasmid)
+            else:
+                plasmid_alias = PlasmidAlias(alias=plasmid_filename, plasmid=new_plasmid)
             plasmid_alias.save()
 
             # Assign features to plasmid
