@@ -80,7 +80,7 @@ class Plasmid(models.Model):
     projectindex = models.IntegerField()
     sequence = models.TextField()
     description = models.TextField()
-    benchlingID = models.TextField(unique=True)
+    benchlingID = models.TextField(unique=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     feature = models.ManyToManyField(Feature)
     attribute = models.ManyToManyField(Attribute)
@@ -173,7 +173,7 @@ class PlasmidFile(models.Model):
 # --- Plasmid Part Assembly Views --- #
 
 class PlasmidPartPrimer(models.Model):
-    sequence = models.TextField()
+    sequence = models.TextField(unique=True)
 
     def get_name(self):
         return f'o{self.pk:0>5}'
