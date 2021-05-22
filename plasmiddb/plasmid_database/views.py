@@ -810,22 +810,22 @@ def part_assembly(request):
             new_plasmid = circularly_permute_plasmid(new_plasmid)
 
             # Raise error when committing parts to benchling that already exist
-            OPL_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
+            plasmid_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
             name_exists = getBenchling('dna-sequences?name=', new_plasmid.description)
             assembly_results[index]['success'] = True
             assembly_results[index]['error'] = ''
 
             pprint(name_exists)
 
-            if len(OPL_exists['dnaSequences']) > 0:
+            if len(plasmid_exists['dnaSequences']) > 0:
                 print('Assembled plasmid sequence already exists in database!')
                 assembly_results[index]['success'] = False
-                existing_plasmids = ','.join([entry.get('entityRegistryId', 'Unnamed') for entry in OPL_exists['dnaSequences']])
+                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in plasmid_exists['dnaSequences']])
                 assembly_results[index]['error'] += f'This assembly sequence already exists in the database as {existing_plasmids}!\n'
             if len(name_exists['dnaSequences']) > 0:
                 print('Assembled plasmid name already exists in database!')
                 assembly_results[index]['success'] = False
-                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in OPL_exists['dnaSequences']])
+                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in name_exists['dnaSequences']])
                 assembly_results[index]['error'] += f'This assembly name already exists in the database as {existing_plasmids}!\n'
             if assembly_results[index]['success']:
                 # Pull Assembly instructions from GGPart
