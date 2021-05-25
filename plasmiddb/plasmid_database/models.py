@@ -185,4 +185,4 @@ class PlasmidPartFragment(models.Model):
     sequence = models.TextField()
     method = models.TextField()
     primers = models.ManyToManyField(PlasmidPartPrimer)
-    template = models.TextField()
+    template = models.TextField(null=True)

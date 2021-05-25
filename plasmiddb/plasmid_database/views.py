@@ -281,24 +281,46 @@ def download_assembly_instructions(request):
     # Generate assembly instructions from database
     if plasmid_indicies_str:
         plasmid_indicies = json.loads(plasmid_indicies_str)
-        for index, plasmid_pk in enumerate(plasmid_indicies, start=1):
-            plasmid_index = int(plasmid_pk)
+
+        # Order Plasmids numerically
+        plasmid_name_list = list()
+        for plasmid_index in plasmid_indicies:
             current_plasmid = Plasmid.objects.get(id=plasmid_index)
+            plasmid_name_list.append((current_plasmid.get_aliases_as_string(), current_plasmid))
+        plasmid_name_list = sorted(plasmid_name_list, key=lambda x: x[0])
+
+        # Generate assembly instructions line by line
+        for index, (_, current_plasmid) in enumerate(plasmid_name_list, start=1):
             first_line = True
             for fragment_index, fragment in enumerate(current_plasmid.fragments.all(), start=1):
-                for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(
-                        enumerate(fragment.primers.all(), start=1)):
+                print('COUNT', fragment.primers.all().count())
+                if fragment.primers.all().count() > 0:
+                    for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(
+                            enumerate(fragment.primers.all(), start=1)):
+                        new_fragment_line = {'Index': index if first_line else '',
+                                             'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
+                                             'Part Name': current_plasmid.description if first_line else '',
+                                             'Assembly Method': fragment.method if is_first else '',
+                                             'Oligo Name': oligo.get_name(),
+                                             'Oligo': oligo.sequence,
+                                             'Template': fragment.template if is_first else '',
+                                             'Product': fragment.sequence if is_first else '',
+                                             }
+                        instructions_list.append(new_fragment_line)
+                        first_line = False
+                else:  # gBlocks should only take one line and have no associated oligos
                     new_fragment_line = {'Index': index if first_line else '',
-                                         'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
-                                         'Part Name': current_plasmid.description if first_line else '',
-                                         'Assembly Method': fragment.method if is_first else '',
-                                         'Oligo Name': oligo.get_name(),
-                                         'Oligo': oligo.sequence,
-                                         'Template': fragment.template if is_first else '',
-                                         'Product': fragment.sequence if is_first else '',
+                                         'Assembly ID': current_plasmid.get_aliases_as_string(),
+                                         'Part Name': current_plasmid.description,
+                                         'Assembly Method': fragment.method,
+                                         'Oligo Name': None,
+                                         'Oligo': None,
+                                         'Template': fragment.template,
+                                         'Product': fragment.sequence,
                                          }
                     instructions_list.append(new_fragment_line)
                     first_line = False
+
     # Generate assembly instructions from request contents
     elif plasmid_results:
         for result_index, result in plasmid_results.items():
@@ -338,7 +360,6 @@ def download_assembly_instructions(request):
         raise Exception("How did you get here?")
 
     assembly_df = pd.DataFrame(instructions_list)
-    # assembly_df = assembly_df[['Index', 'Assembly ID', 'Assembly Method', 'Template', 'Oligo Name', 'Oligo', 'Product']]
 
     # Write to ZIP
     zip_filename = 'AssemblyInstructions.zip'
@@ -352,19 +373,21 @@ def download_assembly_instructions(request):
 
     # Get unique templates
     unique_template_df = assembly_df.drop_duplicates('Template', keep='first')
-    unique_template_df = unique_template_df[['Template']]
-    template_io = io.StringIO()
-    unique_template_df.to_csv(template_io, index=False)
-    template_io.seek(0)
-    zip_file.writestr('UniqueTemplates.csv', template_io.read())
+    if len(unique_template_df) > 0:
+        unique_template_df = unique_template_df[['Template']]
+        template_io = io.StringIO()
+        unique_template_df.to_csv(template_io, index=False)
+        template_io.seek(0)
+        zip_file.writestr('UniqueTemplates.csv', template_io.read())
 
     # Get unique primers
     unique_primer_df = assembly_df.drop_duplicates('Oligo', keep='first')
-    unique_primer_df = unique_primer_df[['Oligo Name', 'Oligo']]
-    primer_io = io.StringIO()
-    unique_primer_df.to_csv(primer_io, index=False)
-    primer_io.seek(0)
-    zip_file.writestr('UniquePrimers.csv', primer_io.read())
+    if len(unique_primer_df) > 0:
+        unique_primer_df = unique_primer_df[['Oligo Name', 'Oligo']]
+        primer_io = io.StringIO()
+        unique_primer_df.to_csv(primer_io, index=False)
+        primer_io.seek(0)
+        zip_file.writestr('UniquePrimers.csv', primer_io.read())
 
     zip_file.close()
 
