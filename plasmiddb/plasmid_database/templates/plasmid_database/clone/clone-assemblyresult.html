@@ -36,47 +36,61 @@
                     <td colspan="5">---</td>
                 {% endif %}
                 {% if assembly_type == 'cassette' %}
-                    <td>{{ result_dict.reaction_plasmids }}</td>
-                    <td></td> {# Do cassettes need notes? #}
+                    <td colspan="2">---</td>
                 {% endif %}
             </tr>
             {% if result_dict.success %}
-                {% for fragment_dict in result_dict.fragments %}
-                    <tr style="border-bottom: 1px solid black;">
-                        <td colspan="3"></td>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ fragment_dict.assembly_method }}</td>
-                        {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
-                            <td>
-                                {% if fragment_dict.oligo_objects %}
-                                    {% for primer in fragment_dict.oligo_objects %}
-                                    <b>{{ primer.get_name }}: </b>{{primer.sequence}}<br>
-                                    {%  endfor %}
-                                {% else %}
-                                    {% for primer in fragment_dict.oligos %}
-                                    <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
-                                    {% endfor %}
-                                {% endif %}
-                            </td>
-                        {% else %}
-                            {% if fragment_dict.primer_F != "" %}
-                                {% if fragment_dict.oligo_objects %}
-                                    <td>
-                                        <b>{{oligo_objects.0.get_name}}</b>{{oligo_objects.0.sequence}}
-                                        <br>
-                                        <b>{{oligo_objects.1.get_name}}</b>{{oligo_objects.1.sequence}}
-                                    </td>
-                                {% else %}
-                                    <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
-                                {% endif %}
+                {% if assembly_type == 'part' %}
+                    {% for fragment_dict in result_dict.fragments %}
+                        <tr style="border-bottom: 1px solid black;">
+                            <td colspan="3"></td>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ fragment_dict.assembly_method }}</td>
+                            {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
+                                <td>
+                                    {% if fragment_dict.oligo_objects %}
+                                        {% for primer in fragment_dict.oligo_objects %}
+                                        <b>{{ primer.get_name }}: </b>{{primer.sequence}}<br>
+                                        {%  endfor %}
+                                    {% else %}
+                                        {% for primer in fragment_dict.oligos %}
+                                        <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
                             {% else %}
-                            <td></td>
+                                {% if fragment_dict.primer_F != "" %}
+                                    {% if fragment_dict.oligo_objects %}
+                                        <td>
+                                            <b>{{oligo_objects.0.get_name}}</b>{{oligo_objects.0.sequence}}
+                                            <br>
+                                            <b>{{oligo_objects.1.get_name}}</b>{{oligo_objects.1.sequence}}
+                                        </td>
+                                    {% else %}
+                                        <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
+                                    {% endif %}
+                                {% else %}
+                                <td></td>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                        <td>{{ fragment_dict.template }}</td>
-                        <td>{{ fragment_dict.product }}</td>
-                    </tr>
-                {%  endfor %}
+                            <td>{{ fragment_dict.template }}</td>
+                            <td>{{ fragment_dict.product }}</td>
+                        </tr>
+                    {%  endfor %}
+                {% endif %}
+                {% if assembly_type == 'cassette' %}
+                    {% for assembly_plasmid in result_dict.assembly_db_plasmids %}
+                        <tr>
+                            <td colspan="3"></td>
+                            <td>{{ assembly_plasmid.get_aliases_as_string }}</td>
+                            {% if forloop.counter == 0 %}
+                                <td>{{ result_dict.new_plasmid.description }}</td>
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                {% endif %}
             {% else %}
                 <td colspan="8">{{ result_dict.error }}</td>
             {% endif %}
@@ -84,29 +98,37 @@
 
     </table>
 
-    <div class="PartInstructions">
-        {# Download part instructions #}
+    <div class="PlasmidAssemblyInstructions">
+        {# Download assembly instructions #}
         <form method="post" action="/database/download_assembly_instructions/" style="display: inline-block">
           {% csrf_token %}
           <input type="hidden" name="DownloadAssemblyInstructions" id="DownloadAssemblyInstructions">
           <button type="submit" id="DownloadAssemblyInstructionsButton" class="BlockButton" download>
-              <i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Part Instructions
+              <i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Assembly Instructions
           </button>
         </form>
 
-        {# Commit part assemblies #}
+        {# Commit assemblies #}
         {% if not committed %}
         <form method="post" action="/database/assembly_results/" style="display: inline-block" id="commitForm">
             {% csrf_token %}
-            <input type="hidden" id="commitParts" name="commitParts" value="1">
-            <button class="partButton BlockButton" type="submit" id="commitPartsButton">
-                Commit Parts to the Database!
-            </button>
+            {% if assembly_type == 'part' %}
+                <input type="hidden" id="commitParts" name="commitParts" value="1">
+                <button class="partButton BlockButton" type="submit" id="commitPartsButton">
+                    Commit Parts to the Database!
+                </button>
+            {% endif %}
+            {% if assembly_type == 'cassette' %}
+                <input type="hidden" id="commitCassettes" name="commitCassettes" value="1">
+                <button class="cassetteButton BlockButton" type="submit" id="commitCassettesButton">
+                    Commit Cassettes to the Database!
+                </button>
+            {% endif %}
         {% endif %}
         </form>
 
         {% if committed %}
-            <button class="partButton BlockButton" id="partsCommited" style="background-color: #6EA400">Parts have been committed to the Database!</button>
+            <button class="partButton BlockButton" id="partsCommited" style="background-color: #6EA400">{{ assembly_type|capfirst }}s have been committed to the Database!</button>
         {% endif %}
     </div>
 
