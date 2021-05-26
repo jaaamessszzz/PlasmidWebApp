@@ -402,8 +402,7 @@ MoCloDatatable.on('click', 'tr', function () {
 
     // Get Parts for selected row
     const partPK = selectedRowData[0];
-    const partProject = selectedRowData[1];
-    const partIndex = selectedRowData[2];
+    const partAlias = selectedRowData[3];
     const partPartString = selectedRowData[6].split(',');
 
     let partParts = [];
@@ -422,7 +421,7 @@ MoCloDatatable.on('click', 'tr', function () {
     const currentRow = currentPart.parentNode;
     partParts.forEach(function (partClass) {
         let partCell = currentRow.getElementsByClassName(partClass)[0];
-        partCell.innerHTML = partProject + ' ' + partIndex;
+        partCell.innerHTML = partAlias.split(',')[0];
         partCell.style.backgroundColor = "#007CBE";
         partCell.className = partClass + ' Filled';
         $(partCell).data('partPK', partPK);
