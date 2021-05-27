@@ -404,7 +404,7 @@ def download_assembly_instructions(request):
                                                 }
                         cassette_instructions_list.append(new_constituent_line)
                         first_line = False
-                        
+
     # Raise Error
     else:
         raise Exception("How did you get here?")
@@ -422,13 +422,13 @@ def download_assembly_instructions(request):
         part_assembly_df.to_csv(assembly_io, index=False)
         assembly_io.seek(0)
         zip_file.writestr('PartAssemblyInstructions.csv', assembly_io.read())
-        
+
     if len(cassette_assembly_df.index) != 0:
         assembly_io = io.StringIO()
         cassette_assembly_df.to_csv(assembly_io, index=False)
         assembly_io.seek(0)
         zip_file.writestr('CassetteAssemblyInstructions.csv', assembly_io.read())
-    
+
     # Get unique assembly plasmids
     unique_assembly_df = cassette_assembly_df.drop_duplicates('Insert', keep='first')
     if len(unique_assembly_df) > 0:
@@ -437,7 +437,7 @@ def download_assembly_instructions(request):
         unique_template_df.to_csv(assembly_io, index=False)
         assembly_io.seek(0)
         zip_file.writestr('UniqueAssemblyPlasmids.csv', assembly_io.read())
-        
+
     # Get unique templates
     unique_template_df = part_assembly_df.drop_duplicates('Template', keep='first')
     if len(unique_template_df) > 0:
@@ -610,11 +610,12 @@ def add_plasmid_by_file(request):
             #Check to see if this plasmid exists in benchling
             OPL_exists = getBenchling('dna-sequences?bases=', dnassembly_plasmid.sequence)
             plasmid_alias = None
+            pdb.set_trace()
             if OPL_exists['dnaSequences']:
                 for plasmid in OPL_exists['dnaSequences']:
-                    new_plasmid.benchlingID = plasmid.get('ID', None)  # assign ID
                     if plasmid['entityRegistryId']:
                         OPLAlias = plasmid['entityRegistryId']
+                        new_plasmid.benchlingID = plasmid.get('id', null=True)
                         plasmid_alias = PlasmidAlias(alias=OPLAlias, plasmid=new_plasmid)
                         break #Exit out once a plasmid with a OPL number is located
 
