@@ -610,12 +610,11 @@ def add_plasmid_by_file(request):
             #Check to see if this plasmid exists in benchling
             OPL_exists = getBenchling('dna-sequences?bases=', dnassembly_plasmid.sequence)
             plasmid_alias = None
-            pdb.set_trace()
             if OPL_exists['dnaSequences']:
                 for plasmid in OPL_exists['dnaSequences']:
                     if plasmid['entityRegistryId']:
                         OPLAlias = plasmid['entityRegistryId']
-                        new_plasmid.benchlingID = plasmid.get('id', null=True)
+                        new_plasmid.benchlingID = plasmid.get('id', 'null=True')
                         plasmid_alias = PlasmidAlias(alias=OPLAlias, plasmid=new_plasmid)
                         break #Exit out once a plasmid with a OPL number is located
 
