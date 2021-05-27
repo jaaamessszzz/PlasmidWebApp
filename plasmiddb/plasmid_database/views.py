@@ -612,7 +612,7 @@ def add_plasmid_by_file(request):
             plasmid_alias = None
             if OPL_exists['dnaSequences']:
                 for plasmid in OPL_exists['dnaSequences']:
-                    new_plasmid.benchlingID = plasmid['ID']  # assign ID
+                    new_plasmid.benchlingID = plasmid.get('ID', None)  # assign ID
                     if plasmid['entityRegistryId']:
                         OPLAlias = plasmid['entityRegistryId']
                         plasmid_alias = PlasmidAlias(alias=OPLAlias, plasmid=new_plasmid)
