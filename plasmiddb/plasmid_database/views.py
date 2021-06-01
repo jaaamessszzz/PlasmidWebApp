@@ -742,11 +742,28 @@ def standard_assembly(request):
 
             # Use Part 2-4 for cassette assembly description
             if post_data.get('ReactionEnzyme') == 'BbsI':
-                for part in ['Part 2a', 'Part 2b', 'Part 3a', 'Part 3b','Part 3c','Part 3d','Part 3e', 'Part 4a', 'Part 4b']:
+                for part in ['Part 1','Part 2a', 'Part 2b', 'Part 3a', 'Part 3b','Part 3c','Part 3d','Part 3e', 'Part 4a', 'Part 4b','Part 5']:
                     for attribute, part_plasmid in zip(plasmid_attributes, assembly_db_plasmids):
-                        if part in attribute and part_plasmid not in seen_description_list:
-                            new_description_list.append(part_plasmid.description)
+                        if part == 'Part 1' and part in attribute: #Get Con annotation from backbone
+                            ind_start = part_plasmid.description.find('_')
+                            ind_end = part_plasmid.description.find('-')
+
+                            strip_description = part_plasmid.description[ind_start+1:ind_end]
+                            new_description_list.append(strip_description) #Don't add plasmid to list because backbone contains both 1 and 5
+
+                        elif part == 'Part 5' and part in attribute: #Get Con annotation from backbone
+                            ind_start = part_plasmid.description.rfind('-')
+                            strip_description = part_plasmid.description[ind_start+1::]
+
+                            new_description_list.append(strip_description) #Don't add plasmid to list because backbone contains both 1 and 5
+
+                        elif part in attribute and part_plasmid not in seen_description_list:
+                            u_ind = part_plasmid.description.find('_')
+                            strip_description = part_plasmid.description[u_ind+1::]
+                            new_description_list.append(strip_description)
                             seen_description_list.append(part_plasmid)
+
+
 
             # Use cassette descriptions for multicassette assembly description
             elif post_data.get('ReactionEnzyme') == 'BsmBI':
@@ -754,9 +771,9 @@ def standard_assembly(request):
                     new_description_list.append(part_plasmid.description)
                     seen_description_list.append(part_plasmid)
 
-            new_description = '|'.join(new_description_list)
+            new_description = '-'.join(new_description_list)
             new_plasmid.description = new_description
-
+            pdb.set_trace()
             # todo: streamline this... there is SO much duplicate code
             # Raise error when committing parts to benchling that already exist
             plasmid_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
@@ -791,7 +808,12 @@ def standard_assembly(request):
             assembly_results[index]['success'] = False
             assembly_results[index]['error'] = str(definition_error)
 
-    request.session['assembly_type'] = 'cassette'
+    if post_data.get('ReactionEnzyme') == 'BbsI':
+        request.session['assembly_type'] = 'cassette'
+
+    elif post_data.get('ReactionEnzyme') == 'BsmBI':
+        request.session['assembly_type'] = 'MC'
+
     request.session['results'] = assembly_results
     request.session['committed'] = False
 
@@ -940,7 +962,7 @@ def assembly_result(request):
                 userDescription = assembly_instructions.partName  # lol.
 
                 # Export the plasmid to Benchling via API
-                benchling_request = postPartBenchling(new_plasmid.sequence, new_plasmid.description, leftPartType)
+                benchling_request = postBenchling(new_plasmid.sequence, new_plasmid.description, leftPartType)
                 #TODO: catch a JSON400 error if the part already exists
 
                 #Save Benchling ID to plasmid
@@ -1030,7 +1052,8 @@ def assembly_result(request):
             plasmid_dnassembly = assembly_results[index]['plasmid_dnassembly']
 
             # Export the plasmid to Benchling via API
-            benchling_request = postPartBenchling(new_plasmid.sequence, new_plasmid.description, '3a')  # todo: update for cassette
+            benchling_request = postBenchling(new_plasmid.sequence, new_plasmid.description, assembly_type)  # todo: update for cassette
+
             # TODO: catch a JSON400 error if the part already exists
 
             # Save Benchling ID to plasmid
