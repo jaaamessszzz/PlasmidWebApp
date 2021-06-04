@@ -5,7 +5,7 @@ import zipfile
 import time
 from datetime import datetime
 from pprint import pprint
-from itertools import chain
+from itertools import chain, product
 import more_itertools
 import pandas as pd
 import csv
@@ -25,6 +25,9 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 
 import boto3
 from django_comments.models import Comment
+
+from rearray.echo_instructions import EchoInstructions
+from rearray.plate import Plate
 
 import dnassembly as dna
 from dnassembly.utils.annotation import annotate_moclo
@@ -277,6 +280,7 @@ def download_assembly_instructions(request):
     plasmid_results = request.session['results']
     part_instructions_list = list()
     cassette_instructions_list = list()
+    plan_list = list()  # Track input plasmids and volumes for echo picklist
 
     # Generate assembly instructions from database
     if plasmid_indicies_str:
@@ -290,13 +294,14 @@ def download_assembly_instructions(request):
         plasmid_name_list = sorted(plasmid_name_list, key=lambda x: x[0])
 
         # Generate assembly instructions line by line
-        for index, (_, current_plasmid) in enumerate(plasmid_name_list, start=1):
+        for index, (plasmid_name, current_plasmid) in enumerate(plasmid_name_list, start=1):
             first_line = True
+            plasmid_plan_list = [(plasmid_name, '')]
 
             # Part plasmid instrucitons
             if len(current_plasmid.fragments.all()) > 0:
                 for fragment_index, fragment in enumerate(current_plasmid.fragments.all(), start=1):
-                    print('COUNT', fragment.primers.all().count())
+                    plasmid_plan_list.append((f'{plasmid_name}-Fragment-{fragment_index}', '500'))
                     if fragment.primers.all().count() > 0:
                         for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(
                                 enumerate(fragment.primers.all(), start=1)):
@@ -330,6 +335,7 @@ def download_assembly_instructions(request):
                 constituent_plasmids = current_plasmid.plasmidproduct.all()
                 if len(constituent_plasmids) > 0:
                     for constituent in constituent_plasmids:
+                        plasmid_plan_list.append((f'{constituent.input.get_aliases_as_string()}', '500'))
                         new_constituent_line = {'Index': index if first_line else '',
                                                 'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
                                                 'Part Name': current_plasmid.description if first_line else '',
@@ -338,24 +344,33 @@ def download_assembly_instructions(request):
                                                 }
                         cassette_instructions_list.append(new_constituent_line)
                         first_line = False
-                else:
+                else:  # I don't think you'd ever get to this point...
                     new_constituent_line = {'Index': index if first_line else '',
                                             'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
                                             'Part Name': current_plasmid.description if first_line else '',
-                                            'Insert': constituent.insert.get_aliases_as_string(),
+                                            'Insert': '',
                                             'Special Instructions': current_plasmid.description if first_line else '',
                                             }
                     cassette_instructions_list.append(new_constituent_line)
                     first_line = False
 
+            # Finalize plasmid_plan_list with Water and master mix
+            plasmid_plan_list.append(('GG_MasterMix', '2000'))
+            water_volume = 10000 - sum([int(vol[1]) if vol[1] != '' else 0 for vol in plasmid_plan_list])
+            plasmid_plan_list.append(('Water', str(water_volume)))
+            plan_list.append(plasmid_plan_list)
+
     # Generate assembly instructions from request contents
     elif plasmid_results:
         for result_index, result in plasmid_results.items():
             first_line = True
+            plasmid_plan_list = [(result['assembly_id'], '')]
+
             if result['success']:
                 # Parts
                 if len(result['new_plasmid'].fragments.all()) > 0:
                     for fragment_index, fragment in enumerate(result['fragments'], start=1):
+                        plasmid_plan_list.append((f"{result['assembly_id']}-Fragment-{fragment_index}", '500'))
                         if fragment.get('oligo_objects') is not None:
                             for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligo_objects'], start=1)):
                                 new_fragment_line = {'Index': result_index if first_line else '',
@@ -387,6 +402,7 @@ def download_assembly_instructions(request):
                     current_plasmid = result['new_plasmid']
                     if len(assembly_db_plasmids) > 0:
                         for constituent in assembly_db_plasmids:
+                            plasmid_plan_list.append((f"{constituent.get_aliases_as_string()}", '500'))
                             new_constituent_line = {'Index': result_index if first_line else '',
                                                     'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
                                                     'Part Name': current_plasmid.description if first_line else '',
@@ -405,18 +421,54 @@ def download_assembly_instructions(request):
                         cassette_instructions_list.append(new_constituent_line)
                         first_line = False
 
+                # Finalize plasmid_plan_list with Water and master mix
+                plasmid_plan_list.append(('GG_MasterMix', '2000'))
+                water_volume = 10000 - sum([int(vol[1]) if vol[1] != '' else 0 for vol in plasmid_plan_list])
+                plasmid_plan_list.append(('Water', str(water_volume)))
+                plan_list.append(plasmid_plan_list)
+
     # Raise Error
     else:
         raise Exception("How did you get here?")
 
+    # --- Rearray Echo picklist and destination plates --- #
+
+    flattened_reagents = [item[0] for sublist in plan_list for item in sublist]
+    unique_reagents = set(flattened_reagents)
+    ncol = 12 if len(unique_reagents) > 94 else 24
+    nrow = 8 if len(unique_reagents) > 94 else 16
+    plate = Plate(dim=(nrow, ncol))
+    plated = ['Water', 'GG_MasterMix']  # Tracked reagents already added to input plate
+
+    well_indices = product(range(nrow), range(ncol))
+    i, j = next(well_indices)
+    plate[i][j] = 'GG_MasterMix'
+    i, j = next(well_indices)
+    plate[i][j] = 'Water'
+
+    for reagent in flattened_reagents:
+        if reagent not in plated:
+            i, j = next(well_indices)
+            plate[i][j] = reagent
+    echo_plan = EchoInstructions(plan_list)
+    echo_plan.finalize_echo_instructions(plate)
+
+    echo_plan_df = pd.DataFrame(echo_plan._instructions)
+    source_plate_df = pd.DataFrame(plate._data)
+    destination_plate_df = pd.DataFrame(echo_plan._plate._data)
+
+    # --- Assembly instructions --- #
+
     part_assembly_df = pd.DataFrame(part_instructions_list)
     cassette_assembly_df = pd.DataFrame(cassette_instructions_list)
 
-    # Write to ZIP
+    # --- Write to ZIP --- #
+
     zip_filename = 'AssemblyInstructions.zip'
     response = HttpResponse(content_type='application/zip')
     zip_file = zipfile.ZipFile(response, 'w')
 
+    # todo: this needs to be refactored...
     if len(part_assembly_df.index) != 0:
         assembly_io = io.StringIO()
         part_assembly_df.to_csv(assembly_io, index=False)
@@ -455,7 +507,25 @@ def download_assembly_instructions(request):
         unique_primer_df.to_csv(primer_io, index=False)
         primer_io.seek(0)
         zip_file.writestr('UniquePrimers.csv', primer_io.read())
-
+    
+    # Echo instructions
+    echo_io = io.StringIO()
+    echo_plan_df.to_csv(echo_io, index=False)
+    echo_io.seek(0)
+    zip_file.writestr('EchoInstructions.csv', echo_io.read())
+    
+    # Destination plate
+    destination_io = io.StringIO()
+    destination_plate_df.to_csv(destination_io, index=False)
+    destination_io.seek(0)
+    zip_file.writestr('EchoDestinationPlate.csv', destination_io.read())
+    
+    # Source plate
+    source_io = io.StringIO()
+    source_plate_df.to_csv(source_io, index=False)
+    source_io.seek(0)
+    zip_file.writestr('EchoSourcePlate.csv', source_io.read())
+    
     zip_file.close()
 
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
