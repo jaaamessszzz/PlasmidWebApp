@@ -202,8 +202,30 @@ $('#partForm').submit(function(e) {
             url: '/database/part_assembly/',
             data: {'data': JSON.stringify(postData)},
             method: "POST",
-            success: function () {
+            success: function (response) {
+                if(response['errors'].length !== 0){
                 window.location.href = '/database/assembly_results/';
+                }
+                else{
+
+                    // Report failed rows
+                    let errorList = document.getElementById('partErrorList');
+                    errorList.innerHTML = '';
+                    rowErrors.forEach(function (element) {
+                        let errorPoint = document.createElement('li');
+                        console.log(element);
+                        errorPoint.innerText = element;
+                        errorList.appendChild(errorPoint);
+                    });
+
+                    document.getElementById('partErrors').style.display = 'block';
+
+                    // Revert submit button
+                    const submitButton = $("#submitParts");
+                    submitButton.prop("disabled",false);
+                    submitButton.css('background-color', '#052049');
+                    submitButton.html("Create Parts!");
+                }
             }
         });
 

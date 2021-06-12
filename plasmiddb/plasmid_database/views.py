@@ -329,6 +329,17 @@ def download_assembly_instructions(request):
                         part_instructions_list.append(new_fragment_line)
                         first_line = False
 
+                # Add line for part entry vector
+                constituent_plasmids = current_plasmid.plasmidproduct.all()
+                for constituent in constituent_plasmids:
+                    plasmid_plan_list.append((constituent.get_aliases_as_string(), '500'))
+                    new_fragment_line = {'Index': index if first_line else '',
+                                         'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
+                                         'Part Name': constituent.get_aliases_as_string(),
+                                         }
+                    part_instructions_list.append(new_fragment_line)
+
+
             # Cassettes and multcassettes
             else:
                 # Get constituent plasmids
@@ -368,7 +379,7 @@ def download_assembly_instructions(request):
 
             if result['success']:
                 # Parts
-                if len(result['new_plasmid'].fragments.all()) > 0:
+                if result.get('fragments') and len(result.get('fragments')) > 0:
                     for fragment_index, fragment in enumerate(result['fragments'], start=1):
                         plasmid_plan_list.append((f"{result['assembly_id']}-Fragment-{fragment_index}", '500'))
                         if fragment.get('oligo_objects') is not None:
@@ -380,7 +391,7 @@ def download_assembly_instructions(request):
                                                      'Template': fragment['template'] if is_first else '',
                                                      'Product': fragment['product'] if is_first else '',
                                                      }
-                                cassette_instructions_list.append(new_fragment_line)
+                                part_instructions_list.append(new_fragment_line)
                                 first_line = False
                         else:
                             for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(enumerate(fragment['oligos'], start=1)):
@@ -393,8 +404,17 @@ def download_assembly_instructions(request):
                                                      'Template': fragment['template'] if is_first else '',
                                                      'Product': fragment['product'] if is_first else '',
                                                      }
-                                cassette_instructions_list.append(new_fragment_line)
+                                part_instructions_list.append(new_fragment_line)
                                 first_line = False
+
+                    # Add line for part entry vector
+                    plasmid_plan_list.append((result['part_entry_vector'].get_aliases_as_string(), '500'))
+                    new_fragment_line = {'Index': result_index if first_line else '',
+                                         'Assembly ID': result['assembly_id'] if first_line else '',
+                                         'Part Name': result['part_entry_vector'].get_aliases_as_string(),
+                                         }
+                    part_instructions_list.append(new_fragment_line)
+
                 # todo: CLEAN THIS!!!
                 # Cassettes
                 else:
@@ -475,29 +495,29 @@ def download_assembly_instructions(request):
         assembly_io.seek(0)
         zip_file.writestr('PartAssemblyInstructions.csv', assembly_io.read())
 
+        # Get unique templates
+        unique_template_df = part_assembly_df.drop_duplicates('Template', keep='first')
+        unique_template_df = unique_template_df[['Template']]
+        template_io = io.StringIO()
+        unique_template_df.to_csv(template_io, index=False)
+        template_io.seek(0)
+        zip_file.writestr('UniqueTemplates.csv', template_io.read())
+
     if len(cassette_assembly_df.index) != 0:
         assembly_io = io.StringIO()
         cassette_assembly_df.to_csv(assembly_io, index=False)
         assembly_io.seek(0)
         zip_file.writestr('CassetteAssemblyInstructions.csv', assembly_io.read())
 
-    # Get unique assembly plasmids
-    unique_assembly_df = cassette_assembly_df.drop_duplicates('Insert', keep='first')
-    if len(unique_assembly_df) > 0:
+        print(cassette_assembly_df)
+
+        # Get unique assembly plasmids
+        unique_assembly_df = cassette_assembly_df.drop_duplicates('Insert', keep='first')
         unique_template_df = unique_assembly_df[['Insert']]
         assembly_io = io.StringIO()
         unique_template_df.to_csv(assembly_io, index=False)
         assembly_io.seek(0)
         zip_file.writestr('UniqueAssemblyPlasmids.csv', assembly_io.read())
-
-    # Get unique templates
-    unique_template_df = part_assembly_df.drop_duplicates('Template', keep='first')
-    if len(unique_template_df) > 0:
-        unique_template_df = unique_template_df[['Template']]
-        template_io = io.StringIO()
-        unique_template_df.to_csv(template_io, index=False)
-        template_io.seek(0)
-        zip_file.writestr('UniqueTemplates.csv', template_io.read())
 
     # Get unique primers
     unique_primer_df = part_assembly_df.drop_duplicates('Oligo', keep='first')
@@ -987,17 +1007,26 @@ def part_assembly(request):
                 assembly_results[index]['success'] = True
                 assembly_results[index]['assembly_instructions'] = assembly_instructions
                 assembly_results[index]['new_plasmid'] = new_plasmid
+                assembly_results[index]['part_entry_vector'] = dropin_vector
                 assembly_results[index]['assembly_id'] = f''  # Populated with OPL if/when plasmid is commited to db
 
         except AssemblyException as assembly_error:
             print(assembly_error)
             assembly_results[index]['success'] = False
             assembly_results[index]['error'] = str(assembly_error)
+            response_dict['errors'].append(f'Assembly {index} failed: {assembly_error}')
 
         except ReactionDefinitionException as definition_error:
             print(definition_error)
             assembly_results[index]['success'] = False
             assembly_results[index]['error'] = str(definition_error)
+            response_dict['errors'].append(f'Assembly {index} failed: {definition_error}')
+
+        except Exception as e:
+            print(e)
+            assembly_results[index]['success'] = False
+            assembly_results[index]['error'] = str(e)
+            response_dict['errors'].append(f'Assembly {index} failed: {e}')
 
     request.session['assembly_type'] = 'part'
     request.session['results'] = assembly_results
@@ -1020,8 +1049,9 @@ def assembly_result(request):
     if commit_parts and not committed:
         for index, assembly_result in assembly_results.items():
             if assembly_result['success']:
-                # Pull new_plasmid from assembly_result
+                # Pull new_plasmid and part_entry_vector from assembly_result
                 new_plasmid = assembly_result['new_plasmid']
+                part_entry_vector = assembly_result['part_entry_vector']
 
                 # Pull GGPart attributes
                 assembly_instructions = assembly_result['assembly_instructions']
@@ -1084,6 +1114,11 @@ def assembly_result(request):
                                                type=part_featuretype)
                         part_feature.save()
                         new_plasmid.feature.add(part_feature)
+
+                # Keep track of plasmids that went into assembly (Plasmid.assembly)
+                # new_plasmid.assembly.add(*assembly_db_plasmids)
+                new_product_input = PlasmidAssembly(product=new_plasmid, input=part_entry_vector)
+                new_product_input.save()
 
                 # Push fragments and primers to the database
                 updated_fragments = []
