@@ -282,6 +282,13 @@ def download_assembly_instructions(request):
     cassette_instructions_list = list()
     plan_list = list()  # Track input plasmids and volumes for echo picklist
 
+    #Define variables for Echo GG Assembly (units in nl)
+    totalVolume = 2000
+    plasmidVolume = 100
+    fragmentVolume = 250
+    BbsIMMVolume = 340
+    BsmBIMMVolume = 375
+
     # Generate assembly instructions from database
     if plasmid_indicies_str:
         plasmid_indicies = json.loads(plasmid_indicies_str)
@@ -301,7 +308,7 @@ def download_assembly_instructions(request):
             # Part plasmid instrucitons
             if len(current_plasmid.fragments.all()) > 0:
                 for fragment_index, fragment in enumerate(current_plasmid.fragments.all(), start=1):
-                    plasmid_plan_list.append((f'{plasmid_name}-Fragment-{fragment_index}', '500'))
+                    plasmid_plan_list.append((f'{plasmid_name}-Fragment-{fragment_index}', fragmentVolume))
                     if fragment.primers.all().count() > 0:
                         for is_first, is_last, (oligo_index, oligo) in more_itertools.mark_ends(
                                 enumerate(fragment.primers.all(), start=1)):
@@ -346,7 +353,7 @@ def download_assembly_instructions(request):
                 constituent_plasmids = current_plasmid.plasmidproduct.all()
                 if len(constituent_plasmids) > 0:
                     for constituent in constituent_plasmids:
-                        plasmid_plan_list.append((f'{constituent.input.get_aliases_as_string()}', '500'))
+                        plasmid_plan_list.append((f'{constituent.input.get_aliases_as_string()}', plasmidVolume))
                         new_constituent_line = {'Index': index if first_line else '',
                                                 'Assembly ID': current_plasmid.get_aliases_as_string() if first_line else '',
                                                 'Part Name': current_plasmid.description if first_line else '',
@@ -366,8 +373,8 @@ def download_assembly_instructions(request):
                     first_line = False
 
             # Finalize plasmid_plan_list with Water and master mix
-            plasmid_plan_list.append(('GG_MasterMix', '2000'))
-            water_volume = 10000 - sum([int(vol[1]) if vol[1] != '' else 0 for vol in plasmid_plan_list])
+            plasmid_plan_list.append(('GG_MasterMix', BsmBIMMVolume))
+            water_volume = totalVolume - sum([int(vol[1]) if vol[1] != '' else 0 for vol in plasmid_plan_list])
             plasmid_plan_list.append(('Water', str(water_volume)))
             plan_list.append(plasmid_plan_list)
 
@@ -527,25 +534,25 @@ def download_assembly_instructions(request):
         unique_primer_df.to_csv(primer_io, index=False)
         primer_io.seek(0)
         zip_file.writestr('UniquePrimers.csv', primer_io.read())
-    
+
     # Echo instructions
     echo_io = io.StringIO()
     echo_plan_df.to_csv(echo_io, index=False)
     echo_io.seek(0)
     zip_file.writestr('EchoInstructions.csv', echo_io.read())
-    
+
     # Destination plate
     destination_io = io.StringIO()
     destination_plate_df.to_csv(destination_io, index=False)
     destination_io.seek(0)
     zip_file.writestr('EchoDestinationPlate.csv', destination_io.read())
-    
+
     # Source plate
     source_io = io.StringIO()
     source_plate_df.to_csv(source_io, index=False)
     source_io.seek(0)
     zip_file.writestr('EchoSourcePlate.csv', source_io.read())
-    
+
     zip_file.close()
 
     response['Content-Disposition'] = f'attachment;filename={zip_filename}'
