@@ -850,7 +850,6 @@ def standard_assembly(request):
 
             new_description = '-'.join(new_description_list)
             new_plasmid.description = new_description
-            pdb.set_trace()
             # todo: streamline this... there is SO much duplicate code
             # Raise error when committing parts to benchling that already exist
             plasmid_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
