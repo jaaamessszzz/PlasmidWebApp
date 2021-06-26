@@ -852,15 +852,15 @@ def standard_assembly(request):
             new_plasmid.description = new_description
             # todo: streamline this... there is SO much duplicate code
             # Raise error when committing parts to benchling that already exist
-            plasmid_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
+            plasmid_exists = searchSeqBenchling(new_plasmid.sequence)
             name_exists = getBenchling('dna-sequences?name=', new_plasmid.description)
             assembly_results[index]['success'] = True
             assembly_results[index]['error'] = ''
 
-            if len(plasmid_exists['dnaSequences']) > 0:
+            if plasmid_exists:
                 print('Assembled plasmid sequence already exists in database!')
                 assembly_results[index]['success'] = False
-                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in plasmid_exists['dnaSequences']])
+                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in plasmid_exists])
                 assembly_results[index]['error'] += f'This assembly sequence already exists in the database as {existing_plasmids}!\n'
             if len(name_exists['dnaSequences']) > 0:
                 print('Assembled plasmid name already exists in database!')
@@ -959,15 +959,15 @@ def part_assembly(request):
             new_plasmid = circularly_permute_plasmid(new_plasmid)
 
             # Raise error when committing parts to benchling that already exist
-            plasmid_exists = getBenchling('dna-sequences?bases=', new_plasmid.sequence)
+            plasmid_exists = searchSeqBenchling(new_plasmid.sequence)
             name_exists = getBenchling('dna-sequences?name=', new_plasmid.description)
             assembly_results[index]['success'] = True
             assembly_results[index]['error'] = ''
 
-            if len(plasmid_exists['dnaSequences']) > 0:
+            if plasmid_exists:
                 print('Assembled plasmid sequence already exists in database!')
                 assembly_results[index]['success'] = False
-                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in plasmid_exists['dnaSequences']])
+                existing_plasmids = ','.join([entry.get('name', 'Unnamed') for entry in plasmid_exists])
                 assembly_results[index]['error'] += f'This assembly sequence already exists in the database as {existing_plasmids}!\n'
             if len(name_exists['dnaSequences']) > 0:
                 print('Assembled plasmid name already exists in database!')
