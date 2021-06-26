@@ -382,7 +382,7 @@ def download_assembly_instructions(request):
     elif plasmid_results:
         for result_index, result in plasmid_results.items():
             first_line = True
-            plasmid_plan_list = [(result['assembly_id'], '')]
+            plasmid_plan_list = list()  # [(f'Assembly {result_index}', '')]
 
             if result['success']:
                 # Parts
@@ -477,6 +477,7 @@ def download_assembly_instructions(request):
         if reagent not in plated:
             i, j = next(well_indices)
             plate[i][j] = reagent
+            plated.append(reagent)
     echo_plan = EchoInstructions(plan_list)
     echo_plan.finalize_echo_instructions(plate)
 
