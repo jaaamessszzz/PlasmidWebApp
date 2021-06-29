@@ -459,11 +459,10 @@ def download_assembly_instructions(request):
         raise Exception("How did you get here?")
 
     # --- Rearray Echo picklist and destination plates --- #
-
     flattened_reagents = [item[0] for sublist in plan_list for item in sublist]
     unique_reagents = set(flattened_reagents)
-    ncol = 12 if len(unique_reagents) > 94 else 24
-    nrow = 8 if len(unique_reagents) > 94 else 16
+    ncol = 24  #To-Do: add the ability to scale beyond a single source plate
+    nrow = 16
     plate = Plate(dim=(nrow, ncol))
     plated = ['Water', 'GG_MasterMix']  # Tracked reagents already added to input plate
 
