@@ -203,11 +203,10 @@ $('#partForm').submit(function(e) {
             data: {'data': JSON.stringify(postData)},
             method: "POST",
             success: function (response) {
-                if(response['errors'].length !== 0){
+                if(response['errors'].length === 0){
                 window.location.href = '/database/assembly_results/';
                 }
                 else{
-
                     // Report failed rows
                     let errorList = document.getElementById('partErrorList');
                     errorList.innerHTML = '';
