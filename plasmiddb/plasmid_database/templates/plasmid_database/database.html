@@ -82,14 +82,24 @@
             <button type="submit" id="DownloadPlasmidsSubmitButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Selected Plasmids</button>
         </form>
 
-        <form method="post" action="download_assembly_instructions/" style="display: inline-block">
+        {# Assembly instructions for selected plasmids #}
+        {# todo: update to use javascript instead of... whatever this is... #}
+        <form method="post" action="get_assembly_instructions/" style="display: inline-block">
             {% csrf_token %}
-            <input type="hidden" name="DownloadAssemblyInstructions" id="DownloadAssemblyInstructions">
-            <button type="submit" id="DownloadAssemblyInstructionsButton" class="BlockButton" download><i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Assembly Instructions</button>
+            <input type="hidden" name="PlasmidAssemblyInstructions" id="PlasmidAssemblyInstructions">
+            <button type="submit" id="PlasmidAssemblyInstructionsButton" class="BlockButton"><i class="fas fa-wrench" data-fa-transform="grow-8"></i>  Get Assembly Instructions</button>
         </form>
 
         {# Delete selected plasmids #}
         <button id="DeleteSelectedDatabasePlasmids" class="BlockButton"><i class="fas fa-trash fa-fw" data-fa-transform="grow-8"></i>  Delete Selected Plasmids</button>
+
+        {# Generate Picklist #}
+        {#<form method="post" action="get_picklist/" style="display: inline-block">#}
+        {#    {% csrf_token %}#}
+        {#    <input type="hidden" name="PlasmidPicklist" id="PlasmidPicklist">#}
+        {#    <button type="submit" id="PickDatabasePlasmids" class="BlockButton"><i class="fas fa-hand-point-down" data-fa-transform="grow-8"></i>  Generate Picklist</button>#}
+        {#</form>#}
+
 
         {# Toggle table columns #}
         <div class="ToggleColumnButtonHolder">

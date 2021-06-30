@@ -11,15 +11,12 @@
 <div class="container">
     <table id="assemblyResultsTable" style="width:100%; text-align: left">
         <tr>
-            <th style="width:5%">Index</th>                     {# Column 1 #}
-            <th style="width:5%">Success</th>                  {# Column 2 #}
-            <th style="width:10%">Assembly ID</th>              {# Column 3 #}
+            <th style="width:10%">Index</th>
+            <th style="width:10%">Success</th>
+            <th style="width:10%">Assembly ID</th>
             {% if assembly_type == 'part' %}
-                <th style="width:5%">Fragment</th>            {# Column 4 #}
-                <th style="width:5%">Method</th>      {# Column 5 #}
-                <th style="width:20%">Primers</th>              {# Column 6 #}
-                <th style="width:5%">Template</th>             {# Column 7 #}
-                <th style="width:45%">Product</th>              {# Column 8 #}
+                <th style="width:20%">Primers</th>
+                <th style="width:50%">Insert</th>
             {% endif %}
             {% if assembly_type == 'cassette' %}
                 <th style="width:35%">Reaction Plasmids</th>
@@ -28,111 +25,22 @@
         </tr>
 
         {% for result, result_dict in results.items %}
-            <tr style="background-color:#A2D1EA;">
+            <tr>
                 <td>{{ result }}</td>
                 <td>{{ result_dict.success }}</td>
-                <td>{{ result_dict.new_plasmid.get_aliases_as_string }}</td>
+                <td>{{ result_dict.new_plasmid.get_standard_id }}</td>
                 {% if assembly_type == 'part' %}
-                    <td colspan="5">---</td>
+                    <td>F: {{ result_dict.primer_F }}<br>R: {{ result_dict.primer_R }}</td>
+                    <td>{{ result_dict.insert }}</td>
                 {% endif %}
                 {% if assembly_type == 'cassette' %}
-                    <td colspan="2">---</td>
+                    <td>{{ result_dict.reaction_plasmids }}</td>
+                    <td></td> {# Do cassettes need notes? #}
                 {% endif %}
             </tr>
-            {% if result_dict.success %}
-                {% if assembly_type == 'part' %}
-                    {% for fragment_dict in result_dict.fragments %}
-                        <tr style="border-bottom: 1px solid black;">
-                            <td colspan="3"></td>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ fragment_dict.assembly_method }}</td>
-                            {% if fragment_dict.assembly_method == 'Oligo Assembly' %}
-                                <td>
-                                    {% if fragment_dict.oligo_objects %}
-                                        {% for primer in fragment_dict.oligo_objects %}
-                                        <b>{{ primer.get_name }}: </b>{{primer.sequence}}<br>
-                                        {%  endfor %}
-                                    {% else %}
-                                        {% for primer in fragment_dict.oligos %}
-                                        <b>Oligo {{ forloop.counter }}: </b>{{primer}}<br>
-                                        {% endfor %}
-                                    {% endif %}
-                                </td>
-                            {% else %}
-                                {% if fragment_dict.primer_F != "" %}
-                                    {% if fragment_dict.oligo_objects %}
-                                        <td>
-                                            <b>{{oligo_objects.0.get_name}}</b>{{oligo_objects.0.sequence}}
-                                            <br>
-                                            <b>{{oligo_objects.1.get_name}}</b>{{oligo_objects.1.sequence}}
-                                        </td>
-                                    {% else %}
-                                        <td><b>F: </b>{{ fragment_dict.primer_F}}<br><b>R: </b>{{ fragment_dict.primer_R}}</td>
-                                    {% endif %}
-                                {% else %}
-                                <td></td>
-                                {% endif %}
-                            {% endif %}
-                            <td>{{ fragment_dict.template }}</td>
-                            <td>{{ fragment_dict.product }}</td>
-                        </tr>
-                    {%  endfor %}
-                {% endif %}
-                {% if assembly_type == 'cassette' %}
-                    {% for assembly_plasmid in result_dict.assembly_db_plasmids %}
-                        <tr>
-                            <td colspan="3"></td>
-                            <td>{{ assembly_plasmid.get_aliases_as_string }}</td>
-                            {% if forloop.counter == 0 %}
-                                <td>{{ result_dict.new_plasmid.description }}</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                {% endif %}
-            {% else %}
-                <td colspan="8">{{ result_dict.error }}</td>
-            {% endif %}
         {% endfor %}
 
     </table>
-
-    <div class="PlasmidAssemblyInstructions">
-        {# Download assembly instructions #}
-        <form method="post" action="/database/download_assembly_instructions/" style="display: inline-block">
-          {% csrf_token %}
-          <input type="hidden" name="DownloadAssemblyInstructions" id="DownloadAssemblyInstructions">
-          <button type="submit" id="DownloadAssemblyInstructionsButton" class="BlockButton" download>
-              <i class="fas fa-download fa-fw" data-fa-transform="grow-8"></i>  Download Assembly Instructions
-          </button>
-        </form>
-
-        {# Commit assemblies #}
-        {% if not committed %}
-        <form method="post" action="/database/assembly_results/" style="display: inline-block" id="commitForm">
-            {% csrf_token %}
-            {% if assembly_type == 'part' %}
-                <input type="hidden" id="commitParts" name="commitParts" value="1">
-                <button class="partButton BlockButton" type="submit" id="commitPartsButton">
-                    Commit Parts to the Database!
-                </button>
-            {% endif %}
-            {% if assembly_type == 'cassette' %}
-                <input type="hidden" id="commitCassettes" name="commitCassettes" value="1">
-                <button class="cassetteButton BlockButton" type="submit" id="commitCassettesButton">
-                    Commit Cassettes to the Database!
-                </button>
-            {% endif %}
-        {% endif %}
-        </form>
-
-        {% if committed %}
-            <button class="partButton BlockButton" id="partsCommited" style="background-color: #6EA400">{{ assembly_type|capfirst }}s have been committed to the Database!</button>
-        {% endif %}
-    </div>
-
-
 </div>
 {% endblock %}
 
@@ -143,12 +51,9 @@
 </script>
 
 {# Javascript #}
-<script type="text/javascript">
-</script>
-{# CSS #}
-{% endblock %}
 
-{% block css %}
+{# CSS #}
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/clone-assemblyresult.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'plasmid_database/css/add_plasmids.css' %}">
+
 {% endblock %}

@@ -191,8 +191,8 @@ const DownloadPlasmidsSubmitButton = $('#DownloadPlasmidsSubmitButton');
 DownloadPlasmidsSubmitButton.prop("disabled", true);
 
 // Disable Assembly Instructions button if no rows are selected
-const DownloadAssemblyInstructionsButton = $('#DownloadAssemblyInstructionsButton');
-DownloadAssemblyInstructionsButton.prop("disabled", true);
+const PlasmidAssemblyInstructionsButton = $('#PlasmidAssemblyInstructionsButton');
+PlasmidAssemblyInstructionsButton.prop("disabled", true);
 
 // Show/Hide delete button with "ARE YOU SUPER SURE" prompt
 // Implement this...
@@ -208,12 +208,12 @@ datatable.on( 'click', 'tr', function () {
     // Toggle delete plasmid button
     const SelectedPlasmids = datatable.rows('.selected').data();
     if(SelectedPlasmids.length === 0){
-        DownloadAssemblyInstructionsButton.prop("disabled", true);
+        PlasmidAssemblyInstructionsButton.prop("disabled", true);
         DownloadPlasmidsSubmitButton.prop("disabled", true);
         deletePlasmidsSubmitButton.prop("disabled", true);
         deletePlasmidsSubmitButton.hide();
     } else {
-        DownloadAssemblyInstructionsButton.prop("disabled", false);
+        PlasmidAssemblyInstructionsButton.prop("disabled", false);
         DownloadPlasmidsSubmitButton.prop("disabled", false);
         deletePlasmidsSubmitButton.prop("disabled", false);
         deletePlasmidsSubmitButton.show();
@@ -230,7 +230,6 @@ datatable.on('click', function(){
     }
     $('#DownloadSelectedDatabasePlasmids').val(JSON.stringify(PlasmidIDs));
     $('#PlasmidAssemblyInstructions').val(JSON.stringify(PlasmidIDs));
-    $('#DownloadAssemblyInstructions').val(JSON.stringify(PlasmidIDs));
 });
 
 //===========================//
