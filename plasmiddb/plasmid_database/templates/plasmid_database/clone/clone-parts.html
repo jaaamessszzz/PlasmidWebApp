@@ -3,19 +3,20 @@
         <div id="partInstructionsButton"><b>Instructions.</b></div>
         <div id="partInstructionsDiv">
             <p style="font-size:10px;margin-top:0">
-                Part entry format (tab-delimited, one new line per part): Description  Part Type (if Custom, add OHs)  Sequence  Method (default None) [CUSTOM -> 5'OH 3'OH]<br>
-                Recognized parts: 1 2a 2b 3a 3b 3c 3d 3e 4 4a 4b 5 6 7 Custom<br>
-                Define parts spanning multiple part types with a dash e.g. 3a-3e<br>
+                Part entry format (tab-delimited, one new line per part): Description  Part Type  Sequence  Alias (optional)<br>
+                Recognized parts: 1 2 3 3a 3b 4 4a 4b 5 6 7 8 8a 8b<br>
+                Define parts spanning multiple part types with a dash e.g. 2-4<br>
                 Sequences are DNA (ATCGatcg)<br>
-                To enable primer design and PCR design method, include PCR templates in the second box<br>
-                PCR template entry format (tab-delimited, one new line per template): Template Name  Sequence<br>
+                Standardize parts: prepend/append nucleotides to certain part types so they conform to YTK MoClo standards<br>
+            </p>
+            <p style="font-size:10px;margin-top:0">
+                This tool currently does not make any modifications to input sequences and will not accept sequences that
+                do not conform to YTK MoClo standards. Please use a codon optimization tool (available from IDT, Benchling)
+                to remove any BsaI/BsmBI/NotI restriction sites from your parts before adding them to the database!
             </p>
         </div>
 
-        <h4>Part Input</h4>
-        <textarea id="partEntry" wrap="off" rows="20" placeholder="Paste your part sequences here!"></textarea>
-        <h4>Part PCR Templates (Optional)</h4>
-        <textarea id="templateEntry" wrap="off" rows="20" placeholder="Paste your PCR templates here!"></textarea>
+        <textarea id="partEntry" wrap="off" rows="25" placeholder="Paste your part sequences here!"></textarea>
 
         <form id="partForm">
             <label for="partProject">Select Project: </label>
@@ -28,14 +29,23 @@
             <label for="partEntryVectors">Select Part Entry Vector: </label>
             <select id="partEntryVectors" name="Entry Vectors">
                 {% for plasmid in partEntryVectors %}
-                    <option value="{{ plasmid.id }}">{{ plasmid.get_aliases_as_string }}</option>
+                    <option value="{{ plasmid.id }}">{{ plasmid.get_standard_id }}</option>
                 {% endfor %}
             </select>
             <br>
+            <input type="checkbox" id="addStandard" name="addStandard" value="addStandard" checked>
+            <label for="addStandard">Standardize parts</label>
+            {# <br>#}
+            {# Restriction Sites to Remove:#}
+            {# <input type="checkbox" id="BsaI" name="BsaI" value="BsaI" checked>#}
+            {# <label for="vehicle1"> BsaI</label>#}
+            {# <input type="checkbox" id="BsmBI" name="BsmBI" value="BsmBI" checked>#}
+            {# <label for="BsmBI"> BsmBI</label>#}
+            {# <input type="checkbox" id="NotI" name="NotI" value="NotI" checked>#}
+            {# <label for="NotI"> NotI</label>#}
             <br>
-            <button class="partButton BlockButton" type="submit" id="submitParts">
-                Create Parts!
-            </button>
+            <br>
+            <button class="partButton BlockButton" type="submit" id="submitParts">Create Parts!</button>
         </form>
 
         <div id="partErrors">

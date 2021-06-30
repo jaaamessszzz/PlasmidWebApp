@@ -1,8 +1,0 @@
-**/*.csv
-**/*.pyc
-**/__pycache__
-**/venv
-**/.idea
-**/.DS_Store
-**/*.DS_Store
-plasmiddb/plasmid_database/migrations/*

@@ -21,6 +21,7 @@ class Project(models.Model):
     description = models.TextField()
     members = models.ManyToManyField(User)
 
+
 class Feature(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sequence = models.TextField()
@@ -80,7 +81,6 @@ class Plasmid(models.Model):
     projectindex = models.IntegerField()
     sequence = models.TextField()
     description = models.TextField()
-    benchlingID = models.TextField(unique=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     feature = models.ManyToManyField(Feature)
     attribute = models.ManyToManyField(Attribute)
@@ -101,9 +101,6 @@ class Plasmid(models.Model):
 
     def get_aliases_as_string(self):
         return ', '.join(sorted([altname.alias for altname in self.aliases.all()]))
-
-    def get_descriptions_as_string(self):
-        return ', '.join(sorted([des for des in self.description]))
 
     def get_attributes_as_string(self):
         return ', '.join(sorted([attr.name for attr in self.attribute.all()]))
@@ -168,21 +165,3 @@ class PlasmidFile(models.Model):
     description = models.TextField()
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-
-
-# --- Plasmid Part Assembly Views --- #
-
-class PlasmidPartPrimer(models.Model):
-    sequence = models.TextField(unique=True)
-
-    def get_name(self):
-        return f'o{self.pk:0>5}'
-
-
-class PlasmidPartFragment(models.Model):
-    plasmid = models.ForeignKey(Plasmid, on_delete=models.CASCADE, related_name='fragments')
-    index = models.IntegerField()
-    sequence = models.TextField()
-    method = models.TextField()
-    primers = models.ManyToManyField(PlasmidPartPrimer)
-    template = models.TextField(null=True)

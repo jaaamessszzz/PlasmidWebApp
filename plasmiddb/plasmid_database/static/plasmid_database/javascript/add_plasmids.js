@@ -9,7 +9,6 @@ function dropHandler(event){
 
     // Get Plasmid Property Definitions
     const PlasmidProject = $('#dragndrop-project option:selected').val();
-    //const PlasmidDescription = document.getElementByID()
     const AddFeatures = document.getElementById("dragndrop-features").checked;
     const AddAttributes = document.querySelectorAll("[aria-selected='true']");
     // const AddAttributes = $('#sel option').filter(':selected');
@@ -112,7 +111,7 @@ function uploadPlasmidFile(file, FileMetadata){
 
         // async=false as async submission of plasmids messes up sequential creator id assignment...
         // I tried adding a trigger database-side but the problem persists, the same index is assigned to multiple
-        // rows before insert which results in integrity errors.
+        // rows before insert which results in integrity errors. 
         let jqXHR = $.ajax({
             async: false,
             type: "POST",

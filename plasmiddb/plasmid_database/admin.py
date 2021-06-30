@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Register your models here.
-from .models import User, Plasmid, Feature, Attribute, Project
+from .models import User, Plasmid, Feature, Attribute
 
 
 class PlasmidAdmin(admin.ModelAdmin):
@@ -18,4 +18,3 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Plasmid, PlasmidAdmin)
 admin.site.register(Feature)
 admin.site.register(Attribute)
-admin.site.register(Project)

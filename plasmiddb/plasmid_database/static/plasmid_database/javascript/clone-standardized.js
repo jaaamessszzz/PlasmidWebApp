@@ -24,7 +24,7 @@ class PlasmidMap {
     constructor(){
         this.head = null;
         this.size = 0;
-        this.tk_parts = ['1', '2a', '2b', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7'];
+        this.tk_parts = ['1', '2', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'];
     }
 
     add(part){
@@ -98,8 +98,8 @@ assemblyType.change(function(){
 // Create new table
 function initializeTable(assemblyType){
 
-    const tableTypes = {'Cassette': ['1', '2a', '2b', '3a', '3b', '3c', '3d', '3e', '4a', '4b', '5', '6', '7'],
-                        'MultiCassette': ['LS-1', '1-2', '2-3', '3-RE', 'RE-LS']};
+    const tableTypes = {'Cassette': ['1', '2', '3a', '3b', '4a', '4b', '5', '6', '7', '8a', '8b'],
+                        'MultiCassette': ['LS-1', '1-2', '2-3', '3-4', '4-5', '5-RE', 'RE-LS']};
 
     // Select and empty existing table
     let newTableJQO = assemblyTable;
@@ -258,7 +258,7 @@ function performPlasmidAssembly(assemblyForm){
 
     let reactionEnzyme;
     if(reactionType === 'Cassette'){
-        reactionEnzyme = 'BbsI';
+        reactionEnzyme = 'BsaI';
     } else if(reactionType === 'MultiCassette'){
         reactionEnzyme = 'BsmBI';
     } else {
@@ -402,7 +402,8 @@ MoCloDatatable.on('click', 'tr', function () {
 
     // Get Parts for selected row
     const partPK = selectedRowData[0];
-    const partAlias = selectedRowData[3];
+    const partProject = selectedRowData[1];
+    const partIndex = selectedRowData[2];
     const partPartString = selectedRowData[6].split(',');
 
     let partParts = [];
@@ -421,7 +422,7 @@ MoCloDatatable.on('click', 'tr', function () {
     const currentRow = currentPart.parentNode;
     partParts.forEach(function (partClass) {
         let partCell = currentRow.getElementsByClassName(partClass)[0];
-        partCell.innerHTML = partAlias.split(',')[0];
+        partCell.innerHTML = partProject + ' ' + partIndex;
         partCell.style.backgroundColor = "#007CBE";
         partCell.className = partClass + ' Filled';
         $(partCell).data('partPK', partPK);
