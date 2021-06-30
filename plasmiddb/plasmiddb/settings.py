@@ -112,8 +112,8 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': 'plasmid_database',
-            'USER': 'jaaamessszzz',  # todo: use environment variable to populate
-            'PASSWORD': 'herpderp~',
+            'USER': 'AndrewNg',  # todo: use environment variable to populate
+            'PASSWORD': 'ProteinsAreCool!',
             'HOST': 'localhost',
             'PORT': '',
         }

@@ -58,7 +58,7 @@ class Command(BaseCommand):
                      creator=user, subcategory=modular_cloning)
         part.save()
 
-        for type in PartOrder.bsai_annotation_f.values():
+        for type in PartOrder.bbsi_annotation_f.values():
            part_type = Attribute(name=f'Part {type}',
                                 description=f'A part plasmid with type {type} overhangs.',
                                 creator=user, subcategory=part)
