@@ -6,7 +6,7 @@ docopt==0.6.2
 PyMySQL==0.9.3
 psycopg2>=2.7.7
 dnassembly>=0.1.7
-wiki==0.6
+wiki==0.7.9
 django-contrib-comments==1.9.2
 boto3==1.13.24
 django-storages==1.9.1
